@@ -94,7 +94,13 @@ const experiment = {
   id: "batch-experiment",
   createdAt: new Date().toISOString(),
   finishedAt: null,
-  page: { duration: 120 },
+  platform: "youtube",
+  page: {
+    title: "Test video",
+    url: "https://www.youtube.com/watch?v=test123",
+    videoIdentity: "youtube:test123|audio:de",
+    duration: 120
+  },
   audioLanguage: "de",
   pipeline: { mode: "batch", status: "transcribing" },
   settings: { syncOffset: 0 },
@@ -231,6 +237,32 @@ assert.equal(local["experiment:batch-experiment"].evaluation.status, "available"
 assert.ok(tabMessages.some(({ message }) => message.type === "TRANSCRIPT_UPDATE"));
 assert.ok(tabMessages.some(({ message }) => message.type === "SET_REPLAY_MODE" && message.enabled));
 assert.ok(tabMessages.some(({ message }) => message.type === "CONTROL_MEDIA" && message.action === "play"));
+const libraryKey = context.DubTranscriptLearning.transcriptStorageKey(
+  "youtube:test123|audio:de"
+);
+assert.equal(local.transcriptLibraryIndex.length, 1);
+assert.equal(local.transcriptLibraryIndex[0].key, libraryKey);
+assert.equal(local[libraryKey].segments.length, 250);
+assert.equal(local[libraryKey].url, "https://www.youtube.com/watch?v=test123");
+context.savedCompatibilityRecord = structuredClone(local[libraryKey]);
+assert.equal(
+  await vm.runInContext(
+    "isStoredTranscriptCompatible(savedCompatibilityRecord, { duration: 251 })",
+    context
+  ),
+  true
+);
+assert.equal(
+  await vm.runInContext(
+    "isStoredTranscriptCompatible(savedCompatibilityRecord, { duration: 400 })",
+    context
+  ),
+  false
+);
+context.libraryKey = libraryKey;
+const textExport = await vm.runInContext("exportLibraryTranscriptText(libraryKey)", context);
+assert.match(textExport.text, /\[00:00\] Erster Teil 0\./);
+assert.match(textExport.filename, /Test-video-de\.txt$/);
 
 context.batchReadyActive = structuredClone(session.activeExperiment);
 await vm.runInContext("handleSeek(batchReadyActive, 30, 1)", context);
@@ -324,6 +356,42 @@ const normalizedRuntimeSettings = await vm.runInContext(
   context
 );
 assert.equal("googleApiKey" in normalizedRuntimeSettings, false);
+
+context.savedLibraryRecord = structuredClone(local[libraryKey]);
+context.savedLibrarySettings = {
+  serverUrl: "ws://127.0.0.1:8000/asr",
+  audioLanguage: "de",
+  captionLanguage: "de",
+  collectCaptions: true,
+  syncOffset: 0,
+  captionPreferences: {},
+  translationPreferences: {}
+};
+context.savedLibraryPrepared = {
+  tab: {
+    id: 8,
+    title: "Test video",
+    url: "https://www.youtube.com/watch?v=test123"
+  },
+  mediaTarget: {
+    frameId: 0,
+    context: {
+      duration: 250,
+      frameUrl: "https://www.youtube.com/watch?v=test123"
+    }
+  }
+};
+const restored = await vm.runInContext(
+  "startLibraryExperiment(savedLibrarySettings, savedLibraryPrepared, savedLibraryRecord)",
+  context
+);
+assert.equal(restored.mode, "library");
+assert.equal(restored.restored, true);
+assert.equal(session.activeExperiment.mode, "batch-ready");
+assert.equal(local[`experiment:${restored.experimentId}`].asrSegments.length, 250);
+assert.ok(tabMessages.some(({ tabId, message }) => (
+  tabId === 8 && message.type === "BEGIN_SESSION" && message.segments.length === 250
+)));
 
 const incompleteActive = {
   ...active,

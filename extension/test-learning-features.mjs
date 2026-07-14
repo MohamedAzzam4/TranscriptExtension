@@ -59,8 +59,39 @@ const dictionary = helpers.extractEnglishWiktionaryEntry({
   }]
 });
 assert.equal(dictionary.englishDefinition, "house; home & residence");
+assert.deepEqual([...dictionary.englishDefinitions], ["house", "home & residence"]);
 assert.equal(dictionary.example, "In dem Haus wohnen wir.");
 assert.equal(dictionary.exampleTranslation, "We live in the house.");
+assert.equal(dictionary.examples.length, 1);
+
+const germanDictionary = helpers.extractGermanWiktionaryEntry(`
+  <h2>Haus (Deutsch)</h2>
+  <h3>Substantiv, n</h3>
+  <table><tr><th>Nominativ</th><td>das Haus</td><td>die Häuser</td></tr></table>
+  <p>Bedeutungen:</p><dl><dd>[1] Gebäude, in dem Menschen wohnen</dd></dl>
+  <p>Beispiele:</p><dl><dd>Wir gehen nach Hause.</dd></dl>
+  <p>Charakteristische Wortkombinationen:</p><dl><dd>ein Haus bauen</dd></dl>
+  <p>Synonyme:</p><dl><dd>[1] Gebäude, Heim</dd></dl>
+  <p>Worttrennung:</p><dl><dd>Haus, Plural: Häu·ser</dd></dl>
+  <p>IPA: [<span class="ipa">haʊ̯s</span>]</p>
+`);
+assert.equal(germanDictionary.wordType, "Substantiv, n");
+assert.deepEqual([...germanDictionary.germanDefinitions], ["Gebäude, in dem Menschen wohnen"]);
+assert.equal(germanDictionary.grammar.article, "das");
+assert.equal(germanDictionary.grammar.singular, "das Haus");
+assert.equal(germanDictionary.grammar.plural, "die Häuser");
+assert.deepEqual([...germanDictionary.collocations], ["ein Haus bauen"]);
+assert.deepEqual([...germanDictionary.synonyms], ["Gebäude", "Heim"]);
+assert.equal(germanDictionary.pronunciation, "haʊ̯s");
+
+const verbDictionary = helpers.extractGermanWiktionaryEntry(`
+  <h2>herausfinden (Deutsch)</h2><h3>Verb</h3>
+  <p>Worttrennung:</p><dl><dd>he·r·aus·fin·den, Präteritum: fand he·r·aus, Partizip II: he·r·aus·ge·fun·den</dd></dl>
+  <table><tr><th>Hilfsverb</th><td><a>haben</a></td></tr></table>
+`);
+assert.equal(verbDictionary.grammar.preterite, "fand he·r·aus");
+assert.equal(verbDictionary.grammar.perfect, "hat he·r·aus·ge·fun·den");
+assert.equal(verbDictionary.grammar.separable, true);
 
 const entry = helpers.normalizeVocabularyEntry({
   word: "Haus!",
@@ -73,5 +104,29 @@ assert.equal(entry.word, "Haus");
 assert.equal(entry.normalizedWord, "haus");
 assert.equal(entry.germanSourceUrl, "https://de.wiktionary.org/wiki/Haus");
 assert.equal(entry.englishSourceUrl, null);
+
+assert.equal(
+  helpers.stableVideoIdentity("https://www.youtube.com/watch?v=abc123&list=ignored", "DE"),
+  "youtube:abc123|audio:de"
+);
+assert.equal(
+  helpers.stableVideoIdentity("https://aniworld.to/anime/stream/show/episode-1?server=2", "de"),
+  "aniworld.to:/anime/stream/show/episode-1|audio:de"
+);
+assert.equal(
+  helpers.stablePageUrl("https://www.youtube.com/watch?v=abc123&list=ignored"),
+  "https://www.youtube.com/watch?v=abc123"
+);
+const transcriptText = helpers.transcriptToText({
+  title: "Test video",
+  audioLanguage: "de",
+  url: "https://www.youtube.com/watch?v=abc123&list=ignored",
+  segments: [
+    { start: 65, text: "Hallo Welt." },
+    { start: 67, text: "Wie geht es dir?" }
+  ]
+});
+assert.match(transcriptText, /\[01:05\] Hallo Welt\./);
+assert.match(transcriptText, /Source: https:\/\/www\.youtube\.com\/watch\?v=abc123/);
 
 console.log("Learning feature tests passed");

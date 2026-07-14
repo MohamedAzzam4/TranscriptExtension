@@ -21,6 +21,29 @@ assert.deepEqual([...groups[0].segmentIds], ["0", "1", "2"]);
 assert.equal(groups[0].reason, "sentence");
 assert.equal(groups[1].text, "Nö.");
 assert.equal(groups[2].text, "Das bleibt getrennt.");
+assert.ok(groups[0].words.length > 3);
+assert.equal(groups[0].words[0].text, "Ich");
+assert.equal(groups[0].words[0].timing, "estimated-within-cue");
+
+const exact = helpers.buildDisplayGroups([{
+  id: "exact",
+  start: 10,
+  end: 11,
+  text: "Hallo Welt.",
+  complete: true,
+  boundary: "sentence",
+  words: [
+    { text: "Hallo", start: 10.1, end: 10.5 },
+    { text: "Welt", start: 10.55, end: 10.95 }
+  ]
+}]);
+assert.equal(JSON.stringify(
+  exact[0].words.map(({ text, start, end }) => ({ text, start, end }))
+), JSON.stringify([
+  { text: "Hallo", start: 10.1, end: 10.5 },
+  { text: "Welt", start: 10.55, end: 10.95 }
+]));
+assert.equal(exact[0].words[0].timing, "word-timestamps");
 
 const bounded = helpers.buildDisplayGroups([
   { id: "a", start: 0, end: 4, text: "A".repeat(100) + ",", complete: true, boundary: "phrase" },

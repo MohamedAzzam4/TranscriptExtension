@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.7.2",
-  "description": "Local full-video transcription with an automatic live-audio fallback.",
+  "version": "0.8.0",
+  "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [
     "activeTab",

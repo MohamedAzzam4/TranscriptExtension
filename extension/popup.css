@@ -198,6 +198,9 @@ button.wide {
   margin-top: 8px;
 }
 
+.secondary-export { margin-top: 6px; font-size: 11px; opacity: .82; }
+
+.transcript-library-panel summary span,
 .vocabulary-panel summary span {
   display: inline-block;
   min-width: 20px;
@@ -231,7 +234,10 @@ button.wide {
   font-size: 10px;
   line-height: 1.35;
 }
+.saved-word-context { margin-top: 4px; color: #d2d7e0; font-size: 10px; font-style: italic; line-height: 1.35; }
 .saved-word button { align-self: center; padding: 5px 7px; font-size: 10px; }
+.library-actions { display: flex; flex-direction: column; gap: 4px; align-self: center; }
+.transcript-library-row > div:first-child { min-width: 0; }
 .empty-saved { margin: 7px 0 0; color: #8f98a8; font-size: 10px; }
 
 #status {

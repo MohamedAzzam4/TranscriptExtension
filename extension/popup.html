@@ -124,7 +124,16 @@
         <button id="start" class="primary">Analyze automatically</button>
         <button id="stop">Stop</button>
       </div>
-      <button id="export" class="wide">Export last experiment JSON</button>
+      <button id="downloadTranscript" class="wide primary">Download transcript .txt</button>
+      <button id="export" class="wide secondary-export">Export technical experiment JSON</button>
+
+      <details class="panel transcript-library-panel">
+        <summary>Saved transcripts <span id="savedTranscriptCount">0</span></summary>
+        <small class="setting-help">Complete transcripts are restored automatically for the same video and audio language.</small>
+        <div id="savedTranscripts" class="saved-words">
+          <p class="empty-saved">No complete transcript has been saved yet.</p>
+        </div>
+      </details>
 
       <details class="panel vocabulary-panel">
         <summary>Saved vocabulary <span id="savedWordCount">0</span></summary>

@@ -14,6 +14,7 @@ assert.equal(new Set(queriedIds).size, queriedIds.length, "popup element binding
 assert.match(html, /id="translationEnabled"/);
 assert.match(html, /id="fontSize"/);
 assert.match(html, /id="savedWords"/);
+assert.match(html, /id="downloadTranscript"/);
+assert.match(html, /id="savedTranscripts"/);
 
 console.log("Popup binding tests passed");
-

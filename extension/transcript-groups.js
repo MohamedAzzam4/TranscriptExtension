@@ -1,5 +1,5 @@
 (() => {
-  if (globalThis.DubTranscriptGroups?.version === 1) return;
+  if (globalThis.DubTranscriptGroups?.version === 2) return;
 
   const DEFAULT_OPTIONS = Object.freeze({
     maxCharacters: 150,
@@ -41,6 +41,7 @@
         start: first.start,
         end: last.end,
         text: current.map((segment) => segment.text).join(" "),
+        words: current.flatMap(segmentWords),
         segmentIds: current.map((segment) => segment.id).filter(Boolean),
         complete: last.boundary === "sentence" || hasTerminalEnding(last.text),
         reason
@@ -84,6 +85,42 @@
     return groups;
   }
 
+  function segmentWords(segment) {
+    const exact = (Array.isArray(segment.words) ? segment.words : [])
+      .map((word) => ({
+        text: String(word?.text || "").replace(/[^\p{L}\p{M}'’\-]/gu, "").trim(),
+        start: Number(word?.start),
+        end: Number(word?.end),
+        timing: segment.timing || "word-timestamps"
+      }))
+      .filter((word) => (
+        word.text
+        && Number.isFinite(word.start)
+        && Number.isFinite(word.end)
+        && word.end >= word.start
+      ));
+    if (exact.length) return exact;
+
+    const tokens = String(segment.text || "")
+      .match(/[\p{L}\p{M}]+(?:['’\-][\p{L}\p{M}]+)*/gu) || [];
+    if (!tokens.length) return [];
+    const duration = Math.max(0, segment.end - segment.start);
+    const weights = tokens.map((token) => Math.max(1, [...token].length));
+    const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+    let consumed = 0;
+    return tokens.map((text, index) => {
+      const start = segment.start + duration * consumed / totalWeight;
+      consumed += weights[index];
+      const end = segment.start + duration * consumed / totalWeight;
+      return {
+        text,
+        start: Math.round(start * 1000) / 1000,
+        end: Math.round(end * 1000) / 1000,
+        timing: "estimated-within-cue"
+      };
+    });
+  }
+
   function normalizeSyncOffset(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return 0;
@@ -101,7 +138,7 @@
   }
 
   globalThis.DubTranscriptGroups = Object.freeze({
-    version: 1,
+    version: 2,
     buildDisplayGroups,
     normalizeSyncOffset
   });

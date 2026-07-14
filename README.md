@@ -8,12 +8,14 @@ It can analyze an accessible, non-DRM video before playback or fall back to tran
 
 - Full-video local transcription for public YouTube pages and accessible non-DRM MP4/HLS media.
 - Automatic live-audio fallback when a complete media source is unavailable.
-- Clickable transcript words with English and German Wiktionary definitions.
-- Browser-local saved vocabulary with video context and examples when available.
+- Clickable transcript words with a structured, source-backed German learning card: meanings, English glosses, paired examples, grammar, collocations, synonyms, and pronunciation when Wiktionary provides them.
+- Replay a selected word from the current video, or open the word directly in German YouGlish.
+- Browser-local saved vocabulary with video context, examples, and word timing when available.
 - Optional English translation under the original transcript.
 - Draggable captions plus font, color, opacity, edge, size, and position controls.
 - A timing adjustment that moves captions earlier or later without retranscribing.
-- Local transcript caching for the current experiment and JSON experiment export.
+- One-click UTF-8 transcript download plus technical JSON experiment export.
+- A browser-local library of up to 20 complete transcripts. Opening the same video and audio language restores the saved transcript automatically instead of transcribing again.
 
 This is still an experiment, not a finished store extension. Netflix and other DRM-protected subscription services are intentionally excluded from full-media acquisition.
 
@@ -70,6 +72,7 @@ Transcription runs locally. Audio is not uploaded to a transcription service.
 - Batch mode reads an authorized public media source and converts its audio in local memory. YouTube uses a temporary media file that is deleted immediately after decoding.
 - Live mode captures only the decoded audio played in the current tab and sends PCM chunks to `127.0.0.1` on the same computer.
 - Definitions are requested from English and German Wiktionary after a word click.
+- The learning card is deterministic and source-backed. It does not send words to an AI service and does not invent simplified explanations, B2 advice, collocations, or grammar when the dictionaries do not provide them.
 - The optional browser translation provider is on-device when supported.
 - If Google Cloud Translation fallback is selected, only displayed transcript text is sent to Google's official API. The optional API key stays in browser-local storage and is excluded from experiment JSON exports.
 - The helper never copies browser cookies into native tools. Do not use the project to bypass access controls, DRM, authentication, or a platform's terms.
@@ -132,7 +135,9 @@ WhisperLiveKit 0.2.24 is pinned for reproducible setup. Its raw PCM mode bypasse
 
 ## Export and evaluation
 
-Stop a run and choose **Export last experiment JSON**. YouTube batch exports can include matching caption reference segments and evaluation metrics such as word error rate, word-agreement estimate, and timing-distance statistics. Captions remain evaluation-only.
+Choose **Download transcript .txt** for a one-click readable transcript. Complete transcripts also appear in **Saved transcripts**, where each one can be downloaded or removed. The library keeps structured timestamps for synchronized replay and automatically recognizes the same stable page plus audio language; signed media URLs and request headers are never stored there.
+
+Choose **Export technical experiment JSON** for research data. YouTube batch exports can include matching caption reference segments and evaluation metrics such as word error rate, word-agreement estimate, and timing-distance statistics. Captions remain evaluation-only.
 
 For the standalone comparison report:
 
@@ -148,6 +153,7 @@ Only compare ASR with captions that represent the selected audio track. A German
 - [AniWorld audio-acquisition plan](docs/ANIWORLD_AUDIO_ACQUISITION_PLAN.md)
 - [Prompt for the isolated GLM AniWorld branch](docs/GLM_ANIWORLD_AUDIO_PROMPT.md)
 - [Deferred product backlog](docs/PRODUCT_BACKLOG.md)
+- [Local learning and transcript-library behavior](docs/LOCAL_LEARNING_FEATURES.md)
 
 ## Current boundaries
 
@@ -155,8 +161,10 @@ Only compare ASR with captions that represent the selected audio track. A German
 - Blob-only, expired, rejected, or inaccessible sources use live tab capture.
 - Multi-provider streaming sites can expose different CDNs on different runs; acquisition performance is not yet normalized.
 - Netflix and other DRM subscription platforms are outside the current acquisition scope.
-- Browser storage has no cleanup/library UI yet. Export important experiments before clearing extension data.
-- One-click text export, persistent same-video transcript restoration, word-audio replay, YouGlish, and the improved learning-card layout are recorded for later work, not included yet.
+- The transcript library is browser-local and intentionally bounded to 20 entries and about 7.5 MB. Removing the extension or clearing its storage removes the library, so download important transcripts as text.
+- Only complete transcripts are promoted to the reusable library. A partially watched live-transcription session remains an experiment record and will not suppress future analysis.
+- Exact batch word timestamps produce the best replay clips. Live cues without word timestamps use an estimated interval inside the cue.
+- The no-AI learning card cannot reliably reproduce a custom tutor's simplified B1 explanations or generated B2 tips; empty source-backed sections are hidden instead of invented.
 
 ## Primary upstream projects
 

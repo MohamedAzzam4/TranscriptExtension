@@ -4,9 +4,12 @@ const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
 const SETTINGS_KEY = "experimentSettings";
 const EXPERIMENT_PREFIX = "experiment:";
-const DEFINITION_PREFIX = "definition:v2:de-en:";
+const DEFINITION_PREFIX = "definition:v3:de-en:";
 const VOCABULARY_KEY = "savedVocabulary";
 const TRANSLATION_SECRETS_KEY = "translationSecrets";
+const TRANSCRIPT_LIBRARY_INDEX_KEY = "transcriptLibraryIndex";
+const TRANSCRIPT_LIBRARY_LIMIT = 20;
+const TRANSCRIPT_LIBRARY_BYTES_LIMIT = 7_500_000;
 const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
 const learning = globalThis.DubTranscriptLearning;
 const mediaClocks = new Map();
@@ -41,6 +44,14 @@ async function handleMessage(message, sender) {
       return {};
     case "EXPORT_LAST_EXPERIMENT":
       return exportLastExperiment();
+    case "EXPORT_LAST_TRANSCRIPT_TEXT":
+      return exportLastTranscriptText();
+    case "GET_TRANSCRIPT_LIBRARY":
+      return getTranscriptLibrary();
+    case "EXPORT_LIBRARY_TRANSCRIPT_TEXT":
+      return exportLibraryTranscriptText(message.key);
+    case "REMOVE_TRANSCRIPT_LIBRARY_ENTRY":
+      return removeTranscriptLibraryEntry(message.key);
     case "PING_CONTENT":
       return {};
     case "CAPTION_SEGMENT":
@@ -98,11 +109,80 @@ async function startSmartExperiment(settings) {
   if (existing) await stopExperiment();
 
   const prepared = await prepareMediaTarget();
+  const identity = learning.stableVideoIdentity(prepared.tab.url, settings.audioLanguage);
+  const savedTranscript = await getStoredTranscript(identity);
+  if (savedTranscript && isStoredTranscriptCompatible(savedTranscript, prepared.mediaTarget.context)) {
+    return startLibraryExperiment(settings, prepared, savedTranscript);
+  }
   const candidate = chooseBatchCandidate(prepared.tab, prepared.mediaTarget.context);
   if (candidate.supported) {
     return startBatchExperiment(settings, prepared, candidate);
   }
   return startLiveExperiment(settings, prepared, candidate.reason);
+}
+
+async function startLibraryExperiment(settings, prepared, savedTranscript) {
+  const { tab, mediaTarget } = prepared;
+  const context = mediaTarget.context;
+  const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const experiment = createExperimentRecord(id, tab, context, settings, {
+    requested: "auto",
+    mode: "library",
+    status: "complete",
+    sourceKind: "local-library",
+    sourceHost: null,
+    fallbackReason: null,
+    restoredFrom: savedTranscript.sourceExperimentId || null
+  });
+  experiment.asrSegments = sanitizeTranscriptSegments(savedTranscript.segments);
+  const duration = Math.max(
+    Number(savedTranscript.duration) || 0,
+    Number(context.duration) || 0,
+    experiment.asrSegments.reduce((maximum, segment) => Math.max(maximum, segment.end), 0)
+  );
+  const range = { start: 0, end: round(duration) };
+  experiment.audioCoverage = [range];
+  experiment.finishedAt = new Date().toISOString();
+  const active = {
+    experimentId: id,
+    tabId: tab.id,
+    mediaFrameId: mediaTarget.frameId,
+    mode: "batch-ready",
+    settings,
+    syncOffset: normalizeSyncOffset(settings.syncOffset),
+    replay: range,
+    batchDuration: range.end,
+    recognizerReady: true
+  };
+
+  await saveExperiment(experiment);
+  await setActive(active);
+  await sendToFrame(tab.id, mediaTarget.frameId, {
+    type: "BEGIN_SESSION",
+    experimentId: id,
+    collectCaptions: false,
+    syncOffset: active.syncOffset,
+    captionPreferences: settings.captionPreferences,
+    translationPreferences: settings.translationPreferences,
+    audioLanguage: settings.audioLanguage,
+    segments: experiment.asrSegments
+  });
+  await sendToActiveFrame(active, { type: "SET_REPLAY_MODE", enabled: true, range });
+  const response = await sendToActiveFrame(active, { type: "CONTROL_MEDIA", action: "play" });
+  await broadcastStatus(response?.ok
+    ? "Saved transcript restored locally. Playback started without transcribing again."
+    : "Saved transcript restored locally. Press play when you are ready.",
+  response?.ok ? null : response?.error);
+  return { experimentId: id, mode: "library", restored: true };
+}
+
+function isStoredTranscriptCompatible(record, context) {
+  if (!Array.isArray(record?.segments) || !record.segments.length) return false;
+  const savedDuration = Number(record.duration);
+  const currentDuration = Number(context?.duration);
+  if (!Number.isFinite(savedDuration) || !Number.isFinite(currentDuration)
+    || savedDuration <= 0 || currentDuration <= 0) return true;
+  return Math.abs(savedDuration - currentDuration) <= Math.max(3, currentDuration * 0.03);
 }
 
 async function prepareMediaTarget() {
@@ -263,6 +343,7 @@ function createExperimentRecord(id, tab, context, settings, pipeline) {
     page: {
       title: tab.title || "Untitled video",
       url: tab.url,
+      videoIdentity: learning.stableVideoIdentity(tab.url, settings.audioLanguage),
       playerFrameUrl: context.frameUrl || tab.url,
       duration: context.duration
     },
@@ -560,6 +641,7 @@ async function completeBatchExperiment(active, message) {
   };
   experiment.evaluation = message.evaluation || null;
   await saveExperiment(experiment);
+  await trySaveTranscriptToLibrary(experiment);
   audioCoverageRanges.set(experiment.id, [range]);
 
   latest.mode = "batch-ready";
@@ -697,6 +779,9 @@ async function stopExperiment() {
   if (experiment) {
     experiment.finishedAt = new Date().toISOString();
     await saveExperiment(experiment);
+    if (wasLive && hasCompleteLiveCoverage(experiment)) {
+      await trySaveTranscriptToLibrary(experiment);
+    }
   }
   await chrome.storage.session.remove(ACTIVE_KEY);
   mediaClocks.delete(active.tabId);
@@ -977,6 +1062,32 @@ async function exportLastExperiment() {
   };
 }
 
+async function exportLastTranscriptText() {
+  const stored = await chrome.storage.local.get(LAST_KEY);
+  const id = stored[LAST_KEY];
+  if (!id) throw new Error("Analyze a video before downloading its transcript.");
+  const experiment = await getExperiment(id);
+  if (!experiment?.asrSegments?.length) {
+    throw new Error("The last experiment does not contain a transcript yet.");
+  }
+  return transcriptTextExport(experiment);
+}
+
+async function exportLibraryTranscriptText(key) {
+  const record = await getTranscriptLibraryRecord(key);
+  if (!record) throw new Error("That saved transcript is no longer available.");
+  return transcriptTextExport(record);
+}
+
+function transcriptTextExport(record) {
+  const title = record.title || record.page?.title || "video";
+  const language = record.audioLanguage || "unknown";
+  return {
+    text: learning.transcriptToText(record),
+    filename: `dub-transcript-lab/transcripts/${learning.safeFilename(title)}-${language}.txt`
+  };
+}
+
 async function setSyncOffset(rawOffset) {
   const syncOffset = normalizeSyncOffset(rawOffset);
   const active = await getActive();
@@ -1143,13 +1254,26 @@ async function lookupBilingualWord(rawWord) {
   const german = germanResult.status === "fulfilled" ? germanResult.value : {};
   const english = englishResult.status === "fulfilled" ? englishResult.value : {};
   const title = german.title || word;
+  const examples = deduplicateExamples([
+    ...(german.examples || []),
+    ...(english.examples || [])
+  ]);
   const result = {
     word,
     title,
     germanDefinition: german.germanDefinition || null,
     englishDefinition: english.englishDefinition || null,
-    example: english.example || null,
-    exampleTranslation: english.exampleTranslation || null,
+    germanDefinitions: german.germanDefinitions || [],
+    englishDefinitions: english.englishDefinitions || [],
+    example: examples[0]?.german || english.example || null,
+    exampleTranslation: examples[0]?.english || english.exampleTranslation || null,
+    examples,
+    collocations: german.collocations || [],
+    synonyms: german.synonyms || [],
+    domains: german.domains || [],
+    grammar: german.grammar || null,
+    wordType: german.wordType || english.partOfSpeech || null,
+    pronunciation: german.pronunciation || null,
     germanSourceUrl: `https://de.wiktionary.org/wiki/${encodeURIComponent(title)}`,
     englishSourceUrl: `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}`,
     fetchedAt: new Date().toISOString()
@@ -1175,7 +1299,7 @@ async function fetchGermanWiktionaryEntry(word) {
   const title = payload.parse?.title || word;
   return {
     title,
-    germanDefinition: extractGermanMeanings(payload.parse?.text)
+    ...learning.extractGermanWiktionaryEntry(payload.parse?.text)
   };
 }
 
@@ -1186,18 +1310,16 @@ async function fetchEnglishWiktionaryEntry(word) {
   return learning.extractEnglishWiktionaryEntry(await response.json());
 }
 
-function extractGermanMeanings(html) {
-  const source = String(html || "");
-  const germanStart = source.search(/<h2[^>]*>[^<]*(?:<[^>]+>)*[^<]*Deutsch/i);
-  const relevant = germanStart >= 0 ? source.slice(germanStart) : source;
-  const match = relevant.match(/Bedeutungen:\s*<\/p>\s*<dl>([\s\S]*?)<\/dl>/i);
-  if (!match) return null;
-
-  const meanings = [...match[1].matchAll(/<dd>([\s\S]*?)<\/dd>/gi)]
-    .slice(0, 3)
-    .map((entry) => learning.htmlToPlainText(entry[1]))
-    .filter(Boolean);
-  return meanings.length ? meanings.join(" ").slice(0, 600) : null;
+function deduplicateExamples(values) {
+  const seen = new Set();
+  return values.filter((example) => {
+    const german = String(example?.german || "").trim();
+    if (!german) return false;
+    const key = german.toLocaleLowerCase("de");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 4);
 }
 
 async function getSavedWords() {
@@ -1212,8 +1334,16 @@ async function getSavedWords() {
 }
 
 async function saveVocabularyWord(rawEntry) {
+  const active = await getActive();
+  const experiment = active ? await getExperiment(active.experimentId) : null;
   const entry = learning.normalizeVocabularyEntry({
     ...rawEntry,
+    video: rawEntry?.video || (experiment?.page?.videoIdentity ? {
+      key: experiment.page.videoIdentity,
+      title: experiment.page.title,
+      url: experiment.page.url,
+      platform: experiment.platform
+    } : null),
     savedAt: new Date().toISOString()
   });
   if (!entry) throw new Error("Select a German word before saving it.");
@@ -1234,6 +1364,160 @@ async function removeSavedWord(rawWord) {
 async function isVocabularyWordSaved(normalized) {
   const { entries } = await getSavedWords();
   return entries.some((entry) => entry.normalizedWord === normalized);
+}
+
+function hasCompleteLiveCoverage(experiment) {
+  if (!experiment?.asrSegments?.length) return false;
+  const duration = Number(experiment.page?.duration) || 0;
+  if (duration <= 0) return false;
+  const ranges = mergeCoverageRanges(experiment.audioCoverage || []);
+  return ranges.length === 1
+    && ranges[0].start <= 1
+    && ranges[0].end >= duration - 1;
+}
+
+async function saveTranscriptToLibrary(experiment) {
+  const identity = experiment?.page?.videoIdentity
+    || learning.stableVideoIdentity(experiment?.page?.url, experiment?.audioLanguage);
+  const key = learning.transcriptStorageKey(identity);
+  const segments = sanitizeTranscriptSegments(experiment?.asrSegments);
+  if (!identity || !key || !segments.length) return null;
+  const duration = Math.max(
+    Number(experiment.page?.duration) || 0,
+    segments.reduce((maximum, segment) => Math.max(maximum, segment.end), 0)
+  );
+  const now = new Date().toISOString();
+  const record = {
+    schemaVersion: 1,
+    key,
+    identity,
+    title: experiment.page?.title || "Untitled video",
+    url: learning.stablePageUrl(experiment.page?.url),
+    platform: experiment.platform || null,
+    audioLanguage: experiment.audioLanguage || "de",
+    duration: round(duration),
+    segmentCount: segments.length,
+    sourceExperimentId: experiment.id || null,
+    savedAt: now,
+    updatedAt: now,
+    segments
+  };
+  record.bytes = JSON.stringify(record).length * 2;
+  if (record.bytes > TRANSCRIPT_LIBRARY_BYTES_LIMIT) {
+    throw new Error("This transcript is too large for the browser-local transcript library.");
+  }
+  const { entries } = await getTranscriptLibrary();
+  const metadata = transcriptLibraryMetadata(record);
+  const updated = [metadata, ...entries.filter((entry) => entry.key !== key)]
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const retained = [];
+  let retainedBytes = 0;
+  for (const entry of updated) {
+    const bytes = Math.max(0, Number(entry.bytes) || 0);
+    if (retained.length >= TRANSCRIPT_LIBRARY_LIMIT) continue;
+    if (retainedBytes + bytes > TRANSCRIPT_LIBRARY_BYTES_LIMIT) continue;
+    retained.push(entry);
+    retainedBytes += bytes;
+  }
+  const retainedKeys = new Set(retained.map((entry) => entry.key));
+  const removed = updated.filter((entry) => !retainedKeys.has(entry.key));
+  if (!retainedKeys.has(key)) {
+    throw new Error("This transcript is too large for the browser-local transcript library.");
+  }
+  if (removed.length) await chrome.storage.local.remove(removed.map((entry) => entry.key));
+  await chrome.storage.local.set({
+    [key]: record,
+    [TRANSCRIPT_LIBRARY_INDEX_KEY]: retained
+  });
+  return metadata;
+}
+
+async function trySaveTranscriptToLibrary(experiment) {
+  try {
+    return await saveTranscriptToLibrary(experiment);
+  } catch (error) {
+    console.warn("Could not add the completed transcript to the reusable library", error);
+    return null;
+  }
+}
+
+function sanitizeTranscriptSegments(rawSegments) {
+  return (Array.isArray(rawSegments) ? rawSegments : [])
+    .map((segment, index) => {
+      const start = Number(segment?.start);
+      const end = Number(segment?.end);
+      const text = String(segment?.text || "").trim().slice(0, 2_000);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end < start || !text) return null;
+      const words = (Array.isArray(segment.words) ? segment.words : [])
+        .map((word) => ({
+          text: String(word?.text || "").trim().slice(0, 100),
+          start: round(Number(word?.start)),
+          end: round(Number(word?.end))
+        }))
+        .filter((word) => word.text && Number.isFinite(word.start)
+          && Number.isFinite(word.end) && word.end >= word.start);
+      return {
+        id: String(segment.id || `saved-${index}`),
+        start: round(start),
+        end: round(end),
+        text,
+        complete: segment.complete !== false,
+        boundary: String(segment.boundary || "sentence").slice(0, 40),
+        ...(words.length ? { words } : {})
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+}
+
+async function getStoredTranscript(identity) {
+  const key = learning.transcriptStorageKey(identity);
+  if (!key) return null;
+  const record = await getTranscriptLibraryRecord(key);
+  return record?.identity === identity ? record : null;
+}
+
+async function getTranscriptLibraryRecord(key) {
+  if (!String(key || "").startsWith("transcript-library:v1:")) return null;
+  const stored = await chrome.storage.local.get(key);
+  return stored[key] || null;
+}
+
+async function getTranscriptLibrary() {
+  const stored = await chrome.storage.local.get(TRANSCRIPT_LIBRARY_INDEX_KEY);
+  const entries = Array.isArray(stored[TRANSCRIPT_LIBRARY_INDEX_KEY])
+    ? stored[TRANSCRIPT_LIBRARY_INDEX_KEY]
+    : [];
+  return {
+    entries: entries
+      .filter((entry) => String(entry?.key || "").startsWith("transcript-library:v1:"))
+      .slice(0, TRANSCRIPT_LIBRARY_LIMIT)
+  };
+}
+
+function transcriptLibraryMetadata(record) {
+  return {
+    key: record.key,
+    title: record.title,
+    url: record.url,
+    platform: record.platform,
+    audioLanguage: record.audioLanguage,
+    duration: record.duration,
+    segmentCount: record.segmentCount,
+    bytes: record.bytes,
+    updatedAt: record.updatedAt
+  };
+}
+
+async function removeTranscriptLibraryEntry(key) {
+  if (!String(key || "").startsWith("transcript-library:v1:")) {
+    throw new Error("Invalid saved transcript key.");
+  }
+  const { entries } = await getTranscriptLibrary();
+  await chrome.storage.local.remove(key);
+  const updated = entries.filter((entry) => entry.key !== key);
+  await chrome.storage.local.set({ [TRANSCRIPT_LIBRARY_INDEX_KEY]: updated });
+  return { entries: updated };
 }
 
 async function ensureContentScripts(tabId) {

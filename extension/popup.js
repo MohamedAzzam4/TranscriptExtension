@@ -28,7 +28,10 @@ const elements = {
   syncOffset: document.querySelector("#syncOffset"),
   start: document.querySelector("#start"),
   stop: document.querySelector("#stop"),
+  downloadTranscript: document.querySelector("#downloadTranscript"),
   export: document.querySelector("#export"),
+  savedTranscripts: document.querySelector("#savedTranscripts"),
+  savedTranscriptCount: document.querySelector("#savedTranscriptCount"),
   savedWords: document.querySelector("#savedWords"),
   savedWordCount: document.querySelector("#savedWordCount"),
   status: document.querySelector("#status")
@@ -78,7 +81,10 @@ elements.start.addEventListener("click", async () => {
     if (!response?.ok) throw new Error(response?.error || "Could not start the experiment.");
     setStatus(response.mode === "batch"
       ? "Full-video analysis started. Playback will begin when the transcript is ready."
-      : "Live transcription fallback is preparing automatically.");
+      : response.mode === "library"
+        ? "Saved transcript restored. Playback started without transcribing again."
+        : "Live transcription fallback is preparing automatically.");
+    await refreshTranscriptLibrary();
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -92,6 +98,19 @@ elements.stop.addEventListener("click", async () => {
     const response = await chrome.runtime.sendMessage({ type: "STOP_EXPERIMENT" });
     if (!response?.ok) throw new Error(response?.error || "Could not stop the experiment.");
     setStatus("Stopped. The result is cached locally and ready to export.");
+    await refreshTranscriptLibrary();
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+});
+
+elements.downloadTranscript.addEventListener("click", async () => {
+  setStatus("Preparing transcript text…");
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "EXPORT_LAST_TRANSCRIPT_TEXT" });
+    if (!response?.ok) throw new Error(response?.error || "There is no transcript to download.");
+    await downloadTextFile(response.text, response.filename);
+    setStatus("Transcript downloaded.");
   } catch (error) {
     setStatus(error.message, true);
   }
@@ -122,6 +141,9 @@ elements.export.addEventListener("click", async () => {
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "EXPERIMENT_STATUS") {
     setStatus(message.error || message.status, Boolean(message.error));
+    if (/transcript ready|saved transcript|cached locally/i.test(message.status || "")) {
+      void refreshTranscriptLibrary();
+    }
   }
 });
 
@@ -151,6 +173,7 @@ async function restoreState() {
   currentSyncOffset = normalizeSyncOffset(settings.syncOffset);
   renderControls();
   await refreshSavedWords();
+  await refreshTranscriptLibrary();
 }
 
 function readSettings() {
@@ -251,6 +274,98 @@ async function refreshSavedWords() {
   }
 }
 
+async function refreshTranscriptLibrary() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "GET_TRANSCRIPT_LIBRARY" });
+    if (!response?.ok) throw new Error(response?.error || "Could not load saved transcripts.");
+    renderTranscriptLibrary(response.entries || []);
+  } catch (error) {
+    elements.savedTranscripts.replaceChildren(createTextElement("p", error.message, "empty-saved"));
+  }
+}
+
+function renderTranscriptLibrary(entries) {
+  elements.savedTranscriptCount.textContent = String(entries.length);
+  if (!entries.length) {
+    elements.savedTranscripts.replaceChildren(createTextElement(
+      "p",
+      "No complete transcript has been saved yet.",
+      "empty-saved"
+    ));
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  for (const entry of entries) {
+    const row = document.createElement("div");
+    row.className = "saved-word transcript-library-row";
+    const body = document.createElement("div");
+    body.append(
+      createTextElement("div", entry.title || "Untitled video", "saved-word-title"),
+      createTextElement(
+        "div",
+        `${entry.audioLanguage || "?"} · ${entry.segmentCount || 0} segments`,
+        "saved-word-definition"
+      )
+    );
+    const actions = document.createElement("div");
+    actions.className = "library-actions";
+    const download = document.createElement("button");
+    download.type = "button";
+    download.textContent = "TXT";
+    download.addEventListener("click", async () => {
+      download.disabled = true;
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "EXPORT_LIBRARY_TRANSCRIPT_TEXT",
+          key: entry.key
+        });
+        if (!response?.ok) throw new Error(response?.error || "Could not export transcript.");
+        await downloadTextFile(response.text, response.filename);
+        setStatus("Transcript downloaded.");
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        download.disabled = false;
+      }
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      remove.disabled = true;
+      const response = await chrome.runtime.sendMessage({
+        type: "REMOVE_TRANSCRIPT_LIBRARY_ENTRY",
+        key: entry.key
+      });
+      if (!response?.ok) {
+        setStatus(response?.error || "Could not remove saved transcript.", true);
+        remove.disabled = false;
+        return;
+      }
+      await refreshTranscriptLibrary();
+    });
+    actions.append(download, remove);
+    row.append(body, actions);
+    fragment.append(row);
+  }
+  elements.savedTranscripts.replaceChildren(fragment);
+}
+
+async function downloadTextFile(text, filename) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  try {
+    await chrome.downloads.download({
+      url,
+      filename,
+      saveAs: false,
+      conflictAction: "uniquify"
+    });
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+}
+
 function renderSavedWords(entries) {
   elements.savedWordCount.textContent = String(entries.length);
   if (!entries.length) {
@@ -275,6 +390,8 @@ function renderSavedWords(entries) {
         "saved-word-definition"
       )
     );
+    const example = entry.context || entry.examples?.[0]?.german;
+    if (example) body.append(createTextElement("div", `„${example}“`, "saved-word-context"));
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Remove";

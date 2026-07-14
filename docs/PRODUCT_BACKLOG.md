@@ -1,22 +1,25 @@
 # Product backlog
 
-This file preserves requested product ideas that are intentionally deferred while setup and media acquisition are being stabilized. Items here are not promises of the current build.
+This file preserves requested product ideas and their current implementation status.
 
-## Word-learning panel
+## Implemented in extension 0.8.0
 
-- Reorganize the word card so definitions, examples, and translations are grouped more clearly instead of appearing as one long scrolling block.
-- Add **Listen again** for the selected word. Prefer the word's real audio from the current video and replay only its timestamped clip without losing the viewer's previous position.
-- Add **Hear on YouGlish**. It should open a new YouGlish tab for the selected word with German selected. Confirm YouGlish's current public URL format before implementation.
-- Keep saved-word context, definitions, examples, source video, and audio timing together so a saved item remains useful later.
+- Reorganized the word card into meanings, paired examples, combinations, grammar, and related-word sections. Empty dictionary sections are hidden.
+- Added **Replay clip** using exact batch word timestamps or a clearly identified cue-based estimate. The original media time, pause state, and playback rate are restored.
+- Added **YouGlish**, opening the selected word in the public German pronunciation route.
+- Saved-word entries now retain context, definitions, examples, source video identity, and available audio timing.
 
-## Transcript export and local library
+- Added one-click UTF-8 text download of the most recent transcript.
+- Completed transcripts are stored under stable platform/page identity plus audio language and restored automatically.
+- Structured cues and optional word timestamps remain in storage; text is generated only for download.
+- The popup lists saved transcripts and supports TXT export and deletion.
+- The library is browser-local, capped at 20 records and roughly 7.5 MB, and excludes signed media URLs, headers, cookies, and secrets.
 
-- Add one-click download of the complete transcript as a readable UTF-8 text file.
-- Save completed transcripts locally and restore them automatically when the same video is opened again.
-- Use a stable video identity, such as platform plus video ID, rather than an expiring media URL.
-- Store structured transcript data for replay and learning features, while generating the text file only as an export format.
-- Provide a simple local-library screen for finding, reopening, exporting, and deleting saved transcripts.
-- Make the storage boundary explicit: browser-local storage first; optional user-selected files or a local companion service only when persistent filesystem access is needed.
+## Still deferred
+
+- A larger searchable library page and an explicit **Open video** action for old transcripts.
+- User-selected filesystem folders or companion-service persistence beyond browser storage.
+- AI-generated B1 simplification or B2 tutoring. The current card deliberately uses only source-backed dictionary data.
 
 ## Acceptance notes
 
