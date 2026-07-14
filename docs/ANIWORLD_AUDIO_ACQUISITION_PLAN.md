@@ -174,6 +174,7 @@ Also repeat these lifecycle checks for every passing provider:
 
 ## Iteration rules for the testing agent
 
+- Work only on `agent/aniworld-audio-probe`, created from the published `main` baseline. Do not commit to `main` or the parallel `feature/bilingual-learning-captions` branch.
 - Preserve the working YouTube 0.6.4 batch path.
 - Do not run Whisper as part of provider discovery.
 - Do not guess that a large `<video>` is correct; prove it with PCM and user confirmation.
@@ -264,4 +265,3 @@ This experiment is complete when:
 - Switching, pausing, seeking, stopping, and page reload clean up capture resources.
 - Existing YouTube tests remain green.
 - The final report explains which providers support future full-video preparation and which are live-only.
-

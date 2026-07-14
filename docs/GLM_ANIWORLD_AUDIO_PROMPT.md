@@ -20,6 +20,14 @@ Read these files completely before changing code:
 
 The existing YouTube implementation at version 0.6.4 is a working regression baseline. Preserve it.
 
+## Required Git branch
+
+Before editing any project file, start from the published `main` branch and create or switch to:
+
+`agent/aniworld-audio-probe`
+
+Do not commit directly to `main` and do not work on `feature/bilingual-learning-captions`; that second branch belongs to another parallel implementation. Commit coherent checkpoints to your agent branch and push only that branch. If the user supplies a repository token, receive it through the sandbox's secret/environment mechanism. Never paste it into a command that will be logged, write it into a file, add it to a remote URL, expose it in output, or commit it.
+
 ## User authorization and browser behavior
 
 The user authorizes you to edit and test this local extension and to use a **visible browser** on the user-specified public test page. Never run the browser hidden.
@@ -57,6 +65,7 @@ Provider availability can change. Record what is actually visible instead of ass
 ### 1. Establish the baseline
 
 - Inspect the dirty worktree and preserve unrelated user changes.
+- Confirm the active branch is `agent/aniworld-audio-probe` before editing.
 - Run the existing local tests before editing.
 - Map the current all-frame video discovery and tab-capture flow.
 - Confirm that the existing offscreen code currently requires a WhisperLiveKit WebSocket before forwarding PCM; do not reuse that requirement in probe mode.
@@ -174,4 +183,3 @@ Do not claim completion until:
 Begin by reading the required files and running the existing tests. Then implement the isolated 10-second tab-audio probe before testing providers. Do not begin with Whisper or transcription.
 
 ---
-
