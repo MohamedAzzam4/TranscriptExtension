@@ -257,6 +257,7 @@ context.testDisplaySettingsMessage = {
   type: "UPDATE_DISPLAY_SETTINGS",
   captionPreferences: {
     fontSize: 38,
+    horizontalPosition: 64,
     verticalPosition: 24,
     backgroundOpacity: 60,
     textOpacity: 90,
@@ -273,6 +274,7 @@ context.testDisplaySettingsMessage = {
 };
 await vm.runInContext("handleMessage(testDisplaySettingsMessage, {})", context);
 assert.equal(session.activeExperiment.settings.captionPreferences.fontSize, 38);
+assert.equal(local.experimentSettings.captionPreferences.horizontalPosition, 64);
 assert.equal(session.activeExperiment.settings.translationPreferences.enabled, false);
 assert.ok(tabMessages.some(({ message }) => (
   message.type === "APPLY_DISPLAY_SETTINGS"

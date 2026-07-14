@@ -10,6 +10,7 @@ const helpers = context.DubTranscriptLearning;
 assert.deepEqual(
   { ...helpers.normalizeCaptionPreferences({
     fontSize: 99,
+    horizontalPosition: 120,
     verticalPosition: -2,
     backgroundOpacity: 42,
     textOpacity: 85,
@@ -20,6 +21,7 @@ assert.deepEqual(
   }) },
   {
     fontSize: 52,
+    horizontalPosition: 98,
     verticalPosition: 3,
     backgroundOpacity: 42,
     textOpacity: 85,
@@ -73,4 +75,3 @@ assert.equal(entry.germanSourceUrl, "https://de.wiktionary.org/wiki/Haus");
 assert.equal(entry.englishSourceUrl, null);
 
 console.log("Learning feature tests passed");
-

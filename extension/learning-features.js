@@ -3,6 +3,7 @@
 
   const DEFAULT_CAPTION_PREFERENCES = Object.freeze({
     fontSize: 31,
+    horizontalPosition: 50,
     verticalPosition: 11,
     backgroundOpacity: 86,
     textOpacity: 100,
@@ -29,6 +30,12 @@
     const edgeStyle = String(raw.edgeStyle || "").toLowerCase();
     return {
       fontSize: clampNumber(raw.fontSize, 16, 52, DEFAULT_CAPTION_PREFERENCES.fontSize),
+      horizontalPosition: clampNumber(
+        raw.horizontalPosition,
+        2,
+        98,
+        DEFAULT_CAPTION_PREFERENCES.horizontalPosition
+      ),
       verticalPosition: clampNumber(
         raw.verticalPosition,
         3,

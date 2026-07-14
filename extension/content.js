@@ -1,6 +1,6 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 7) return;
-  globalThis.__dubTranscriptLabVersion = 7;
+  if (globalThis.__dubTranscriptLabVersion === 8) return;
+  globalThis.__dubTranscriptLabVersion = 8;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
@@ -30,6 +30,8 @@
   let wordGermanSourceElement = null;
   let wordEnglishSourceElement = null;
   let currentCaption = null;
+  let captionDrag = null;
+  let suppressTranscriptClick = false;
   let listeners = [];
   const mediaSecurityStates = new WeakMap();
 
@@ -223,6 +225,9 @@
     wordSaveElement = null;
     wordGermanSourceElement = null;
     wordEnglishSourceElement = null;
+    removeCaptionDragListeners();
+    captionDrag = null;
+    suppressTranscriptClick = false;
     wrapElement = null;
     captionBoxElement = null;
     translationElement = null;
@@ -297,6 +302,7 @@
   }
 
   function createOverlay() {
+    document.getElementById("dub-transcript-lab-overlay")?.remove();
     overlayHost = document.createElement("div");
     overlayHost.id = "dub-transcript-lab-overlay";
     const shadow = overlayHost.attachShadow({ mode: "open" });
@@ -313,7 +319,7 @@
         }
         .wrap {
           position: absolute;
-          left: 50%;
+          left: var(--caption-left, 50%);
           bottom: var(--caption-bottom, 11%);
           transform: translateX(-50%);
           width: min(880px, 88%);
@@ -336,7 +342,10 @@
           box-shadow: 0 4px 20px rgba(0,0,0,.35);
           pointer-events: auto;
           user-select: text;
+          cursor: grab;
+          touch-action: none;
         }
+        .caption-box.dragging { cursor: grabbing; user-select: none; }
         .caption-box[hidden] { display: none; }
         .transcript {
           max-height: 2.5em;
@@ -398,9 +407,14 @@
         .status:empty { display: none; }
         .status.error { color: #ff9b9b; }
         .word-card {
+          position: absolute;
+          left: calc(50% + var(--word-card-offset, 0px));
+          bottom: calc(100% + 12px);
+          transform: translateX(-50%);
           box-sizing: border-box;
           width: min(520px, 92%);
-          margin: 8px auto 0;
+          max-height: min(46vh, 390px);
+          margin: 0;
           padding: 11px 13px;
           border: 1px solid rgba(255,255,255,.18);
           border-radius: 10px;
@@ -409,6 +423,7 @@
           box-shadow: 0 8px 32px rgba(0,0,0,.48);
           text-align: left;
           pointer-events: auto;
+          overflow-y: auto;
         }
         .word-card[hidden] { display: none; }
         .word-card-header {
@@ -509,8 +524,9 @@
     wordEnglishSourceElement = shadow.querySelector(".word-source-en");
     shadow.querySelector(".word-close").addEventListener("click", closeWordCard);
     wordSaveElement.addEventListener("click", toggleSavedWord);
-    transcriptElement.addEventListener("pointerdown", stopPlayerClick);
+    captionBoxElement.addEventListener("pointerdown", startCaptionDrag);
     transcriptElement.addEventListener("click", handleTranscriptClick);
+    captionBoxElement.addEventListener("click", stopPlayerClick);
     wordCardElement.addEventListener("pointerdown", stopPlayerClick);
     wordCardElement.addEventListener("click", (event) => event.stopPropagation());
     applyDisplaySettings(session.captionPreferences, session.translationPreferences);
@@ -535,6 +551,7 @@
     if (!wrapElement || !captionBoxElement) return;
 
     const caption = session.captionPreferences;
+    wrapElement.style.setProperty("--caption-left", `${caption.horizontalPosition}%`);
     wrapElement.style.setProperty("--caption-bottom", `${caption.verticalPosition}%`);
     wrapElement.style.setProperty("--caption-font-size", `${caption.fontSize}px`);
     wrapElement.style.setProperty("--caption-font-family", learning.fontFamilyValue(caption.fontFamily));
@@ -574,6 +591,119 @@
       }
     }
     if (overlayHost.parentNode !== playerContainer) playerContainer.append(overlayHost);
+    positionWordCard();
+  }
+
+  function startCaptionDrag(event) {
+    if (!session || !playerContainer || (event.pointerType === "mouse" && event.button !== 0)) {
+      return;
+    }
+    const playerRect = playerContainer.getBoundingClientRect();
+    const captionRect = captionBoxElement.getBoundingClientRect();
+    const wrapRect = wrapElement.getBoundingClientRect();
+    if (!playerRect.width || !playerRect.height) return;
+    const horizontalMargin = Math.min(
+      48,
+      Math.max(2, captionRect.width / 2 / playerRect.width * 100 + 1)
+    );
+    const wrapHeight = Math.max(0, wrapRect.height / playerRect.height * 100);
+    captionDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startHorizontal: session.captionPreferences.horizontalPosition,
+      startVertical: session.captionPreferences.verticalPosition,
+      playerWidth: playerRect.width,
+      playerHeight: playerRect.height,
+      minimumHorizontal: horizontalMargin,
+      maximumHorizontal: 100 - horizontalMargin,
+      maximumVertical: Math.max(3, 98 - wrapHeight),
+      moved: false
+    };
+    window.addEventListener("pointermove", moveCaptionDrag, true);
+    window.addEventListener("pointerup", finishCaptionDrag, true);
+    window.addEventListener("pointercancel", finishCaptionDrag, true);
+    captionBoxElement.classList.add("dragging");
+    event.stopPropagation();
+  }
+
+  function moveCaptionDrag(event) {
+    if (!captionDrag || event.pointerId !== captionDrag.pointerId || !session) return;
+    const deltaX = event.clientX - captionDrag.startX;
+    const deltaY = event.clientY - captionDrag.startY;
+    if (!captionDrag.moved && Math.hypot(deltaX, deltaY) < 4) return;
+    captionDrag.moved = true;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const horizontalPosition = clamp(
+      captionDrag.startHorizontal + deltaX / captionDrag.playerWidth * 100,
+      captionDrag.minimumHorizontal,
+      captionDrag.maximumHorizontal
+    );
+    const verticalPosition = clamp(
+      captionDrag.startVertical - deltaY / captionDrag.playerHeight * 100,
+      3,
+      captionDrag.maximumVertical
+    );
+    session.captionPreferences = learning.normalizeCaptionPreferences({
+      ...session.captionPreferences,
+      horizontalPosition,
+      verticalPosition
+    });
+    wrapElement.style.setProperty(
+      "--caption-left",
+      `${session.captionPreferences.horizontalPosition}%`
+    );
+    wrapElement.style.setProperty(
+      "--caption-bottom",
+      `${session.captionPreferences.verticalPosition}%`
+    );
+    positionWordCard();
+  }
+
+  function finishCaptionDrag(event) {
+    if (!captionDrag || event.pointerId !== captionDrag.pointerId) return;
+    const moved = captionDrag.moved;
+    removeCaptionDragListeners();
+    captionBoxElement.classList.remove("dragging");
+    captionDrag = null;
+    event.stopPropagation();
+    if (!moved || !session) return;
+
+    suppressTranscriptClick = true;
+    setTimeout(() => { suppressTranscriptClick = false; }, 0);
+    void chrome.runtime.sendMessage({
+      type: "UPDATE_DISPLAY_SETTINGS",
+      captionPreferences: session.captionPreferences,
+      translationPreferences: session.translationPreferences
+    });
+  }
+
+  function removeCaptionDragListeners() {
+    window.removeEventListener("pointermove", moveCaptionDrag, true);
+    window.removeEventListener("pointerup", finishCaptionDrag, true);
+    window.removeEventListener("pointercancel", finishCaptionDrag, true);
+  }
+
+  function positionWordCard() {
+    if (!wordCardElement || wordCardElement.hidden || !playerContainer || !captionBoxElement) return;
+    const playerRect = playerContainer.getBoundingClientRect();
+    const captionRect = captionBoxElement.getBoundingClientRect();
+    const cardRect = wordCardElement.getBoundingClientRect();
+    if (!playerRect.width || !cardRect.width) return;
+    const desiredCenter = captionRect.left + captionRect.width / 2;
+    const minimumCenter = playerRect.left + cardRect.width / 2 + 8;
+    const maximumCenter = playerRect.right - cardRect.width / 2 - 8;
+    const clampedCenter = clamp(desiredCenter, minimumCenter, maximumCenter);
+    wordCardElement.style.setProperty(
+      "--word-card-offset",
+      `${clampedCenter - desiredCenter}px`
+    );
+  }
+
+  function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
   }
 
   function renderTranscript() {
@@ -702,6 +832,10 @@
 
   function handleTranscriptClick(event) {
     event.stopPropagation();
+    if (suppressTranscriptClick) {
+      event.preventDefault();
+      return;
+    }
     const wordButton = event.target.closest(".word");
     if (!wordButton) return;
     event.preventDefault();
@@ -714,6 +848,7 @@
     session.selectedWord = word;
     session.selectedWordResult = null;
     wordCardElement.hidden = false;
+    requestAnimationFrame(positionWordCard);
     wordTitleElement.textContent = word;
     wordEnglishDefinitionElement.textContent = "Loading…";
     wordGermanDefinitionElement.textContent = "Loading…";
@@ -742,11 +877,13 @@
       wordGermanSourceElement.href = result.germanSourceUrl;
       wordEnglishSourceElement.href = result.englishSourceUrl;
       renderSaveState(Boolean(result.saved), false);
+      requestAnimationFrame(positionWordCard);
     } catch (error) {
       if (!session || session.selectedWord !== word) return;
       wordEnglishDefinitionElement.textContent = error.message;
       wordGermanDefinitionElement.textContent = "Definition lookup failed.";
       renderSaveState(false, true);
+      requestAnimationFrame(positionWordCard);
     }
   }
 

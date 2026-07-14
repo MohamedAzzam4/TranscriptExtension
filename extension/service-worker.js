@@ -2,6 +2,7 @@ importScripts("learning-features.js");
 
 const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
+const SETTINGS_KEY = "experimentSettings";
 const EXPERIMENT_PREFIX = "experiment:";
 const DEFINITION_PREFIX = "definition:v2:de-en:";
 const VOCABULARY_KEY = "savedVocabulary";
@@ -999,6 +1000,14 @@ async function updateDisplaySettings(message) {
   const translationPreferences = learning.normalizeTranslationPreferences(
     message.translationPreferences
   );
+  const storedSettings = await chrome.storage.local.get(SETTINGS_KEY);
+  await chrome.storage.local.set({
+    [SETTINGS_KEY]: {
+      ...(storedSettings[SETTINGS_KEY] || {}),
+      captionPreferences,
+      translationPreferences
+    }
+  });
   const active = await getActive();
   if (!active) return { captionPreferences, translationPreferences };
 

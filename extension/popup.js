@@ -11,6 +11,8 @@ const elements = {
   translationAvailability: document.querySelector("#translationAvailability"),
   fontSize: document.querySelector("#fontSize"),
   fontSizeValue: document.querySelector("#fontSizeValue"),
+  horizontalPosition: document.querySelector("#horizontalPosition"),
+  horizontalPositionValue: document.querySelector("#horizontalPositionValue"),
   verticalPosition: document.querySelector("#verticalPosition"),
   verticalPositionValue: document.querySelector("#verticalPositionValue"),
   backgroundOpacity: document.querySelector("#backgroundOpacity"),
@@ -48,6 +50,7 @@ for (const element of [
   elements.translationLanguage,
   elements.translationProvider,
   elements.fontSize,
+  elements.horizontalPosition,
   elements.verticalPosition,
   elements.backgroundOpacity,
   elements.textOpacity,
@@ -137,6 +140,7 @@ async function restoreState() {
   elements.translationProvider.value = translation.provider;
   elements.googleTranslateApiKey.value = stored[TRANSLATION_SECRETS_KEY]?.googleApiKey || "";
   elements.fontSize.value = caption.fontSize;
+  elements.horizontalPosition.value = caption.horizontalPosition;
   elements.verticalPosition.value = caption.verticalPosition;
   elements.backgroundOpacity.value = caption.backgroundOpacity;
   elements.textOpacity.value = caption.textOpacity;
@@ -159,6 +163,7 @@ function readSettings() {
     syncOffset: currentSyncOffset,
     captionPreferences: learning.normalizeCaptionPreferences({
       fontSize: elements.fontSize.value,
+      horizontalPosition: elements.horizontalPosition.value,
       verticalPosition: elements.verticalPosition.value,
       backgroundOpacity: elements.backgroundOpacity.value,
       textOpacity: elements.textOpacity.value,
@@ -309,6 +314,7 @@ function normalizeSyncOffset(value) {
 function renderControls() {
   renderSyncOffset();
   elements.fontSizeValue.textContent = `${Number(elements.fontSize.value)} px`;
+  elements.horizontalPositionValue.textContent = `${Number(elements.horizontalPosition.value)}%`;
   elements.verticalPositionValue.textContent = `${Number(elements.verticalPosition.value)}%`;
   elements.backgroundOpacityValue.textContent = `${Number(elements.backgroundOpacity.value)}%`;
   elements.textOpacityValue.textContent = `${Number(elements.textOpacity.value)}%`;
