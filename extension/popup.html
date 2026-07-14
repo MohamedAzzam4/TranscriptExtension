@@ -27,6 +27,80 @@
         </label>
       </div>
 
+      <details class="panel" open>
+        <summary>Translation</summary>
+        <label class="check">
+          <input id="translationEnabled" type="checkbox" checked>
+          Show English translation under the transcript
+        </label>
+        <div class="languages">
+          <label>
+            Target language
+            <input id="translationLanguage" value="en" maxlength="16" spellcheck="false">
+          </label>
+          <label>
+            Provider
+            <select id="translationProvider">
+              <option value="auto">Automatic</option>
+              <option value="browser">On-device only</option>
+              <option value="google">Google Cloud</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Google Cloud Translation API key (optional)
+          <input id="googleTranslateApiKey" type="password" autocomplete="off" spellcheck="false">
+        </label>
+        <small class="setting-help">Stored only in this browser profile. Google Cloud requires a billing-enabled project even when monthly credit covers usage.</small>
+        <small id="translationAvailability" class="setting-help"></small>
+      </details>
+
+      <details class="panel">
+        <summary>Caption appearance</summary>
+        <label class="range-setting">
+          <span>Font size <output id="fontSizeValue">31 px</output></span>
+          <input id="fontSize" type="range" min="16" max="52" step="1" value="31">
+        </label>
+        <label class="range-setting">
+          <span>Position from bottom <output id="verticalPositionValue">11%</output></span>
+          <input id="verticalPosition" type="range" min="3" max="70" step="1" value="11">
+        </label>
+        <label class="range-setting">
+          <span>Background opacity <output id="backgroundOpacityValue">86%</output></span>
+          <input id="backgroundOpacity" type="range" min="0" max="100" step="1" value="86">
+        </label>
+        <label class="range-setting">
+          <span>Text opacity <output id="textOpacityValue">100%</output></span>
+          <input id="textOpacity" type="range" min="25" max="100" step="1" value="100">
+        </label>
+        <div class="appearance-grid">
+          <label>
+            Font
+            <select id="fontFamily">
+              <option value="sans">Sans serif</option>
+              <option value="serif">Serif</option>
+              <option value="mono">Monospace</option>
+            </select>
+          </label>
+          <label>
+            Edge style
+            <select id="edgeStyle">
+              <option value="shadow">Drop shadow</option>
+              <option value="outline">Outline</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+          <label>
+            Text color
+            <input id="textColor" type="color" value="#ffffff">
+          </label>
+          <label>
+            Background
+            <input id="backgroundColor" type="color" value="#05070c">
+          </label>
+        </div>
+      </details>
+
       <div class="sync-control">
         <span>Caption timing</span>
         <div class="sync-stepper">
@@ -48,8 +122,16 @@
       </div>
       <button id="export" class="wide">Export last experiment JSON</button>
 
+      <details class="panel vocabulary-panel">
+        <summary>Saved vocabulary <span id="savedWordCount">0</span></summary>
+        <div id="savedWords" class="saved-words">
+          <p class="empty-saved">Click a transcript word and choose “Save word”.</p>
+        </div>
+      </details>
+
       <p id="status" role="status">Ready.</p>
     </main>
+    <script src="learning-features.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

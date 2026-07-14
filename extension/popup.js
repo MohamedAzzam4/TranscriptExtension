@@ -1,30 +1,71 @@
+const learning = globalThis.DubTranscriptLearning;
 const elements = {
   serverUrl: document.querySelector("#serverUrl"),
   audioLanguage: document.querySelector("#audioLanguage"),
   captionLanguage: document.querySelector("#captionLanguage"),
   collectCaptions: document.querySelector("#collectCaptions"),
+  translationEnabled: document.querySelector("#translationEnabled"),
+  translationLanguage: document.querySelector("#translationLanguage"),
+  translationProvider: document.querySelector("#translationProvider"),
+  googleTranslateApiKey: document.querySelector("#googleTranslateApiKey"),
+  translationAvailability: document.querySelector("#translationAvailability"),
+  fontSize: document.querySelector("#fontSize"),
+  fontSizeValue: document.querySelector("#fontSizeValue"),
+  verticalPosition: document.querySelector("#verticalPosition"),
+  verticalPositionValue: document.querySelector("#verticalPositionValue"),
+  backgroundOpacity: document.querySelector("#backgroundOpacity"),
+  backgroundOpacityValue: document.querySelector("#backgroundOpacityValue"),
+  textOpacity: document.querySelector("#textOpacity"),
+  textOpacityValue: document.querySelector("#textOpacityValue"),
+  fontFamily: document.querySelector("#fontFamily"),
+  edgeStyle: document.querySelector("#edgeStyle"),
+  textColor: document.querySelector("#textColor"),
+  backgroundColor: document.querySelector("#backgroundColor"),
   syncEarlier: document.querySelector("#syncEarlier"),
   syncLater: document.querySelector("#syncLater"),
   syncOffset: document.querySelector("#syncOffset"),
   start: document.querySelector("#start"),
   stop: document.querySelector("#stop"),
   export: document.querySelector("#export"),
+  savedWords: document.querySelector("#savedWords"),
+  savedWordCount: document.querySelector("#savedWordCount"),
   status: document.querySelector("#status")
 };
 
 const SETTINGS_KEY = "experimentSettings";
+const TRANSLATION_SECRETS_KEY = "translationSecrets";
 let currentSyncOffset = 0;
+let displayUpdateTimer = null;
+let resetTranslationCache = false;
 
-void restoreSettings();
+void restoreState();
 
 elements.syncEarlier.addEventListener("click", () => void adjustSyncOffset(-0.1));
 elements.syncLater.addEventListener("click", () => void adjustSyncOffset(0.1));
+
+for (const element of [
+  elements.translationEnabled,
+  elements.translationLanguage,
+  elements.translationProvider,
+  elements.fontSize,
+  elements.verticalPosition,
+  elements.backgroundOpacity,
+  elements.textOpacity,
+  elements.fontFamily,
+  elements.edgeStyle,
+  elements.textColor,
+  elements.backgroundColor
+]) {
+  element.addEventListener("input", scheduleDisplaySettingsUpdate);
+  element.addEventListener("change", scheduleDisplaySettingsUpdate);
+}
+elements.googleTranslateApiKey.addEventListener("change", scheduleDisplaySettingsUpdate);
 
 elements.start.addEventListener("click", async () => {
   setStatus("Checking whether the complete video can be analyzed locally…");
   elements.start.disabled = true;
   const settings = readSettings();
-  await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+  await persistSettings(settings);
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -81,16 +122,31 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-async function restoreSettings() {
-  const stored = await chrome.storage.local.get(SETTINGS_KEY);
-  const settings = stored[SETTINGS_KEY];
-  if (!settings) return;
+async function restoreState() {
+  const stored = await chrome.storage.local.get([SETTINGS_KEY, TRANSLATION_SECRETS_KEY]);
+  const settings = stored[SETTINGS_KEY] || {};
+  const caption = learning.normalizeCaptionPreferences(settings.captionPreferences);
+  const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
+
   elements.serverUrl.value = settings.serverUrl || elements.serverUrl.value;
   elements.audioLanguage.value = settings.audioLanguage || "de";
   elements.captionLanguage.value = settings.captionLanguage || "de";
   elements.collectCaptions.checked = settings.collectCaptions !== false;
+  elements.translationEnabled.checked = translation.enabled;
+  elements.translationLanguage.value = translation.targetLanguage;
+  elements.translationProvider.value = translation.provider;
+  elements.googleTranslateApiKey.value = stored[TRANSLATION_SECRETS_KEY]?.googleApiKey || "";
+  elements.fontSize.value = caption.fontSize;
+  elements.verticalPosition.value = caption.verticalPosition;
+  elements.backgroundOpacity.value = caption.backgroundOpacity;
+  elements.textOpacity.value = caption.textOpacity;
+  elements.fontFamily.value = caption.fontFamily;
+  elements.edgeStyle.value = caption.edgeStyle;
+  elements.textColor.value = caption.textColor.toLowerCase();
+  elements.backgroundColor.value = caption.backgroundColor.toLowerCase();
   currentSyncOffset = normalizeSyncOffset(settings.syncOffset);
-  renderSyncOffset();
+  renderControls();
+  await refreshSavedWords();
 }
 
 function readSettings() {
@@ -100,14 +156,70 @@ function readSettings() {
     captionLanguage: elements.captionLanguage.value.trim() || "de",
     collectCaptions: elements.collectCaptions.checked,
     batchModel: "small",
-    syncOffset: currentSyncOffset
+    syncOffset: currentSyncOffset,
+    captionPreferences: learning.normalizeCaptionPreferences({
+      fontSize: elements.fontSize.value,
+      verticalPosition: elements.verticalPosition.value,
+      backgroundOpacity: elements.backgroundOpacity.value,
+      textOpacity: elements.textOpacity.value,
+      fontFamily: elements.fontFamily.value,
+      edgeStyle: elements.edgeStyle.value,
+      textColor: elements.textColor.value,
+      backgroundColor: elements.backgroundColor.value
+    }),
+    translationPreferences: learning.normalizeTranslationPreferences({
+      enabled: elements.translationEnabled.checked,
+      targetLanguage: elements.translationLanguage.value,
+      provider: elements.translationProvider.value
+    })
   };
+}
+
+async function persistSettings(settings = readSettings()) {
+  await chrome.storage.local.set({
+    [SETTINGS_KEY]: settings,
+    [TRANSLATION_SECRETS_KEY]: {
+      googleApiKey: elements.googleTranslateApiKey.value.trim()
+    }
+  });
+}
+
+function scheduleDisplaySettingsUpdate(event) {
+  if ([
+    elements.translationEnabled,
+    elements.translationLanguage,
+    elements.translationProvider,
+    elements.googleTranslateApiKey
+  ].includes(event?.currentTarget)) {
+    resetTranslationCache = true;
+  }
+  renderControls();
+  clearTimeout(displayUpdateTimer);
+  displayUpdateTimer = setTimeout(() => void applyDisplaySettings(), 160);
+}
+
+async function applyDisplaySettings() {
+  const settings = readSettings();
+  await persistSettings(settings);
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "UPDATE_DISPLAY_SETTINGS",
+      captionPreferences: settings.captionPreferences,
+      translationPreferences: settings.translationPreferences,
+      resetTranslationCache
+    });
+    if (!response?.ok) throw new Error(response?.error || "Could not update caption settings.");
+    resetTranslationCache = false;
+    setStatus("Caption settings updated.");
+  } catch (error) {
+    setStatus(error.message, true);
+  }
 }
 
 async function adjustSyncOffset(delta) {
   currentSyncOffset = normalizeSyncOffset(currentSyncOffset + delta);
   renderSyncOffset();
-  await chrome.storage.local.set({ [SETTINGS_KEY]: readSettings() });
+  await persistSettings();
   try {
     const response = await chrome.runtime.sendMessage({
       type: "SET_SYNC_OFFSET",
@@ -124,11 +236,86 @@ async function adjustSyncOffset(delta) {
   }
 }
 
+async function refreshSavedWords() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "GET_SAVED_WORDS" });
+    if (!response?.ok) throw new Error(response?.error || "Could not load saved words.");
+    renderSavedWords(response.entries || []);
+  } catch (error) {
+    elements.savedWords.replaceChildren(createTextElement("p", error.message, "empty-saved"));
+  }
+}
+
+function renderSavedWords(entries) {
+  elements.savedWordCount.textContent = String(entries.length);
+  if (!entries.length) {
+    elements.savedWords.replaceChildren(createTextElement(
+      "p",
+      "Click a transcript word and choose “Save word”.",
+      "empty-saved"
+    ));
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const entry of entries) {
+    const row = document.createElement("div");
+    row.className = "saved-word";
+    const body = document.createElement("div");
+    body.append(
+      createTextElement("div", entry.word, "saved-word-title"),
+      createTextElement(
+        "div",
+        entry.englishDefinition || entry.germanDefinition || entry.context || "Saved word",
+        "saved-word-definition"
+      )
+    );
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      remove.disabled = true;
+      const response = await chrome.runtime.sendMessage({
+        type: "REMOVE_SAVED_WORD",
+        word: entry.word
+      });
+      if (!response?.ok) {
+        setStatus(response?.error || "Could not remove saved word.", true);
+        remove.disabled = false;
+        return;
+      }
+      await refreshSavedWords();
+    });
+    row.append(body, remove);
+    fragment.append(row);
+  }
+  elements.savedWords.replaceChildren(fragment);
+}
+
+function createTextElement(tag, text, className) {
+  const element = document.createElement(tag);
+  element.className = className;
+  element.textContent = text;
+  return element;
+}
+
 function normalizeSyncOffset(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   const rounded = Math.round(Math.max(-3, Math.min(3, number)) * 10) / 10;
   return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function renderControls() {
+  renderSyncOffset();
+  elements.fontSizeValue.textContent = `${Number(elements.fontSize.value)} px`;
+  elements.verticalPositionValue.textContent = `${Number(elements.verticalPosition.value)}%`;
+  elements.backgroundOpacityValue.textContent = `${Number(elements.backgroundOpacity.value)}%`;
+  elements.textOpacityValue.textContent = `${Number(elements.textOpacity.value)}%`;
+  const browserTranslatorAvailable = "Translator" in globalThis;
+  elements.translationAvailability.textContent = browserTranslatorAvailable
+    ? "On-device translation is detected. Automatic mode uses it before Google Cloud."
+    : "On-device translation is not detected in this browser. Automatic mode needs the optional Google Cloud key.";
 }
 
 function renderSyncOffset() {

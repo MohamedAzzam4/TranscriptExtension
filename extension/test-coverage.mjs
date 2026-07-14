@@ -3,7 +3,14 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const listener = { addListener() {} };
-const context = vm.createContext({
+let context;
+context = vm.createContext({
+  importScripts(...files) {
+    for (const file of files) {
+      const imported = fs.readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
+      vm.runInContext(imported, context, { filename: file });
+    }
+  },
   chrome: {
     runtime: { onMessage: listener },
     tabs: { onRemoved: listener, onUpdated: listener }

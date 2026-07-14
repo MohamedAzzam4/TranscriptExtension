@@ -12,11 +12,15 @@ This is not the full commercial extension. It is a YouTube-first harness for ans
 4. Both pipelines produce the same timestamped cue format and cache it in `chrome.storage.local`.
 5. In YouTube batch mode, the available manual caption track in the requested language is stored as an evaluation-only reference; the original-language automatic track is the fallback. Live mode continues to sample visible YouTube captions or active HTML5 text-track cues. Neither path feeds captions into ASR.
 6. A completed batch covers the full media timeline. In live mode, rewind replays the recorded audio coverage, including silence, and capture resumes only after playback leaves it.
-7. Transcript words are clickable inside the video player. A click opens an inline German definition card backed by German Wiktionary.
+7. Transcript words are clickable inside the video player. A click opens an inline English/German definition card backed by English and German Wiktionary. The card includes an example when available and can save the word plus its current video context to browser-local vocabulary.
 8. WhisperLiveKit word timestamps are grouped at completed sentence, natural phrase, silence, or bounded-length breaks. The player combines those cues into sentence-aware display blocks capped by strict text and duration limits. Short continuations stay with the following clause, while complete replies remain separate.
 9. **Earlier** and **Later** controls shift caption display in 0.1-second steps (up to ±3 seconds), persist the offset, and never trigger transcription again.
+10. An optional translated line appears below the source transcript in a smaller font. Translation uses the browser's on-device Translator API when available, with an optional official Google Cloud Translation key as fallback. Translation results are cached locally by sentence.
+11. Caption appearance controls update the active overlay without retranscribing: font size/family, vertical position, text/background color and opacity, and edge style. Translation visibility is independently switchable.
 
 Nothing is uploaded to a transcription service. Batch mode reads the authorized media source and decodes its audio into local memory without saving a permanent media copy. Live mode only receives chunks played during uncached portions of the experiment.
+
+Translation is a separate opt-in text operation. The on-device provider keeps transcript text in the browser. If the user selects Google Cloud fallback, only the displayed transcript text is sent to Google's official Translation API. Its API key is stored separately in `chrome.storage.local` and is not included in active experiment state or JSON exports. Google Cloud currently requires a billing-enabled project even when its monthly credit covers usage.
 
 ## 1. Install the local recognizer
 

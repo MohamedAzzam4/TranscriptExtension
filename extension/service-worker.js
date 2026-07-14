@@ -1,8 +1,13 @@
+importScripts("learning-features.js");
+
 const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
 const EXPERIMENT_PREFIX = "experiment:";
-const DEFINITION_PREFIX = "definition:de:";
+const DEFINITION_PREFIX = "definition:v2:de-en:";
+const VOCABULARY_KEY = "savedVocabulary";
+const TRANSLATION_SECRETS_KEY = "translationSecrets";
 const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
+const learning = globalThis.DubTranscriptLearning;
 const mediaClocks = new Map();
 const runtimeSampleTimes = new Map();
 const audioCoverageRanges = new Map();
@@ -52,7 +57,17 @@ async function handleMessage(message, sender) {
       );
       return {};
     case "LOOKUP_WORD":
-      return lookupGermanWord(message.word);
+      return lookupBilingualWord(message.word);
+    case "SAVE_WORD":
+      return saveVocabularyWord(message.entry);
+    case "REMOVE_SAVED_WORD":
+      return removeSavedWord(message.word);
+    case "GET_SAVED_WORDS":
+      return getSavedWords();
+    case "TRANSLATE_TEXT":
+      return translateText(message);
+    case "UPDATE_DISPLAY_SETTINGS":
+      return updateDisplaySettings(message);
     case "SET_SYNC_OFFSET":
       return setSyncOffset(message.offset);
     case "OFFSCREEN_TRANSCRIPT":
@@ -76,6 +91,7 @@ async function handleMessage(message, sender) {
 }
 
 async function startSmartExperiment(settings) {
+  settings = normalizeRuntimeSettings(settings);
   validateSettings(settings);
   const existing = await getActive();
   if (existing) await stopExperiment();
@@ -143,6 +159,9 @@ async function startBatchExperiment(settings, prepared, candidate) {
     experimentId: id,
     collectCaptions: false,
     syncOffset: active.syncOffset,
+    captionPreferences: settings.captionPreferences,
+    translationPreferences: settings.translationPreferences,
+    audioLanguage: settings.audioLanguage,
     segments: []
   });
 
@@ -207,6 +226,9 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null) {
     experimentId: id,
     collectCaptions: settings.collectCaptions,
     syncOffset: active.syncOffset,
+    captionPreferences: settings.captionPreferences,
+    translationPreferences: settings.translationPreferences,
+    audioLanguage: settings.audioLanguage,
     segments: []
   });
   const captureResponse = await chrome.runtime.sendMessage({
@@ -250,7 +272,9 @@ function createExperimentRecord(id, tab, context, settings, pipeline) {
       collectCaptions: settings.collectCaptions,
       serverUrl: settings.serverUrl,
       batchModel: settings.batchModel || "small",
-      syncOffset: normalizeSyncOffset(settings.syncOffset)
+      syncOffset: normalizeSyncOffset(settings.syncOffset),
+      captionPreferences: settings.captionPreferences,
+      translationPreferences: settings.translationPreferences
     },
     pipeline,
     epochs: [],
@@ -970,18 +994,162 @@ async function setSyncOffset(rawOffset) {
   return { syncOffset };
 }
 
-async function lookupGermanWord(rawWord) {
-  const word = String(rawWord || "")
-    .normalize("NFC")
-    .replace(/[^\p{L}\p{M}'’-]/gu, "")
-    .slice(0, 64);
+async function updateDisplaySettings(message) {
+  const captionPreferences = learning.normalizeCaptionPreferences(message.captionPreferences);
+  const translationPreferences = learning.normalizeTranslationPreferences(
+    message.translationPreferences
+  );
+  const active = await getActive();
+  if (!active) return { captionPreferences, translationPreferences };
+
+  active.settings = {
+    ...active.settings,
+    captionPreferences,
+    translationPreferences
+  };
+  await setActive(active);
+  const experiment = await getExperiment(active.experimentId);
+  if (experiment) {
+    experiment.settings ||= {};
+    experiment.settings.captionPreferences = captionPreferences;
+    experiment.settings.translationPreferences = translationPreferences;
+    await saveExperiment(experiment);
+  }
+  await sendToActiveFrame(active, {
+    type: "APPLY_DISPLAY_SETTINGS",
+    captionPreferences,
+    translationPreferences,
+    resetTranslationCache: Boolean(message.resetTranslationCache)
+  });
+  return { captionPreferences, translationPreferences };
+}
+
+async function translateText(message) {
+  const text = String(message.text || "").replace(/\s+/g, " ").trim().slice(0, 2_000);
+  if (!text) return { translatedText: "", provider: "none" };
+  const sourceLanguage = String(message.sourceLanguage || "de").slice(0, 16).toLowerCase();
+  const preferences = learning.normalizeTranslationPreferences(message.translationPreferences);
+  const targetLanguage = preferences.targetLanguage;
+  if (sourceLanguage === targetLanguage) return { translatedText: text, provider: "identity" };
+
+  const cacheKey = learning.translationCacheKey(text, sourceLanguage, targetLanguage);
+  const cached = await chrome.storage.local.get(cacheKey);
+  if (cached[cacheKey]?.sourceText === text && cached[cacheKey]?.translatedText) {
+    return cached[cacheKey];
+  }
+
+  let browserError = null;
+  if (preferences.provider !== "google") {
+    try {
+      await ensureOffscreenDocument();
+      const response = await sendToOffscreen({
+        type: "OFFSCREEN_TRANSLATE_TEXT",
+        text,
+        sourceLanguage,
+        targetLanguage
+      });
+      if (!response?.ok || !response.translatedText) {
+        throw new Error(response?.error || "The browser Translator API is unavailable.");
+      }
+      const result = {
+        sourceText: text,
+        translatedText: String(response.translatedText),
+        provider: "browser",
+        translatedAt: new Date().toISOString()
+      };
+      await chrome.storage.local.set({ [cacheKey]: result });
+      return result;
+    } catch (error) {
+      browserError = error;
+      if (preferences.provider === "browser") throw error;
+    }
+  }
+
+  const stored = await chrome.storage.local.get(TRANSLATION_SECRETS_KEY);
+  const apiKey = String(stored[TRANSLATION_SECRETS_KEY]?.googleApiKey || "").trim();
+  if (!apiKey) {
+    throw new Error(
+      browserError?.message
+        ? `On-device translation is unavailable (${browserError.message}). Add an optional Google Cloud Translation API key in the extension settings.`
+        : "Add a Google Cloud Translation API key in the extension settings."
+    );
+  }
+
+  const response = await fetch(
+    `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        q: text,
+        source: sourceLanguage,
+        target: targetLanguage,
+        format: "text"
+      })
+    }
+  );
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(
+      payload?.error?.message || `Google Cloud Translation returned HTTP ${response.status}.`
+    );
+  }
+  const payload = await response.json();
+  const translatedText = learning.htmlToPlainText(
+    payload?.data?.translations?.[0]?.translatedText
+  );
+  if (!translatedText) throw new Error("Google Cloud Translation returned no text.");
+  const result = {
+    sourceText: text,
+    translatedText,
+    provider: "google",
+    translatedAt: new Date().toISOString()
+  };
+  await chrome.storage.local.set({ [cacheKey]: result });
+  return result;
+}
+
+async function lookupBilingualWord(rawWord) {
+  const word = learning.sanitizeWord(rawWord);
   if (!word) throw new Error("Select a German word first.");
 
-  const normalized = word.toLocaleLowerCase("de-DE");
+  const normalized = learning.normalizedWord(word);
   const cacheKey = `${DEFINITION_PREFIX}${normalized}`;
   const cached = await chrome.storage.local.get(cacheKey);
-  if (cached[cacheKey]) return cached[cacheKey];
+  if (cached[cacheKey]) {
+    return { ...cached[cacheKey], saved: await isVocabularyWordSaved(normalized) };
+  }
 
+  const [germanResult, englishResult] = await Promise.allSettled([
+    fetchGermanWiktionaryEntry(word),
+    fetchEnglishWiktionaryEntry(word)
+  ]);
+  if (germanResult.status === "rejected" && englishResult.status === "rejected") {
+    throw new Error(
+      `Both Wiktionary lookups failed (${germanResult.reason?.message || "German lookup"}; `
+      + `${englishResult.reason?.message || "English lookup"}).`
+    );
+  }
+
+  const german = germanResult.status === "fulfilled" ? germanResult.value : {};
+  const english = englishResult.status === "fulfilled" ? englishResult.value : {};
+  const title = german.title || word;
+  const result = {
+    word,
+    title,
+    germanDefinition: german.germanDefinition || null,
+    englishDefinition: english.englishDefinition || null,
+    example: english.example || null,
+    exampleTranslation: english.exampleTranslation || null,
+    germanSourceUrl: `https://de.wiktionary.org/wiki/${encodeURIComponent(title)}`,
+    englishSourceUrl: `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}`,
+    fetchedAt: new Date().toISOString()
+  };
+  await chrome.storage.local.set({ [cacheKey]: result });
+  return { ...result, saved: await isVocabularyWordSaved(normalized) };
+}
+
+async function fetchGermanWiktionaryEntry(word) {
   const url = new URL("https://de.wiktionary.org/w/api.php");
   url.search = new URLSearchParams({
     action: "parse",
@@ -993,18 +1161,20 @@ async function lookupGermanWord(rawWord) {
   }).toString();
 
   const response = await fetch(url, { method: "GET" });
-  if (!response.ok) throw new Error(`Wiktionary returned HTTP ${response.status}.`);
+  if (!response.ok) throw new Error(`German Wiktionary returned HTTP ${response.status}.`);
   const payload = await response.json();
   const title = payload.parse?.title || word;
-  const result = {
-    word,
+  return {
     title,
-    definition: extractGermanMeanings(payload.parse?.text),
-    sourceUrl: `https://de.wiktionary.org/wiki/${encodeURIComponent(title)}`,
-    fetchedAt: new Date().toISOString()
+    germanDefinition: extractGermanMeanings(payload.parse?.text)
   };
-  await chrome.storage.local.set({ [cacheKey]: result });
-  return result;
+}
+
+async function fetchEnglishWiktionaryEntry(word) {
+  const url = `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`;
+  const response = await fetch(url, { method: "GET" });
+  if (!response.ok) throw new Error(`English Wiktionary returned HTTP ${response.status}.`);
+  return learning.extractEnglishWiktionaryEntry(await response.json());
 }
 
 function extractGermanMeanings(html) {
@@ -1016,34 +1186,51 @@ function extractGermanMeanings(html) {
 
   const meanings = [...match[1].matchAll(/<dd>([\s\S]*?)<\/dd>/gi)]
     .slice(0, 3)
-    .map((entry) => htmlToPlainText(entry[1]))
+    .map((entry) => learning.htmlToPlainText(entry[1]))
     .filter(Boolean);
   return meanings.length ? meanings.join(" ").slice(0, 600) : null;
 }
 
-function htmlToPlainText(value) {
-  const namedEntities = {
-    amp: "&",
-    apos: "'",
-    gt: ">",
-    lt: "<",
-    nbsp: " ",
-    quot: "\""
+async function getSavedWords() {
+  const stored = await chrome.storage.local.get(VOCABULARY_KEY);
+  const entries = Array.isArray(stored[VOCABULARY_KEY]) ? stored[VOCABULARY_KEY] : [];
+  return {
+    entries: entries
+      .map((entry) => learning.normalizeVocabularyEntry(entry))
+      .filter(Boolean)
+      .sort((a, b) => b.savedAt.localeCompare(a.savedAt))
   };
-  return String(value || "")
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&#x([0-9a-f]+);/gi, (_match, code) => String.fromCodePoint(parseInt(code, 16)))
-    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
-    .replace(/&([a-z]+);/gi, (entity, name) => namedEntities[name.toLowerCase()] ?? entity)
-    .replace(/\s+/g, " ")
-    .trim();
+}
+
+async function saveVocabularyWord(rawEntry) {
+  const entry = learning.normalizeVocabularyEntry({
+    ...rawEntry,
+    savedAt: new Date().toISOString()
+  });
+  if (!entry) throw new Error("Select a German word before saving it.");
+  const { entries } = await getSavedWords();
+  const updated = [entry, ...entries.filter((item) => item.normalizedWord !== entry.normalizedWord)];
+  await chrome.storage.local.set({ [VOCABULARY_KEY]: updated.slice(0, 2_000) });
+  return { entry, saved: true, count: updated.length };
+}
+
+async function removeSavedWord(rawWord) {
+  const normalized = learning.normalizedWord(rawWord);
+  const { entries } = await getSavedWords();
+  const updated = entries.filter((entry) => entry.normalizedWord !== normalized);
+  await chrome.storage.local.set({ [VOCABULARY_KEY]: updated });
+  return { saved: false, count: updated.length };
+}
+
+async function isVocabularyWordSaved(normalized) {
+  const { entries } = await getSavedWords();
+  return entries.some((entry) => entry.normalizedWord === normalized);
 }
 
 async function ensureContentScripts(tabId) {
   const results = await chrome.scripting.executeScript({
     target: { tabId, allFrames: true },
-    files: ["transcript-groups.js", "content.js"]
+    files: ["learning-features.js", "transcript-groups.js", "content.js"]
   });
   return [...new Set(results.map((result) => result.frameId))];
 }
@@ -1156,6 +1343,21 @@ function createEpoch(mediaStart, playbackRate, reason) {
     anchored: false,
     reason,
     createdAt: new Date().toISOString()
+  };
+}
+
+function normalizeRuntimeSettings(settings = {}) {
+  return {
+    serverUrl: String(settings.serverUrl || "").trim(),
+    audioLanguage: String(settings.audioLanguage || "de").trim().slice(0, 16) || "de",
+    captionLanguage: String(settings.captionLanguage || "de").trim().slice(0, 16) || "de",
+    collectCaptions: settings.collectCaptions !== false,
+    batchModel: String(settings.batchModel || "small").slice(0, 64),
+    syncOffset: normalizeSyncOffset(settings.syncOffset),
+    captionPreferences: learning.normalizeCaptionPreferences(settings.captionPreferences),
+    translationPreferences: learning.normalizeTranslationPreferences(
+      settings.translationPreferences
+    )
   };
 }
 

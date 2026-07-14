@@ -20,7 +20,14 @@ const storageArea = (values) => ({
   }
 });
 
-const context = vm.createContext({
+let context;
+context = vm.createContext({
+  importScripts(...files) {
+    for (const file of files) {
+      const imported = fs.readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
+      vm.runInContext(imported, context, { filename: file });
+    }
+  },
   chrome: {
     runtime: {
       onMessage: listener,
@@ -44,6 +51,17 @@ const context = vm.createContext({
   },
   console,
   crypto: globalThis.crypto,
+  async fetch(url) {
+    if (String(url).startsWith("https://translation.googleapis.com/")) {
+      return {
+        ok: true,
+        async json() {
+          return { data: { translations: [{ translatedText: "Hello &amp; welcome." }] } };
+        }
+      };
+    }
+    throw new Error(`Unexpected test fetch: ${url}`);
+  },
   setTimeout,
   clearTimeout,
   URL,
@@ -234,6 +252,76 @@ assert.equal(local["experiment:batch-experiment"].settings.syncOffset, 0.4);
 assert.ok(tabMessages.some(({ message }) => (
   message.type === "SET_SYNC_OFFSET" && message.offset === 0.4
 )));
+
+context.testDisplaySettingsMessage = {
+  type: "UPDATE_DISPLAY_SETTINGS",
+  captionPreferences: {
+    fontSize: 38,
+    verticalPosition: 24,
+    backgroundOpacity: 60,
+    textOpacity: 90,
+    textColor: "#FFFF00",
+    backgroundColor: "#000000",
+    fontFamily: "serif",
+    edgeStyle: "outline"
+  },
+  translationPreferences: {
+    enabled: false,
+    targetLanguage: "en",
+    provider: "browser"
+  }
+};
+await vm.runInContext("handleMessage(testDisplaySettingsMessage, {})", context);
+assert.equal(session.activeExperiment.settings.captionPreferences.fontSize, 38);
+assert.equal(session.activeExperiment.settings.translationPreferences.enabled, false);
+assert.ok(tabMessages.some(({ message }) => (
+  message.type === "APPLY_DISPLAY_SETTINGS"
+  && message.captionPreferences.verticalPosition === 24
+  && message.translationPreferences.provider === "browser"
+)));
+
+context.testVocabularyEntry = {
+  word: "Haus",
+  englishDefinition: "house",
+  germanDefinition: "Gebäude zum Wohnen",
+  context: "Das ist ein Haus.",
+  germanSourceUrl: "https://de.wiktionary.org/wiki/Haus",
+  englishSourceUrl: "https://en.wiktionary.org/wiki/Haus"
+};
+const savedWord = await vm.runInContext("saveVocabularyWord(testVocabularyEntry)", context);
+assert.equal(savedWord.saved, true);
+assert.equal(local.savedVocabulary.length, 1);
+assert.equal(local.savedVocabulary[0].normalizedWord, "haus");
+const savedWords = await vm.runInContext("getSavedWords()", context);
+assert.equal(savedWords.entries[0].englishDefinition, "house");
+await vm.runInContext("removeSavedWord('Haus')", context);
+assert.equal(local.savedVocabulary.length, 0);
+
+local.translationSecrets = { googleApiKey: "test-key" };
+context.testTranslationMessage = {
+  text: "Hallo und willkommen.",
+  sourceLanguage: "de",
+  translationPreferences: {
+    enabled: true,
+    targetLanguage: "en",
+    provider: "google"
+  }
+};
+const translated = await vm.runInContext("translateText(testTranslationMessage)", context);
+assert.equal(translated.translatedText, "Hello & welcome.");
+assert.equal(translated.provider, "google");
+assert.ok(Object.keys(local).some((key) => key.startsWith("translation:v1:de:en:")));
+context.testUnsafeSettings = {
+  serverUrl: "ws://127.0.0.1:8000/asr",
+  audioLanguage: "de",
+  googleApiKey: "must-not-enter-active-state",
+  translationPreferences: { enabled: true, targetLanguage: "en", provider: "google" }
+};
+const normalizedRuntimeSettings = await vm.runInContext(
+  "normalizeRuntimeSettings(testUnsafeSettings)",
+  context
+);
+assert.equal("googleApiKey" in normalizedRuntimeSettings, false);
 
 const incompleteActive = {
   ...active,

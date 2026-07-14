@@ -1,9 +1,11 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 6) return;
-  globalThis.__dubTranscriptLabVersion = 6;
+  if (globalThis.__dubTranscriptLabVersion === 7) return;
+  globalThis.__dubTranscriptLabVersion = 7;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
+  const learning = globalThis.DubTranscriptLearning;
   if (!transcriptGroups) throw new Error("Transcript grouping helpers were not loaded.");
+  if (!learning) throw new Error("Learning feature helpers were not loaded.");
 
   let video = null;
   let session = null;
@@ -13,12 +15,20 @@
   let overlayHost = null;
   let playerContainer = null;
   let playerInlinePosition = null;
+  let wrapElement = null;
+  let captionBoxElement = null;
   let transcriptElement = null;
+  let translationElement = null;
   let statusElement = null;
   let wordCardElement = null;
   let wordTitleElement = null;
-  let wordDefinitionElement = null;
-  let wordSourceElement = null;
+  let wordEnglishDefinitionElement = null;
+  let wordGermanDefinitionElement = null;
+  let wordExampleElement = null;
+  let wordExampleTranslationElement = null;
+  let wordSaveElement = null;
+  let wordGermanSourceElement = null;
+  let wordEnglishSourceElement = null;
   let currentCaption = null;
   let listeners = [];
   const mediaSecurityStates = new WeakMap();
@@ -91,6 +101,14 @@
           }
           sendResponse({ ok: true, syncOffset: session?.syncOffset ?? 0 });
           break;
+        case "APPLY_DISPLAY_SETTINGS":
+          applyDisplaySettings(
+            message.captionPreferences,
+            message.translationPreferences,
+            message.resetTranslationCache
+          );
+          sendResponse({ ok: true });
+          break;
         case "SET_CAPTION_COLLECTION":
           setCaptionCollection(Boolean(message.enabled));
           sendResponse({ ok: true });
@@ -130,11 +148,20 @@
       replay: false,
       displayedText: null,
       selectedWord: null,
+      selectedWordResult: null,
       remainingTimeTranscription: null,
       processingLag: null,
       stabilizationDelay: null,
       processingWarning: false,
-      lastCommitted: null
+      lastCommitted: null,
+      audioLanguage: String(message.audioLanguage || "de").toLowerCase(),
+      captionPreferences: learning.normalizeCaptionPreferences(message.captionPreferences),
+      translationPreferences: learning.normalizeTranslationPreferences(
+        message.translationPreferences
+      ),
+      translationCache: new Map(),
+      translationPending: new Map(),
+      displayedTranslation: ""
     };
 
     createOverlay();
@@ -189,8 +216,16 @@
     statusElement = null;
     wordCardElement = null;
     wordTitleElement = null;
-    wordDefinitionElement = null;
-    wordSourceElement = null;
+    wordEnglishDefinitionElement = null;
+    wordGermanDefinitionElement = null;
+    wordExampleElement = null;
+    wordExampleTranslationElement = null;
+    wordSaveElement = null;
+    wordGermanSourceElement = null;
+    wordEnglishSourceElement = null;
+    wrapElement = null;
+    captionBoxElement = null;
+    translationElement = null;
     session = null;
   }
 
@@ -279,34 +314,53 @@
         .wrap {
           position: absolute;
           left: 50%;
-          bottom: max(11%, 56px);
+          bottom: var(--caption-bottom, 11%);
           transform: translateX(-50%);
           width: min(880px, 88%);
           pointer-events: none;
-          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+          font-family: var(--caption-font-family, Inter, ui-sans-serif, system-ui, sans-serif);
           text-align: center;
         }
-        .transcript {
+        .caption-box {
+          box-sizing: border-box;
           display: inline-block;
           max-width: 100%;
-          max-height: 2.5em;
-          overflow: hidden;
           padding: 8px 13px;
           border-radius: 8px;
-          background: rgba(5, 7, 12, .86);
-          color: white;
-          font-size: clamp(18px, 2.2vw, 31px);
+          background: var(--caption-background, rgba(5, 7, 12, .86));
+          color: var(--caption-color, white);
+          font-size: var(--caption-font-size, 31px);
           font-weight: 650;
           line-height: 1.25;
-          text-shadow: 0 1px 2px black;
+          text-shadow: var(--caption-text-shadow, 0 1px 2px black);
           box-shadow: 0 4px 20px rgba(0,0,0,.35);
           pointer-events: auto;
           user-select: text;
         }
-        .transcript:empty { display: none; }
+        .caption-box[hidden] { display: none; }
+        .transcript {
+          max-height: 2.5em;
+          overflow: hidden;
+        }
         .transcript.long {
           max-height: 3.75em;
-          font-size: clamp(16px, 1.8vw, 26px);
+          font-size: .84em;
+        }
+        .translation {
+          margin-top: 4px;
+          color: inherit;
+          font-size: .68em;
+          font-weight: 500;
+          line-height: 1.3;
+          opacity: .92;
+          text-shadow: inherit;
+        }
+        .translation[hidden] { display: none; }
+        .translation.pending { opacity: .62; font-style: italic; }
+        .translation.error { color: #ffc0c0; font-size: .48em; }
+        .translation.long {
+          max-height: 2.6em;
+          overflow: hidden;
         }
         .word {
           appearance: none;
@@ -364,6 +418,17 @@
           gap: 12px;
         }
         .word-title { font-size: 17px; font-weight: 750; }
+        .word-card-actions { display: flex; align-items: center; gap: 6px; }
+        .word-save {
+          border: 1px solid #7560e8;
+          border-radius: 6px;
+          padding: 5px 8px;
+          background: #5b43cf;
+          color: white;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .word-save.saved { border-color: #376b57; background: #244b3d; }
         .word-close {
           border: 0;
           padding: 2px 6px;
@@ -372,40 +437,128 @@
           font-size: 18px;
           cursor: pointer;
         }
-        .word-definition {
-          margin: 7px 0;
+        .word-section { margin-top: 9px; }
+        .word-label {
+          color: #9ca6b8;
+          font-size: 10px;
+          font-weight: 750;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+        .word-definition,
+        .word-example,
+        .word-example-translation {
+          margin: 3px 0 0;
           color: #dce1ea;
           font-size: 13px;
           line-height: 1.45;
           text-shadow: none;
         }
-        .word-source { color: #a998ff; font-size: 12px; }
+        .word-example { color: #f3f4f7; font-style: italic; }
+        .word-example-translation { color: #b8c0ce; font-size: 12px; }
+        .word-sources { display: flex; gap: 12px; margin-top: 10px; }
+        .word-source { color: #a998ff; font-size: 11px; }
       </style>
       <div class="wrap">
         <div class="status">Starting…</div>
-        <div class="transcript"></div>
+        <div class="caption-box" hidden>
+          <div class="transcript"></div>
+          <div class="translation" hidden></div>
+        </div>
         <div class="word-card" hidden>
           <div class="word-card-header">
             <div class="word-title"></div>
-            <button class="word-close" type="button" aria-label="Close definition">×</button>
+            <div class="word-card-actions">
+              <button class="word-save" type="button">Save word</button>
+              <button class="word-close" type="button" aria-label="Close definition">×</button>
+            </div>
           </div>
-          <div class="word-definition"></div>
-          <a class="word-source" target="_blank" rel="noopener noreferrer">Open German Wiktionary</a>
+          <div class="word-section">
+            <div class="word-label">English definition</div>
+            <div class="word-definition word-definition-en"></div>
+          </div>
+          <div class="word-section">
+            <div class="word-label">German definition</div>
+            <div class="word-definition word-definition-de"></div>
+          </div>
+          <div class="word-section word-example-section">
+            <div class="word-label">Example</div>
+            <div class="word-example"></div>
+            <div class="word-example-translation"></div>
+          </div>
+          <div class="word-sources">
+            <a class="word-source word-source-de" target="_blank" rel="noopener noreferrer">German Wiktionary</a>
+            <a class="word-source word-source-en" target="_blank" rel="noopener noreferrer">English Wiktionary</a>
+          </div>
         </div>
       </div>`;
 
+    wrapElement = shadow.querySelector(".wrap");
+    captionBoxElement = shadow.querySelector(".caption-box");
     transcriptElement = shadow.querySelector(".transcript");
+    translationElement = shadow.querySelector(".translation");
     statusElement = shadow.querySelector(".status");
     wordCardElement = shadow.querySelector(".word-card");
     wordTitleElement = shadow.querySelector(".word-title");
-    wordDefinitionElement = shadow.querySelector(".word-definition");
-    wordSourceElement = shadow.querySelector(".word-source");
+    wordEnglishDefinitionElement = shadow.querySelector(".word-definition-en");
+    wordGermanDefinitionElement = shadow.querySelector(".word-definition-de");
+    wordExampleElement = shadow.querySelector(".word-example");
+    wordExampleTranslationElement = shadow.querySelector(".word-example-translation");
+    wordSaveElement = shadow.querySelector(".word-save");
+    wordGermanSourceElement = shadow.querySelector(".word-source-de");
+    wordEnglishSourceElement = shadow.querySelector(".word-source-en");
     shadow.querySelector(".word-close").addEventListener("click", closeWordCard);
+    wordSaveElement.addEventListener("click", toggleSavedWord);
     transcriptElement.addEventListener("pointerdown", stopPlayerClick);
     transcriptElement.addEventListener("click", handleTranscriptClick);
     wordCardElement.addEventListener("pointerdown", stopPlayerClick);
     wordCardElement.addEventListener("click", (event) => event.stopPropagation());
+    applyDisplaySettings(session.captionPreferences, session.translationPreferences);
     placeOverlay();
+  }
+
+  function applyDisplaySettings(
+    rawCaptionPreferences,
+    rawTranslationPreferences,
+    resetTranslationCache = false
+  ) {
+    if (!session) return;
+    const previousTranslation = JSON.stringify(session.translationPreferences || {});
+    session.captionPreferences = learning.normalizeCaptionPreferences(rawCaptionPreferences);
+    session.translationPreferences = learning.normalizeTranslationPreferences(
+      rawTranslationPreferences
+    );
+    if (previousTranslation !== JSON.stringify(session.translationPreferences)) {
+      session.displayedTranslation = "";
+    }
+    if (resetTranslationCache) session.translationCache.clear();
+    if (!wrapElement || !captionBoxElement) return;
+
+    const caption = session.captionPreferences;
+    wrapElement.style.setProperty("--caption-bottom", `${caption.verticalPosition}%`);
+    wrapElement.style.setProperty("--caption-font-size", `${caption.fontSize}px`);
+    wrapElement.style.setProperty("--caption-font-family", learning.fontFamilyValue(caption.fontFamily));
+    wrapElement.style.setProperty(
+      "--caption-background",
+      learning.rgbaFromHex(caption.backgroundColor, caption.backgroundOpacity)
+    );
+    wrapElement.style.setProperty(
+      "--caption-color",
+      learning.rgbaFromHex(caption.textColor, caption.textOpacity)
+    );
+    const shadows = {
+      none: "none",
+      shadow: "0 1px 2px black",
+      outline: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000"
+    };
+    wrapElement.style.setProperty("--caption-text-shadow", shadows[caption.edgeStyle]);
+    if (!session.translationPreferences.enabled) {
+      session.displayedTranslation = "";
+      translationElement.textContent = "";
+      translationElement.hidden = true;
+    } else if (session.displayedText) {
+      void renderTranslation(session.displayedText);
+    }
   }
 
   function placeOverlay() {
@@ -438,7 +591,9 @@
       && performance.now() - session.lastCommitted.receivedAt < 3_500
       ? session.lastCommitted.text
       : "";
-    renderClickableText(active?.text || freshCommit || recent?.text || "");
+    const text = active?.text || freshCommit || recent?.text || "";
+    renderClickableText(text);
+    void renderTranslation(text);
     if (session.replay) {
       renderStatus("Cached transcript replay — audio is not being transcribed again.");
     }
@@ -449,6 +604,7 @@
   }
 
   function renderClickableText(text) {
+    captionBoxElement.hidden = !text;
     if (session.displayedText === text) return;
     session.displayedText = text;
     transcriptElement.classList.toggle("long", text.length > 110);
@@ -469,6 +625,81 @@
     transcriptElement.replaceChildren(fragment);
   }
 
+  async function renderTranslation(text) {
+    if (!session || !translationElement) return;
+    const preferences = session.translationPreferences;
+    if (!preferences.enabled || !text) {
+      session.displayedTranslation = "";
+      translationElement.textContent = "";
+      translationElement.hidden = true;
+      return;
+    }
+
+    translationElement.hidden = false;
+    const requestKey = translationSessionKey(text, preferences);
+    const cached = session.translationCache.get(requestKey);
+    if (cached?.translatedText) {
+      showTranslation(cached.translatedText, "ready");
+      return;
+    }
+    if (cached?.error) {
+      showTranslation(cached.error, "error");
+      return;
+    }
+
+    showTranslation("Translating…", "pending");
+    let pending = session.translationPending.get(requestKey);
+    if (!pending) {
+      pending = chrome.runtime.sendMessage({
+        type: "TRANSLATE_TEXT",
+        text,
+        sourceLanguage: session.audioLanguage,
+        translationPreferences: preferences
+      });
+      session.translationPending.set(requestKey, pending);
+    }
+
+    try {
+      const result = await pending;
+      if (!result?.ok || !result.translatedText) {
+        throw new Error(result?.error || "Translation is unavailable.");
+      }
+      session.translationCache.set(requestKey, { translatedText: result.translatedText });
+      if (
+        session.displayedText === text
+        && translationSessionKey(text, session.translationPreferences) === requestKey
+        && session.translationPreferences.enabled
+      ) {
+        showTranslation(result.translatedText, "ready");
+      }
+    } catch (error) {
+      const message = error.message || "Translation is unavailable.";
+      session.translationCache.set(requestKey, { error: message });
+      if (
+        session.displayedText === text
+        && translationSessionKey(text, session.translationPreferences) === requestKey
+        && session.translationPreferences.enabled
+      ) {
+        showTranslation(message, "error");
+      }
+    } finally {
+      session?.translationPending.delete(requestKey);
+    }
+  }
+
+  function translationSessionKey(text, preferences) {
+    return `${preferences.provider}:${preferences.targetLanguage}:${text}`;
+  }
+
+  function showTranslation(text, state) {
+    session.displayedTranslation = state === "ready" ? text : "";
+    translationElement.textContent = text;
+    translationElement.hidden = false;
+    translationElement.classList.toggle("pending", state === "pending");
+    translationElement.classList.toggle("error", state === "error");
+    translationElement.classList.toggle("long", text.length > 150);
+  }
+
   function handleTranscriptClick(event) {
     event.stopPropagation();
     const wordButton = event.target.closest(".word");
@@ -481,28 +712,80 @@
     transcriptElement.querySelector(".word.selected")?.classList.remove("selected");
     wordButton.classList.add("selected");
     session.selectedWord = word;
+    session.selectedWordResult = null;
     wordCardElement.hidden = false;
     wordTitleElement.textContent = word;
-    wordDefinitionElement.textContent = "Loading definition…";
-    wordSourceElement.href = `https://de.wiktionary.org/wiki/${encodeURIComponent(word)}`;
+    wordEnglishDefinitionElement.textContent = "Loading…";
+    wordGermanDefinitionElement.textContent = "Loading…";
+    wordExampleElement.textContent = session.displayedText || "";
+    wordExampleTranslationElement.textContent = session.displayedTranslation || "";
+    wordGermanSourceElement.href = `https://de.wiktionary.org/wiki/${encodeURIComponent(word)}`;
+    wordEnglishSourceElement.href = `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}`;
+    renderSaveState(false, true);
 
     try {
       const result = await chrome.runtime.sendMessage({ type: "LOOKUP_WORD", word });
       if (!session || session.selectedWord !== word) return;
       if (!result?.ok) throw new Error(result?.error || "Definition lookup failed.");
+      session.selectedWordResult = result;
       wordTitleElement.textContent = result.title || word;
-      wordDefinitionElement.textContent = result.definition
-        || "No short German Wiktionary definition was found for this word form.";
-      wordSourceElement.href = result.sourceUrl;
+      wordEnglishDefinitionElement.textContent = result.englishDefinition
+        || "No short English definition was found for this word form.";
+      wordGermanDefinitionElement.textContent = result.germanDefinition
+        || "No short German definition was found for this word form.";
+      wordExampleElement.textContent = result.example || session.displayedText || "";
+      wordExampleTranslationElement.textContent = result.exampleTranslation
+        || session.displayedTranslation
+        || "";
+      wordExampleElement.parentElement.hidden = !wordExampleElement.textContent
+        && !wordExampleTranslationElement.textContent;
+      wordGermanSourceElement.href = result.germanSourceUrl;
+      wordEnglishSourceElement.href = result.englishSourceUrl;
+      renderSaveState(Boolean(result.saved), false);
     } catch (error) {
       if (!session || session.selectedWord !== word) return;
-      wordDefinitionElement.textContent = error.message;
+      wordEnglishDefinitionElement.textContent = error.message;
+      wordGermanDefinitionElement.textContent = "Definition lookup failed.";
+      renderSaveState(false, true);
     }
+  }
+
+  async function toggleSavedWord(event) {
+    event.stopPropagation();
+    const result = session?.selectedWordResult;
+    if (!result) return;
+    wordSaveElement.disabled = true;
+    try {
+      const response = await chrome.runtime.sendMessage(result.saved
+        ? { type: "REMOVE_SAVED_WORD", word: result.word }
+        : {
+            type: "SAVE_WORD",
+            entry: {
+              ...result,
+              context: session.displayedText,
+              contextTranslation: session.displayedTranslation
+            }
+          });
+      if (!response?.ok) throw new Error(response?.error || "Could not update saved words.");
+      result.saved = !result.saved;
+      renderSaveState(result.saved, false);
+    } catch (error) {
+      renderStatus(error.message, true);
+    } finally {
+      wordSaveElement.disabled = false;
+    }
+  }
+
+  function renderSaveState(saved, disabled) {
+    wordSaveElement.disabled = disabled;
+    wordSaveElement.classList.toggle("saved", saved);
+    wordSaveElement.textContent = saved ? "Saved ✓" : "Save word";
   }
 
   function closeWordCard(event) {
     event?.stopPropagation();
     if (session) session.selectedWord = null;
+    if (session) session.selectedWordResult = null;
     transcriptElement?.querySelector(".word.selected")?.classList.remove("selected");
     if (wordCardElement) wordCardElement.hidden = true;
   }
