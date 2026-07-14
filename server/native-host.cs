@@ -90,7 +90,7 @@ internal static class NativeHost
             return;
         }
 
-        SendState("starting", "Starting the local GPU recognizer.", null);
+        SendState("starting", "Starting the local recognizer.", null);
         Process recognizer = StartRecognizer();
         DateTime deadline = DateTime.UtcNow.AddSeconds(StartupTimeoutSeconds);
         while (DateTime.UtcNow < deadline)
@@ -180,6 +180,9 @@ internal static class NativeHost
             };
             if (Directory.Exists(cuda))
                 info.EnvironmentVariables["PATH"] = cuda + ";" + info.EnvironmentVariables["PATH"];
+            string localModelCache = Path.Combine(projectRoot, ".model-cache", "huggingface");
+            if (Directory.Exists(localModelCache))
+                info.EnvironmentVariables["HF_HOME"] = localModelCache;
             info.EnvironmentVariables["PYTHONUTF8"] = "1";
 
             using (Process process = new Process())

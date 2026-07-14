@@ -1,128 +1,167 @@
 # Dub Transcript Lab
 
-A deliberately small experiment for transcribing the selected browser video's actual audio. It first tries to prepare the complete transcript locally from an authorized non-DRM source; when that is unavailable, it captures the decoded tab audio live. If a video is using a German dub, the German dub is transcribed. Existing captions never feed the recognizer; the extension only records them in a separate stream for later comparison.
+Dub Transcript Lab is a Windows browser-extension experiment that creates subtitles from the audio actually playing in a video. If a German dub is selected, it transcribes that German dub instead of relying on subtitles translated from another language.
 
-This is not the full commercial extension. It is a YouTube-first harness for answering the risky questions before building product UI, translation, word definitions, accounts, or billing.
+It can analyze an accessible, non-DRM video before playback or fall back to transcribing the audio as it plays. Completed captions are cached in the browser, remain synchronized when you rewind, and appear inside the video player.
 
-## How it works
+## Current features
 
-1. After the user clicks **Analyze automatically**, the Manifest V3 extension pauses the selected player and inspects its media source inside the correct frame.
-2. A public YouTube page or accessible non-DRM HTTP MP4/HLS source is decoded by PyAV and transcribed in one local Faster-Whisper batch job. Public YouTube source resolution uses `yt-dlp`; no browser cookies are copied to the helper. YouTube analysis keeps the best available audio track, downloads it in sequential 8 MB HTTP ranges, reports the measured transfer rate, and deletes the temporary file immediately after decoding. If that download is rejected, the original direct decoder is tried before the header-aware streaming fallback.
-3. If no safe batch source is available, the extension automatically falls back to decoded tab capture, 0.5-second mono 16 kHz PCM chunks, and the local WhisperLiveKit WebSocket.
-4. Both pipelines produce the same timestamped cue format and cache it in `chrome.storage.local`.
-5. In YouTube batch mode, the available manual caption track in the requested language is stored as an evaluation-only reference; the original-language automatic track is the fallback. Live mode continues to sample visible YouTube captions or active HTML5 text-track cues. Neither path feeds captions into ASR.
-6. A completed batch covers the full media timeline. In live mode, rewind replays the recorded audio coverage, including silence, and capture resumes only after playback leaves it.
-7. Transcript words are clickable inside the video player. A click opens an inline English/German definition card backed by English and German Wiktionary. The card includes an example when available and can save the word plus its current video context to browser-local vocabulary.
-8. WhisperLiveKit word timestamps are grouped at completed sentence, natural phrase, silence, or bounded-length breaks. The player combines those cues into sentence-aware display blocks capped by strict text and duration limits. Short continuations stay with the following clause, while complete replies remain separate.
-9. **Earlier** and **Later** controls shift caption display in 0.1-second steps (up to ±3 seconds), persist the offset, and never trigger transcription again.
-10. An optional translated line appears below the source transcript in a smaller font. Translation uses the browser's on-device Translator API when available, with an optional official Google Cloud Translation key as fallback. Translation results are cached locally by sentence.
-11. Caption appearance controls update the active overlay without retranscribing: font size/family, vertical position, text/background color and opacity, and edge style. Translation visibility is independently switchable.
+- Full-video local transcription for public YouTube pages and accessible non-DRM MP4/HLS media.
+- Automatic live-audio fallback when a complete media source is unavailable.
+- Clickable transcript words with English and German Wiktionary definitions.
+- Browser-local saved vocabulary with video context and examples when available.
+- Optional English translation under the original transcript.
+- Draggable captions plus font, color, opacity, edge, size, and position controls.
+- A timing adjustment that moves captions earlier or later without retranscribing.
+- Local transcript caching for the current experiment and JSON experiment export.
 
-Nothing is uploaded to a transcription service. Batch mode reads the authorized media source and decodes its audio into local memory without saving a permanent media copy. Live mode only receives chunks played during uncached portions of the experiment.
+This is still an experiment, not a finished store extension. Netflix and other DRM-protected subscription services are intentionally excluded from full-media acquisition.
 
-Translation is a separate opt-in text operation. The on-device provider keeps transcript text in the browser. If the user selects Google Cloud fallback, only the displayed transcript text is sent to Google's official Translation API. Its API key is stored separately in `chrome.storage.local` and is not included in active experiment state or JSON exports. Google Cloud currently requires a billing-enabled project even when its monthly credit covers usage.
+## Beginner installation on Windows
 
-## 1. Install the local recognizer
+### What you need
 
-Use Python 3.10 or newer. From PowerShell in this directory:
+- Windows 10 or Windows 11, 64-bit.
+- Google Chrome or Microsoft Edge version 116 or newer.
+- A stable internet connection for the first installation.
+- Several GB of free disk space for Python packages and speech models.
+- 64-bit Python 3.12 is recommended. Python 3.11 and 3.13 are also accepted.
+
+Download Python from [python.org](https://www.python.org/downloads/windows/). During Python installation, enable **Add python.exe to PATH**.
+
+### Install in five steps
+
+1. On GitHub, choose **Code → Download ZIP**, then extract the ZIP to a normal folder. Do not run it from inside the ZIP preview.
+2. Double-click **`INSTALL.cmd`** in the extracted folder.
+3. Choose **CPU compatibility mode** for the easiest first setup. Choose NVIDIA GPU mode only if the computer has a supported NVIDIA graphics card and a faster setup is worth the additional download.
+4. The installer opens the browser extensions page and the correct `extension` folder. Enable **Developer mode**, choose **Load unpacked**, select that folder, then paste the displayed 32-character extension ID into the installer.
+5. Leave the installer open while it downloads the local recognizer and speech model. The first installation can take a while. Wait for the green **Ready** message.
+
+The setup is project-local: Python packages, models, CUDA files, and logs stay inside the extracted project folder. CPU mode downloads `base` for live captions and `small` for full-video analysis; NVIDIA mode reuses `small` for both. The only Windows-level changes are the per-user browser native-host registration and, unless disabled, a Startup shortcut for the local recognizer.
+
+### Try it
+
+1. Open a public YouTube video.
+2. Select the audio language you want to hear, such as German.
+3. Click **Dub Transcript Lab** in the browser toolbar.
+4. Confirm the audio language code and choose **Analyze automatically**.
+5. Wait for full-video preparation. Playback begins automatically when the transcript is ready. If full-video access is unavailable, the extension switches to live transcription.
+
+For the first test, use a short public video. CPU mode works on more computers but can be much slower than an NVIDIA GPU.
+
+### If setup stops working
+
+Double-click **`CHECK-SETUP.cmd`**. It checks the local configuration, Python packages, browser registration, automatic startup, and recognizer health. Logs are stored in `.runtime\logs`.
+
+Running **`INSTALL.cmd`** again is safe and repairs missing packages or registration.
+
+### Remove it
+
+1. Double-click **`UNINSTALL.cmd`**.
+2. Choose whether to keep or remove downloaded models and Python packages.
+3. Remove Dub Transcript Lab from `chrome://extensions` or `edge://extensions`.
+
+The uninstaller removes the Startup shortcut and Chrome/Edge native-host registration for the current Windows user.
+
+## Privacy and network use
+
+Transcription runs locally. Audio is not uploaded to a transcription service.
+
+- Batch mode reads an authorized public media source and converts its audio in local memory. YouTube uses a temporary media file that is deleted immediately after decoding.
+- Live mode captures only the decoded audio played in the current tab and sends PCM chunks to `127.0.0.1` on the same computer.
+- Definitions are requested from English and German Wiktionary after a word click.
+- The optional browser translation provider is on-device when supported.
+- If Google Cloud Translation fallback is selected, only displayed transcript text is sent to Google's official API. The optional API key stays in browser-local storage and is excluded from experiment JSON exports.
+- The helper never copies browser cookies into native tools. Do not use the project to bypass access controls, DRM, authentication, or a platform's terms.
+
+## How transcription works
+
+1. **Analyze automatically** pauses the selected player and searches its frame for a safe media source.
+2. Public YouTube media is resolved with `yt-dlp`. Accessible non-DRM HTTP media is read with PyAV. Faster-Whisper transcribes the complete audio locally.
+3. When batch acquisition is not possible, Chrome tab capture sends 0.5-second mono 16 kHz PCM chunks to a local WhisperLiveKit server started with `--pcm-input`.
+4. Both paths produce the same timestamped cue format in `chrome.storage.local`.
+5. Existing captions are evaluation-only and never feed the recognizer.
+6. Sentence, phrase, silence, and bounded-length breaks are used to create readable caption blocks.
+
+On direct streaming sites, the current **Decoding** phase may also include fetching remote media. Its speed can therefore depend on the selected provider/CDN even though transcription itself is local.
+
+## Advanced manual setup
+
+The beginner installer is recommended. These commands are useful for development or diagnostics.
+
+Create or repair the Python environment:
 
 ```powershell
 .\server\setup.cmd
 ```
 
-If `python` is not on `PATH`, pass the executable explicitly:
+Pass a specific supported Python executable when necessary:
 
 ```powershell
 .\server\setup.cmd -Python "C:\path\to\python.exe"
 ```
 
-Install the recognizer as a per-user background startup process once:
+Start the recognizer visibly and keep the window open:
 
 ```powershell
-.\server\install-autostart.cmd
+.\server\start.cmd -Device cpu -Model base -Language de
 ```
 
-After that, the extension is one click: **Analyze automatically** pauses the current video, tries full-video local analysis, and begins playback when the complete transcript is ready. Unsupported or inaccessible sources fall back to the existing live recognizer. A shortcut in the current user's Windows Startup folder launches the hidden live recognizer whenever that user signs in.
-
-For true one-click recovery when the recognizer is not already running, build and register the project-local Native Messaging host:
-
-```powershell
-.\server\build-native-host.ps1
-.\server\install-native-host.ps1 -ExtensionId "your-32-character-unpacked-extension-id"
-```
-
-The host is registered under the current user's Edge and Chrome Native Messaging keys. Its allowlist contains only that extension ID. It now supports both long-running batch jobs with progress events and automatic startup of the live recognizer.
-
-For a manual foreground server with visible logs, use `.\server\start.cmd` instead.
-
-The experiment defaults to WhisperLiveKit's `localagreement` streaming policy. On this Windows machine it lets Faster-Whisper use CTranslate2 directly, while the default SimulStreaming policy also initializes a torch model and currently falls back to CPU. We can benchmark SimulStreaming later with `-Policy simulstreaming` after installing a CUDA-enabled torch build.
-
-The launcher defaults to `-Device auto`. This machine has project-local CUDA 12 cuBLAS and cuDNN 9 libraries under `.runtime/cuda`; Faster-Whisper is verified as `cuda` with `int8_float16` compute on the RTX 4060. Use `-Device cpu` only as a diagnostic fallback because the `small` model cannot keep pace with this live stream on CPU.
-
-To reproduce the project-local Windows GPU setup after deleting `.runtime`, run:
+Install the optional project-local NVIDIA runtime:
 
 ```powershell
 .\server\setup-gpu.cmd
 ```
 
-The script downloads the Windows CUDA archive referenced by Faster-Whisper, verifies its pinned size and SHA-256, and extracts it only inside this project.
-
-`small` is the first cost/accuracy checkpoint. After the flow is stable, repeat the same clips with `medium` and `turbo` rather than guessing which model is best:
+Then start with the saved GPU configuration or explicitly use automatic device selection:
 
 ```powershell
-.\server\start.cmd -Model medium
+.\server\start.cmd -Device auto -Model small -Language de
 ```
 
-The first run downloads model files. Everything after that runs locally, so there is no per-minute transcription bill. GPU runtime support still depends on the local PyTorch/CUDA installation; use CPU for plumbing tests if GPU setup is not yet ready.
-
-If Faster-Whisper reports a CUDA/CTranslate2 problem, first prove the browser pipeline on CPU with the native backend and a smaller model:
+Build and register the native messaging helper manually:
 
 ```powershell
-.\server\start.cmd -Backend whisper -Model base
+.\server\build-native-host.ps1
+.\server\install-native-host.ps1 -ExtensionId "your-32-character-extension-id"
 ```
 
-Then configure the CUDA-enabled PyTorch and CTranslate2 packages before running the accuracy/speed benchmark on the GPU. Do not compare model latency while one run is using CPU and another is using GPU.
+The helper is registered only for that extension ID under the current user's Chrome and Edge Native Messaging keys. It can start the live recognizer and run cancellable full-video batch jobs.
 
-`wlk check` currently reports FFmpeg as missing on this machine. That is not a blocker: live mode uses `--pcm-input`, while batch media decoding is handled by PyAV bundled through Faster-Whisper.
+WhisperLiveKit 0.2.24 is pinned for reproducible setup. Its raw PCM mode bypasses FFmpeg for live capture. Batch media decoding is provided by PyAV through Faster-Whisper, so a missing FFmpeg executable is not a blocker for the current pipelines.
 
-## 2. Load the extension
+## Export and evaluation
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Choose **Load unpacked** and select the absolute `extension` directory inside this project.
-4. Open a public YouTube video, choose the audio track you want to test, and optionally enable captions in the same language.
-5. Click the extension, confirm the two language codes, and choose **Analyze automatically**.
+Stop a run and choose **Export last experiment JSON**. YouTube batch exports can include matching caption reference segments and evaluation metrics such as word error rate, word-agreement estimate, and timing-distance statistics. Captions remain evaluation-only.
 
-The extension requests tab capture only following that click. Chrome 116 or newer is required because the service worker passes the tab stream to an offscreen document.
-
-## 3. Export and compare
-
-Stop the run and click **Export last experiment JSON**. Batch YouTube exports now include `captionSegments` plus an `evaluation` object containing reference metadata, whole-transcript word error rate, a word-agreement estimate, and timing-distance statistics. `captionsUsedAsInput` remains `false`.
-
-For the older standalone comparison report, run:
+For the standalone comparison report:
 
 ```powershell
 node .\scripts\compare-transcript.mjs "C:\path\to\export.json"
 ```
 
-The script reports WER and simple timing coverage. Treat WER as meaningful only when the caption text represents the words spoken in the selected audio track. A German dub compared with German subtitles translated from the original English dialogue measures adaptation differences, not recognition accuracy.
+Only compare ASR with captions that represent the selected audio track. A German dub compared with subtitles adapted from the original English dialogue measures adaptation differences as well as recognition error.
 
-See [the test matrix](experiments/TEST_MATRIX.md) for the experiment order and pass/fail checks.
+## Project documentation
 
-The next provider experiment is documented in [the AniWorld audio-acquisition plan](docs/ANIWORLD_AUDIO_ACQUISITION_PLAN.md). A ready-to-paste autonomous testing brief is in [the GLM AniWorld prompt](docs/GLM_ANIWORLD_AUDIO_PROMPT.md).
+- [Experiment test matrix](experiments/TEST_MATRIX.md)
+- [AniWorld audio-acquisition plan](docs/ANIWORLD_AUDIO_ACQUISITION_PLAN.md)
+- [Prompt for the isolated GLM AniWorld branch](docs/GLM_ANIWORLD_AUDIO_PROMPT.md)
+- [Deferred product backlog](docs/PRODUCT_BACKLOG.md)
 
 ## Current boundaries
 
-- Public YouTube pages and accessible non-DRM HTTP MP4/HLS sources can use full-video batch analysis.
-- Blob-only, inaccessible, expiring, or rejected media sources automatically use live capture instead.
-- The batch helper accepts only public HTTP(S) addresses and never forwards browser cookies. Use it only for media you are authorized to access and analyze.
-- YouTube batch mode can retrieve a matching manual or original-language automatic caption track without playing the video. Live mode covers visible YouTube captions and standard active text-track cues; other site-specific players may need a small adapter.
-- Click-for-definition is included for German words. Automatic subtitle translation remains postponed until capture, timestamp alignment, accuracy, and latency are measured.
-- Netflix and other DRM subscription platforms are intentionally excluded from phase one. Their technical and contractual constraints need a separate checkpoint after the public-site system works.
-- Storage is local and currently has no cleanup UI. Export important runs, then clear the extension's site data when needed.
+- Full-video mode supports public YouTube pages and accessible non-DRM HTTP MP4/HLS media.
+- Blob-only, expired, rejected, or inaccessible sources use live tab capture.
+- Multi-provider streaming sites can expose different CDNs on different runs; acquisition performance is not yet normalized.
+- Netflix and other DRM subscription platforms are outside the current acquisition scope.
+- Browser storage has no cleanup/library UI yet. Export important experiments before clearing extension data.
+- One-click text export, persistent same-video transcript restoration, word-audio replay, YouGlish, and the improved learning-card layout are recorded for later work, not included yet.
 
-## Implementation references
+## Primary upstream projects
 
-- [Chrome tabCapture documentation](https://developer.chrome.com/docs/extensions/reference/api/tabCapture)
-- [Chrome offscreen document documentation](https://developer.chrome.com/docs/extensions/reference/api/offscreen)
 - [WhisperLiveKit](https://github.com/QuentinFuxa/WhisperLiveKit)
+- [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper)
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+- [Chrome tabCapture](https://developer.chrome.com/docs/extensions/reference/api/tabCapture)
+- [Chrome offscreen documents](https://developer.chrome.com/docs/extensions/reference/api/offscreen)

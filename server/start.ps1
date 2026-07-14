@@ -1,12 +1,10 @@
 param(
-  [string]$Model = "small",
-  [string]$Language = "de",
-  [string]$Backend = "faster-whisper",
-  [ValidateSet("localagreement", "simulstreaming")]
-  [string]$Policy = "localagreement",
-  [ValidateSet("cpu", "auto")]
-  [string]$Device = "auto",
-  [int]$Port = 8000
+  [string]$Model = "",
+  [string]$Language = "",
+  [string]$Backend = "",
+  [string]$Policy = "",
+  [string]$Device = "",
+  [int]$Port = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,6 +14,41 @@ $Python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $WhisperLiveKitRunner = Join-Path $PSScriptRoot "run-wlk.py"
 $ModelCache = Join-Path $ProjectRoot ".model-cache"
 $CudaRuntime = Join-Path $ProjectRoot ".runtime\cuda"
+$ConfigPath = Join-Path $ProjectRoot ".runtime\user-settings.json"
+
+$Config = $null
+if (Test-Path $ConfigPath) {
+  try {
+    $Config = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
+  } catch {
+    throw "The local setup configuration is invalid: $ConfigPath"
+  }
+}
+
+if (-not $Model) { $Model = if ($Config.model) { [string]$Config.model } else { "base" } }
+if (-not $Language) { $Language = if ($Config.language) { [string]$Config.language } else { "de" } }
+if (-not $Backend) { $Backend = if ($Config.backend) { [string]$Config.backend } else { "faster-whisper" } }
+if (-not $Policy) { $Policy = if ($Config.policy) { [string]$Config.policy } else { "localagreement" } }
+if (-not $Device) { $Device = if ($Config.device) { [string]$Config.device } else { "cpu" } }
+if ($Port -le 0) { $Port = if ($Config.port) { [int]$Config.port } else { 8000 } }
+
+if ($Policy -notin @("localagreement", "simulstreaming")) {
+  throw "Unsupported streaming policy '$Policy'."
+}
+if ($Device -notin @("cpu", "auto")) {
+  throw "Unsupported device '$Device'. Use 'cpu' or 'auto'."
+}
+if ($Port -lt 1 -or $Port -gt 65535) {
+  throw "Invalid recognizer port: $Port"
+}
+if ($Config.modelCache) {
+  $ConfiguredModelCache = [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot ([string]$Config.modelCache)))
+  if (-not $ConfiguredModelCache.StartsWith([System.IO.Path]::GetFullPath($ProjectRoot), [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "The configured model cache must stay inside the project folder."
+  }
+  New-Item -ItemType Directory -Force -Path $ConfiguredModelCache | Out-Null
+  $env:HF_HOME = $ConfiguredModelCache
+}
 
 if (-not (Test-Path $WhisperLiveKit) -or -not (Test-Path $Python)) {
   throw "WhisperLiveKit is not installed. Run .\server\setup.cmd first."
@@ -30,7 +63,9 @@ if ($Device -eq "cpu") {
   $env:CUDA_VISIBLE_DEVICES = "0"
   $env:PATH = "$CudaRuntime;$env:PATH"
 } else {
-  throw "GPU mode needs the project-local CUDA runtime in $CudaRuntime. Use -Device cpu or install CUDA 12 cuBLAS and cuDNN 9."
+  Write-Warning "The NVIDIA runtime is not installed. Falling back to CPU mode."
+  $env:CUDA_VISIBLE_DEVICES = "-1"
+  $Device = "cpu"
 }
 Write-Host "Starting device '$Device', policy '$Policy', backend '$Backend', model '$Model', language '$Language' on ws://127.0.0.1:$Port/asr"
 $WhisperLiveKitArgs = @(
@@ -43,9 +78,9 @@ $WhisperLiveKitArgs = @(
   "--port", $Port
 )
 
-# SimulStreaming downloads a native Whisper checkpoint; keep that optional
-# second model inside the project. LocalAgreement reuses the Hugging Face model
-# fetched by `wlk pull`, so it must retain WhisperLiveKit's default cache path.
+# SimulStreaming can use an additional native Whisper checkpoint. Keep its
+# explicit cache inside the project as well; LocalAgreement follows HF_HOME
+# when the guided installer has configured a project-local Hugging Face cache.
 if ($Policy -eq "simulstreaming") {
   $WhisperLiveKitArgs += @("--model_cache_dir", $ModelCache)
 }

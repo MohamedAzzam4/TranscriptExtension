@@ -1,11 +1,13 @@
 param(
-  [string]$ExtensionId = "dnllioiahdlnncdojpgjaeklbkfkcbnk"
+  [string]$ExtensionId = "dnllioiahdlnncdojpgjaeklbkfkcbnk",
+  [string]$Executable = ""
 )
 
 $ErrorActionPreference = "Stop"
 $HostName = "com.dub_transcript_lab.recognizer"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
-$Executable = Join-Path $PSScriptRoot "native-host.exe"
+if (-not $Executable) { $Executable = Join-Path $PSScriptRoot "native-host.exe" }
+$Executable = [System.IO.Path]::GetFullPath($Executable)
 $RuntimeDirectory = Join-Path $ProjectRoot ".runtime\native-host"
 $ManifestPath = Join-Path $RuntimeDirectory "$HostName.json"
 

@@ -377,7 +377,7 @@ function handleNativeHostMessage(message) {
     return;
   }
   if (message?.state === "starting") {
-    void broadcastStatus("Starting the local GPU recognizer automatically…");
+    void broadcastStatus("Starting the local recognizer automatically…");
     return;
   }
   if (message?.state === "ready") {
