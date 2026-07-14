@@ -1,0 +1,8 @@
+.reference/
+.venv/
+.model-cache/
+.runtime/
+__pycache__/
+exports/
+__pycache__/
+server/*.log

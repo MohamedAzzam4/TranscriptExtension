@@ -1,0 +1,13 @@
+{
+  "page": { "title": "Comparison smoke test" },
+  "audioLanguage": "de",
+  "captionLanguage": "de-DE",
+  "asrSegments": [
+    { "start": 0.1, "end": 1.4, "text": "Guten Morgen" },
+    { "start": 1.5, "end": 2.6, "text": "wie geht es dir?" }
+  ],
+  "captionSegments": [
+    { "start": 0, "end": 1.3, "text": "Guten Morgen" },
+    { "start": 1.4, "end": 2.5, "text": "wie geht es dir" }
+  ]
+}

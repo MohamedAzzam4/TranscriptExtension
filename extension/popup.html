@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dub Transcript Lab</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <h1>Dub Transcript Lab</h1>
+      <p class="hint">One click tries to prepare the complete transcript locally. If the source is unavailable, it falls back to live transcription automatically. Reference captions are never ASR input.</p>
+
+      <label>
+        Local WhisperLiveKit WebSocket
+        <input id="serverUrl" type="url" value="ws://127.0.0.1:8000/asr" spellcheck="false">
+      </label>
+
+      <div class="languages">
+        <label>
+          Audio language
+          <input id="audioLanguage" value="de" maxlength="16" spellcheck="false">
+        </label>
+        <label>
+          Caption language
+          <input id="captionLanguage" value="de" maxlength="16" spellcheck="false">
+        </label>
+      </div>
+
+      <div class="sync-control">
+        <span>Caption timing</span>
+        <div class="sync-stepper">
+          <button id="syncEarlier" type="button" aria-label="Show captions 0.1 seconds earlier">Earlier</button>
+          <output id="syncOffset" aria-live="polite">0.0 s</output>
+          <button id="syncLater" type="button" aria-label="Show captions 0.1 seconds later">Later</button>
+        </div>
+        <small>Adjusts cached captions without transcribing again.</small>
+      </div>
+
+      <label class="check">
+        <input id="collectCaptions" type="checkbox" checked>
+        Collect available captions as an answer key
+      </label>
+
+      <div class="buttons">
+        <button id="start" class="primary">Analyze automatically</button>
+        <button id="stop">Stop</button>
+      </div>
+      <button id="export" class="wide">Export last experiment JSON</button>
+
+      <p id="status" role="status">Ready.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

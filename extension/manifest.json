@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Dub Transcript Lab",
+  "version": "0.6.4",
+  "description": "Local full-video transcription with an automatic live-audio fallback.",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "nativeMessaging",
+    "offscreen",
+    "scripting",
+    "storage",
+    "tabCapture"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://de.wiktionary.org/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Dub Transcript Lab"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:* https://de.wiktionary.org"
+  }
+}
