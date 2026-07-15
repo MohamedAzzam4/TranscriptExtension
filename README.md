@@ -41,6 +41,18 @@ Download Python from [python.org](https://www.python.org/downloads/windows/). Du
 
 The setup is project-local: Python packages, models, CUDA files, and logs stay inside the extracted project folder. CPU mode downloads `base` for live captions and `small` for full-video analysis; NVIDIA mode reuses `small` for both. The only Windows-level changes are the per-user browser native-host registration and, unless disabled, a Startup shortcut for the local recognizer.
 
+### Update an existing installation
+
+Keep the existing project folder and extension card so the extension ID and browser-local transcripts, vocabulary, settings, and translation cache remain available.
+
+1. Download and extract the new ZIP to a temporary folder.
+2. Copy its contents over the existing project folder and allow Windows to replace matching files. Do not delete the existing `.model-cache`, `.runtime`, or `.venv` folders.
+3. Open `chrome://extensions` or `edge://extensions` and click **Reload** on the existing Dub Transcript Lab card. Do not remove the extension or load the new files from a different folder.
+4. Run **`INSTALL.cmd`** again from the existing project folder. Paste the same extension ID when requested. Existing packages and models are reused when compatible.
+5. Run **`CHECK-SETUP.cmd`**, refresh the video page, and start a short test.
+
+Download important transcripts as text before an update as a precaution. Do not run `UNINSTALL.cmd` for a normal update.
+
 ### Try it
 
 1. Open a public YouTube video.
