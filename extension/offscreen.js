@@ -58,6 +58,8 @@ async function handleMessage(message) {
           error: error.name === "AbortError" ? "Browser audio decoding was cancelled." : error.message
         }));
       return { started: true };
+    case "OFFSCREEN_INSPECT_NETFLIX_AUDIO":
+      return inspectNetflixResearchAudio(message);
     case "OFFSCREEN_SET_PLAYING":
       playing = message.playing;
       workletNode?.port.postMessage({ type: "reset" });
@@ -85,6 +87,357 @@ async function handleMessage(message) {
     default:
       throw new Error(`Unknown offscreen command: ${message.type}`);
   }
+}
+
+async function inspectNetflixResearchAudio(message) {
+  const candidates = normalizeNetflixResearchCandidates(message.candidates);
+  const moduleUrl = chrome.runtime.getURL("vendor/mp4box.all.mjs");
+  const { createFile } = await import(moduleUrl);
+  const inspections = [];
+  for (const candidate of candidates) {
+    try {
+      inspections.push(await inspectNetflixResearchCandidate(
+        candidate,
+        createFile,
+        Math.max(0, Number(message.durationHint) || 0)
+      ));
+    } catch (error) {
+      inspections.push({
+        representationKey: String(candidate.representationKey || "").slice(0, 500),
+        sourceHost: safeNetflixResearchHost(candidate.url),
+        status: "inspection-failed",
+        error: String(error?.message || error || "Unknown inspection error").slice(0, 1_000),
+        privacy: { audioStored: false, urlStored: false, drmSecretsCollected: false }
+      });
+    }
+  }
+  return {
+    inspections,
+    environment: {
+      webCodecsAvailable: "AudioDecoder" in globalThis,
+      offlineAudioContextAvailable: "OfflineAudioContext" in globalThis
+    }
+  };
+}
+
+function normalizeNetflixResearchCandidates(rawCandidates) {
+  const candidates = [];
+  for (const raw of Array.isArray(rawCandidates) ? rawCandidates : []) {
+    try {
+      const parsed = new URL(String(raw?.url || ""));
+      const host = parsed.hostname.toLowerCase();
+      if (
+        parsed.protocol !== "https:"
+        || (host !== "nflxvideo.net" && !host.endsWith(".nflxvideo.net"))
+      ) continue;
+      candidates.push({
+        ...raw,
+        url: parsed.href,
+        representationKey: String(raw.representationKey || "").slice(0, 500)
+      });
+    } catch {
+      // Ignore malformed and non-Netflix candidates.
+    }
+  }
+  return candidates.slice(0, 8);
+}
+
+async function inspectNetflixResearchCandidate(candidate, createFile, durationHint) {
+  const maximumBytes = 2 * 1024 * 1024;
+  const sourceHost = safeNetflixResearchHost(candidate.url);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  let response;
+  let chunks = [];
+  let receivedBytes = 0;
+  try {
+    response = await fetch(candidate.url, {
+      method: "GET",
+      credentials: "omit",
+      cache: "no-store",
+      referrerPolicy: "no-referrer",
+      headers: {
+        Accept: "audio/mp4,video/mp4,application/octet-stream,*/*",
+        Range: `bytes=0-${maximumBytes - 1}`
+      },
+      signal: controller.signal
+    });
+    if (!response.ok || !response.body) {
+      throw new Error(`Netflix CDN returned HTTP ${response.status || "unknown"}.`);
+    }
+    const reader = response.body.getReader();
+    while (receivedBytes < maximumBytes) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value?.byteLength) continue;
+      const remaining = maximumBytes - receivedBytes;
+      const accepted = value.byteLength > remaining ? value.slice(0, remaining) : value;
+      chunks.push(accepted);
+      receivedBytes += accepted.byteLength;
+      if (receivedBytes >= maximumBytes) {
+        await reader.cancel("Netflix research byte limit reached.");
+        break;
+      }
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!receivedBytes) throw new Error("Netflix CDN returned no bytes for the initialization inspection.");
+  const bytes = new Uint8Array(receivedBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  chunks = [];
+
+  const contentLength = positiveResearchNumber(response.headers.get("content-length"));
+  const contentRangeText = String(response.headers.get("content-range") || "").slice(0, 128);
+  const contentRange = parseContentRange(contentRangeText);
+  const entityBytes = contentRange?.total || contentLength;
+  const rawBitrate = positiveResearchNumber(candidate.bitrate);
+  const bitrate = rawBitrate && rawBitrate < 1_000 ? rawBitrate * 1_000 : rawBitrate;
+  const estimatedExpectedBytes = bitrate && durationHint >= 60
+    ? Math.round(bitrate * durationHint / 8)
+    : null;
+  const entityCoverageRatio = entityBytes && estimatedExpectedBytes
+    ? entityBytes / estimatedExpectedBytes
+    : null;
+  const mp4 = await inspectResearchMp4(createFile, bytes.buffer, candidate);
+  const protectionSignals = {
+    encryptedSampleEntry: mp4.sampleEntryType === "enca",
+    psshBoxPresent: mp4.psshCount > 0 || hasIsoBoxSignature(bytes, "pssh"),
+    sinfBoxPresent: mp4.sinfCount > 0 || hasIsoBoxSignature(bytes, "sinf"),
+    tencBoxPresent: hasIsoBoxSignature(bytes, "tenc"),
+    schmBoxPresent: hasIsoBoxSignature(bytes, "schm")
+  };
+  const protectionDetected = Object.values(protectionSignals).some(Boolean);
+  bytes.fill(0);
+
+  return {
+    representationKey: String(candidate.representationKey || "").slice(0, 500),
+    status: "inspected",
+    sourceHost,
+    response: {
+      status: response.status,
+      contentType: String(response.headers.get("content-type") || "").slice(0, 160) || null,
+      contentLength,
+      contentRange: contentRangeText || null,
+      acceptRanges: String(response.headers.get("accept-ranges") || "").slice(0, 64) || null,
+      rangeRequested: true,
+      rangeHonored: response.status === 206 || Boolean(contentRange),
+      bytesInspected: receivedBytes,
+      reportedEntityBytes: entityBytes,
+      estimatedExpectedBytes,
+      entityCoverageRatio: roundResearchNumber(entityCoverageRatio),
+      deliveryShape: entityCoverageRatio != null && entityCoverageRatio < 0.35
+        ? "short-entity"
+        : entityBytes
+          ? "full-sized-entity"
+          : "unknown-size"
+    },
+    container: {
+      parsed: mp4.parsed,
+      parseError: mp4.parseError,
+      brands: mp4.brands,
+      fragmented: mp4.fragmented,
+      codec: mp4.codec,
+      sampleEntryType: mp4.sampleEntryType,
+      sampleRate: mp4.sampleRate,
+      channels: mp4.channels,
+      bitrate: mp4.bitrate,
+      audioSpecificConfigBytes: mp4.audioSpecificConfigBytes,
+      psshCount: mp4.psshCount,
+      sinfCount: mp4.sinfCount,
+      schemeTypes: mp4.schemeTypes,
+      originalFormats: mp4.originalFormats
+    },
+    protection: {
+      detected: protectionDetected,
+      signals: protectionSignals
+    },
+    webCodecs: mp4.webCodecs,
+    privacy: {
+      audioStored: false,
+      urlStored: false,
+      cookiesStored: false,
+      licenseTrafficInspected: false,
+      drmSecretsCollected: false
+    }
+  };
+}
+
+function inspectResearchMp4(createFile, sourceBuffer, candidate) {
+  return new Promise((resolve) => {
+    const file = createFile(false);
+    let settled = false;
+    let timer = null;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve(value);
+    };
+    const fallback = (parseError = null) => ({
+      parsed: false,
+      parseError: parseError ? String(parseError).slice(0, 500) : "Initialization metadata was not complete in the inspected bytes.",
+      brands: [],
+      fragmented: null,
+      codec: inferAacCodec(candidate) || null,
+      sampleEntryType: null,
+      sampleRate: null,
+      channels: null,
+      bitrate: null,
+      audioSpecificConfigBytes: null,
+      psshCount: 0,
+      sinfCount: 0,
+      schemeTypes: [],
+      originalFormats: [],
+      webCodecs: {
+        apiAvailable: "AudioDecoder" in globalThis,
+        codec: inferAacCodec(candidate) || null,
+        configSupported: null,
+        note: "A complete MP4 initialization section was not available for a configuration check."
+      }
+    });
+    file.onError = (error) => finish(fallback(error));
+    file.onReady = async (info) => {
+      try {
+        const track = info.audioTracks?.[0] || info.tracks?.find((value) => value.audio);
+        if (!track) {
+          finish(fallback("MP4Box found no audio track."));
+          return;
+        }
+        const internalTrack = file.getTrackById(track.id);
+        const entry = internalTrack?.mdia?.minf?.stbl?.stsd?.entries?.[0] || null;
+        const sampleEntryType = researchBoxType(entry);
+        const sinfs = Array.isArray(entry?.sinfs)
+          ? entry.sinfs
+          : entry?.sinf
+            ? [entry.sinf]
+            : [];
+        const psshs = [
+          ...(Array.isArray(file.psshs) ? file.psshs : []),
+          ...(Array.isArray(file.moov?.psshs) ? file.moov.psshs : [])
+        ];
+        const esds = entry?.esds || entry?.wave?.esds;
+        const decoderConfigDescriptor = esds?.esd?.findDescriptor?.(4);
+        const decoderSpecificInfo = decoderConfigDescriptor?.findDescriptor?.(5)?.data;
+        const description = decoderSpecificInfo?.byteLength
+          ? new Uint8Array(decoderSpecificInfo).slice()
+          : null;
+        const reportedCodec = String(track.codec || "").trim();
+        const codec = String(
+          (/^enca$/i.test(reportedCodec) ? "" : reportedCodec)
+          || inferAacCodec(candidate)
+          || reportedCodec
+        ).trim() || null;
+        const config = codec ? {
+          codec,
+          sampleRate: Math.max(8_000, Number(track.audio?.sample_rate) || 48_000),
+          numberOfChannels: Math.max(1, Number(track.audio?.channel_count) || 2),
+          ...(description ? { description } : {})
+        } : null;
+        let configSupported = null;
+        let supportError = null;
+        if ("AudioDecoder" in globalThis && config) {
+          try {
+            configSupported = Boolean((await AudioDecoder.isConfigSupported(config))?.supported);
+          } catch (error) {
+            supportError = String(error?.message || error).slice(0, 500);
+          }
+        }
+        const schemeTypes = sinfs
+          .map((sinf) => String(
+            sinf?.schm?.scheme_type || sinf?.schm?.schemeType || sinf?.scheme_type || ""
+          ).slice(0, 32))
+          .filter(Boolean);
+        const originalFormats = sinfs
+          .map((sinf) => String(
+            sinf?.frma?.data_format || sinf?.frma?.dataFormat || sinf?.original_format || ""
+          ).slice(0, 32))
+          .filter(Boolean);
+        finish({
+          parsed: true,
+          parseError: null,
+          brands: (Array.isArray(info.brands) ? info.brands : []).map((brand) => String(brand).slice(0, 16)),
+          fragmented: Boolean(info.isFragmented),
+          codec,
+          sampleEntryType,
+          sampleRate: positiveResearchNumber(track.audio?.sample_rate),
+          channels: positiveResearchNumber(track.audio?.channel_count),
+          bitrate: positiveResearchNumber(track.bitrate),
+          audioSpecificConfigBytes: description?.byteLength || null,
+          psshCount: psshs.length,
+          sinfCount: sinfs.length,
+          schemeTypes: [...new Set(schemeTypes)],
+          originalFormats: [...new Set(originalFormats)],
+          webCodecs: {
+            apiAvailable: "AudioDecoder" in globalThis,
+            codec,
+            configSupported,
+            descriptionBytes: description?.byteLength || null,
+            error: supportError,
+            note: configSupported === true
+              ? "The browser reports configuration support; actual encrypted or unusual samples may still fail."
+              : "No audio samples were decoded during research inspection."
+          }
+        });
+      } catch (error) {
+        finish(fallback(error?.message || error));
+      }
+    };
+    timer = setTimeout(() => finish(fallback()), 1_000);
+    try {
+      const buffer = sourceBuffer.slice(0);
+      buffer.fileStart = 0;
+      file.appendBuffer(buffer);
+      file.flush();
+    } catch (error) {
+      finish(fallback(error?.message || error));
+    }
+  });
+}
+
+function researchBoxType(box) {
+  const direct = box?.type || box?.fourcc || box?.box_name;
+  if (direct) return String(direct).slice(0, 32);
+  const name = String(box?.constructor?.name || "");
+  const match = name.match(/^([a-z0-9_]{4})SampleEntry$/i);
+  return match ? match[1].toLowerCase() : (name.slice(0, 64) || null);
+}
+
+function hasIsoBoxSignature(bytes, type) {
+  const signature = [...String(type)].map((character) => character.charCodeAt(0));
+  for (let index = 4; index <= bytes.length - signature.length; index += 1) {
+    if (!signature.every((value, offset) => bytes[index + offset] === value)) continue;
+    const size = (
+      bytes[index - 4] * 0x1000000
+      + bytes[index - 3] * 0x10000
+      + bytes[index - 2] * 0x100
+      + bytes[index - 1]
+    );
+    if (size === 0 || size === 1 || (size >= 8 && index - 4 + size <= bytes.length + 8)) return true;
+  }
+  return false;
+}
+
+function safeNetflixResearchHost(value) {
+  try {
+    return new URL(String(value || "")).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function positiveResearchNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function roundResearchNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.round(number * 1_000) / 1_000 : null;
 }
 
 async function decodeBrowserBatchAudio(message, signal) {

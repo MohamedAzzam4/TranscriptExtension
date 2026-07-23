@@ -22,6 +22,16 @@ It can analyze an accessible video before playback or fall back to transcribing 
 
 This is still an experiment, not a finished store extension. Netflix support is conditional and does not bypass DRM: encrypted or unavailable sources still use live decoded-tab-audio transcription.
 
+### Netflix audio research mode
+
+Version 0.9.5 includes a temporary research panel for collecting privacy-safe,
+title-by-title Netflix audio data before making more decoder changes. It records track,
+codec, subtitle, CDN, MP4 protection, and browser capability metadata without retaining
+audio, media URLs, cookies, account data, license traffic, or DRM keys.
+
+See [docs/NETFLIX_AUDIO_RESEARCH.md](docs/NETFLIX_AUDIO_RESEARCH.md) for the report schema,
+manual sampling protocol, and dataset fields.
+
 ## Beginner installation on Windows
 
 ### What you need

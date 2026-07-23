@@ -1,4 +1,4 @@
-importScripts("learning-features.js");
+importScripts("learning-features.js", "netflix-research.js");
 
 const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
@@ -10,8 +10,12 @@ const TRANSLATION_SECRETS_KEY = "translationSecrets";
 const TRANSCRIPT_LIBRARY_INDEX_KEY = "transcriptLibraryIndex";
 const TRANSCRIPT_LIBRARY_LIMIT = 20;
 const TRANSCRIPT_LIBRARY_BYTES_LIMIT = 7_500_000;
+const NETFLIX_RESEARCH_INDEX_KEY = "netflixResearchIndex:v1";
+const NETFLIX_RESEARCH_LAST_KEY = "lastNetflixResearchId";
+const NETFLIX_RESEARCH_LIMIT = 60;
 const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
 const learning = globalThis.DubTranscriptLearning;
+const netflixResearch = globalThis.DubTranscriptNetflixResearch;
 const mediaClocks = new Map();
 const runtimeSampleTimes = new Map();
 const audioCoverageRanges = new Map();
@@ -50,6 +54,16 @@ async function handleMessage(message, sender) {
       return getTranscriptLibrary();
     case "GET_VISIBLE_DIAGNOSTICS":
       return getVisibleDiagnostics();
+    case "ANALYZE_NETFLIX_TITLE":
+      return analyzeNetflixTitle(message.audioLanguage);
+    case "GET_NETFLIX_RESEARCH_STATE":
+      return getNetflixResearchState();
+    case "ATTACH_NETFLIX_SUBTITLE_SAMPLE":
+      return attachNetflixSubtitleSample();
+    case "EXPORT_LAST_NETFLIX_RESEARCH":
+      return exportLastNetflixResearch();
+    case "EXPORT_NETFLIX_RESEARCH_DATASET":
+      return exportNetflixResearchDataset();
     case "EXPORT_LIBRARY_TRANSCRIPT_TEXT":
       return exportLibraryTranscriptText(message.key);
     case "REMOVE_TRANSCRIPT_LIBRARY_ENTRY":
@@ -1898,6 +1912,407 @@ async function exportLastTranscriptText() {
     throw new Error("The last experiment does not contain a transcript yet.");
   }
   return transcriptTextExport(experiment);
+}
+
+async function inspectCurrentMediaTarget() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || identifyPlatform(tab.url) !== "netflix.com") {
+    throw new Error("Open a Netflix movie or episode player before running research mode.");
+  }
+  const frameIds = await ensureContentScripts(tab.id);
+  const mediaTarget = await findMediaTarget(tab.id, frameIds);
+  if (!mediaTarget) {
+    throw new Error("Start Netflix playback once, then click Analyze this Netflix title again.");
+  }
+  return { tab, mediaTarget };
+}
+
+async function analyzeNetflixTitle(rawAudioLanguage = "de") {
+  const { tab, mediaTarget } = await inspectCurrentMediaTarget();
+  const context = mediaTarget.context || {};
+  const audioLanguage = netflixResearch.normalizeLanguage(rawAudioLanguage) || "de";
+  const metadata = context.netflixMetadata && typeof context.netflixMetadata === "object"
+    ? context.netflixMetadata
+    : { title: {}, audioTracks: [], subtitleTracks: [] };
+  const currentNetflixId = netflixWatchId(tab.url);
+  const observedNetflixId = netflixResearch.safeText(metadata.title?.videoId, 64);
+  if (observedNetflixId && currentNetflixId && observedNetflixId !== currentNetflixId) {
+    throw new Error(
+      "The observer still contains metadata from the previous Netflix title. "
+      + "Start this title once, wait a moment, and run research mode again."
+    );
+  }
+  const groups = netflixResearch.groupAudioRepresentations(
+    context.batchCandidates,
+    audioLanguage
+  );
+  if (!groups.length) {
+    throw new Error(
+      "Netflix track metadata has not been observed yet. Reload this Netflix tab, start playback, "
+      + "confirm the desired audio track, and run research mode again."
+    );
+  }
+  const matchingGroups = groups.filter((group) => group.language === audioLanguage);
+  const inspectedGroups = (matchingGroups.length ? matchingGroups : groups).slice(0, 8);
+  const selectedTrack = selectNetflixResearchAudioTrack(
+    metadata.audioTracks,
+    groups,
+    audioLanguage
+  );
+  const subtitleInventory = netflixResearch.subtitleInventory(
+    metadata.subtitleTracks,
+    audioLanguage
+  );
+  await ensureOffscreenDocument();
+  const offscreenResponse = await sendToOffscreen({
+    type: "OFFSCREEN_INSPECT_NETFLIX_AUDIO",
+    durationHint: context.duration,
+    candidates: inspectedGroups.map((group) => ({
+      representationKey: group.key,
+      url: group.urls[0],
+      codec: group.codecHint,
+      profile: group.profileHint,
+      bitrate: group.bitrate,
+      channels: group.channels
+    }))
+  });
+  if (!offscreenResponse?.ok) {
+    throw new Error(offscreenResponse?.error || "The Netflix container inspection failed.");
+  }
+
+  const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const titleMetadata = metadata.title && typeof metadata.title === "object"
+    ? metadata.title
+    : {};
+  const netflixId = currentNetflixId
+    || netflixResearch.safeText(titleMetadata.videoId, 64)
+    || null;
+  const visibleTitle = netflixResearch.safeText(context.visibleTitleText, 400);
+  const documentTitle = netflixResearch.safeText(context.documentTitle || tab.title, 300);
+  const bestTitle = netflixResearch.safeText(
+    titleMetadata.episodeTitle
+      || titleMetadata.title
+      || visibleTitle
+      || (/^netflix$/i.test(documentTitle) ? "" : documentTitle),
+    240
+  ) || `Netflix ${netflixId || "title"}`;
+  const report = {
+    schemaVersion: netflixResearch.REPORT_SCHEMA_VERSION,
+    id,
+    collectedAt: new Date().toISOString(),
+    collector: {
+      name: "Dub Transcript Lab Netflix research mode",
+      extensionVersion: installedExtensionVersion(),
+      scope: "metadata-and-initialization-only"
+    },
+    page: {
+      netflixId,
+      title: bestTitle,
+      documentTitle: documentTitle || null,
+      visibleTitleText: visibleTitle || null,
+      contentType: netflixResearch.safeText(titleMetadata.contentType, 32) || "unknown",
+      seriesId: netflixResearch.safeText(titleMetadata.seriesId, 64) || null,
+      seriesTitle: netflixResearch.safeText(titleMetadata.seriesTitle, 240) || null,
+      episodeTitle: netflixResearch.safeText(titleMetadata.episodeTitle, 240) || null,
+      seasonNumber: safeResearchInteger(titleMetadata.seasonNumber),
+      episodeNumber: safeResearchInteger(titleMetadata.episodeNumber),
+      releaseYear: safeResearchYear(titleMetadata.releaseYear),
+      durationSeconds: round(Number(context.duration) || 0)
+    },
+    environment: {
+      collectedLanguage: audioLanguage,
+      browserLanguage: netflixResearch.safeText(context.browserLanguage, 32) || null,
+      platform: netflixResearch.safeText(context.browserPlatform, 64) || null,
+      userAgentFamily: browserFamily(context.userAgent),
+      webCodecsAvailable: offscreenResponse.environment?.webCodecsAvailable === true,
+      offlineAudioContextAvailable: offscreenResponse.environment?.offlineAudioContextAvailable === true
+    },
+    drm: {
+      protectedPlaybackObserved: Boolean(context.drmProtected),
+      mediaKeysAttached: Boolean(context.drmSignals?.mediaKeysAttached),
+      encryptedEventObserved: Boolean(context.drmSignals?.encryptedEventObserved),
+      observerReportedDrm: Boolean(context.drmSignals?.observerReportedDrm)
+    },
+    audio: {
+      requestedLanguage: audioLanguage,
+      selectedTrack,
+      tracks: (Array.isArray(metadata.audioTracks) ? metadata.audioTracks : [])
+        .map(netflixResearch.sanitizeAudioTrack)
+        .filter(Boolean),
+      representationGroups: groups.map(netflixResearch.representationSummary),
+      inspectedRepresentationCount: inspectedGroups.length
+    },
+    subtitles: subtitleInventory,
+    alignment: {
+      status: "not-sampled",
+      agreementEstimate: null,
+      note: "Metadata cannot prove that subtitle wording matches the selected dub. Attach a manual ASR/caption sample."
+    },
+    deliveryInspections: offscreenResponse.inspections || [],
+    summary: null,
+    privacy: {
+      audioStored: false,
+      mediaUrlsStored: false,
+      queryTokensStored: false,
+      cookiesStored: false,
+      accountDataStored: false,
+      licenseTrafficInspected: false,
+      drmKeysCollected: false
+    }
+  };
+  report.summary = netflixResearchSummary(report);
+  await saveNetflixResearchReport(report);
+  return { report: netflixResearchReportMetadata(report) };
+}
+
+function selectNetflixResearchAudioTrack(rawTracks, groups, audioLanguage) {
+  const tracks = (Array.isArray(rawTracks) ? rawTracks : [])
+    .map(netflixResearch.sanitizeAudioTrack)
+    .filter(Boolean);
+  const selected = tracks.find((track) => track.selected && track.language === audioLanguage)
+    || tracks.find((track) => track.language === audioLanguage && track.role === "main")
+    || tracks.find((track) => track.language === audioLanguage)
+    || tracks.find((track) => track.selected)
+    || tracks[0];
+  if (selected) return selected;
+  const group = groups.find((value) => value.selected && value.language === audioLanguage)
+    || groups.find((value) => value.language === audioLanguage && value.role === "main")
+    || groups[0];
+  return group ? {
+    language: group.language,
+    label: group.label,
+    trackId: group.trackId,
+    role: group.role,
+    selected: group.selected,
+    channels: group.channels,
+    representationCount: groups.filter((value) => value.trackId === group.trackId).length
+  } : null;
+}
+
+function netflixResearchSummary(report) {
+  const inspections = Array.isArray(report.deliveryInspections) ? report.deliveryInspections : [];
+  const inspected = inspections.filter((item) => item.status === "inspected");
+  const protectionDetectedCount = inspected.filter((item) => item.protection?.detected).length;
+  const shortEntityCount = inspected.filter(
+    (item) => item.response?.deliveryShape === "short-entity"
+  ).length;
+  const webCodecsSupportedCount = inspected.filter(
+    (item) => item.webCodecs?.configSupported === true
+  ).length;
+  const parseFailureCount = inspected.filter((item) => item.container?.parsed === false).length
+    + inspections.filter((item) => item.status === "inspection-failed").length;
+  let conclusion = "No representation initialization data was inspected.";
+  if (inspected.length && protectionDetectedCount === inspected.length) {
+    conclusion = "Every inspected representation contains content-protection signals.";
+  } else if (protectionDetectedCount) {
+    conclusion = "The selected audio exposes a mixture of protected and apparently clear representations.";
+  } else if (inspected.length) {
+    conclusion = "No MP4 protection box was detected in the inspected initialization ranges.";
+  }
+  return {
+    inspectedRepresentationCount: inspected.length,
+    protectionDetectedCount,
+    shortEntityCount,
+    webCodecsSupportedCount,
+    parseFailureCount,
+    sameLanguageSubtitleCount: Number(report.subtitles?.sameLanguageCount) || 0,
+    subtitleConclusion: report.subtitles?.conclusion || "unknown",
+    conclusion
+  };
+}
+
+async function saveNetflixResearchReport(report) {
+  const key = `${netflixResearch.RESEARCH_PREFIX}${report.id}`;
+  const stored = await chrome.storage.local.get(NETFLIX_RESEARCH_INDEX_KEY);
+  const existing = Array.isArray(stored[NETFLIX_RESEARCH_INDEX_KEY])
+    ? stored[NETFLIX_RESEARCH_INDEX_KEY]
+    : [];
+  const metadata = netflixResearchReportMetadata(report);
+  const updated = [metadata, ...existing.filter((entry) => entry.id !== report.id)]
+    .slice(0, NETFLIX_RESEARCH_LIMIT);
+  const retainedIds = new Set(updated.map((entry) => entry.id));
+  const removedKeys = existing
+    .filter((entry) => !retainedIds.has(entry.id))
+    .map((entry) => `${netflixResearch.RESEARCH_PREFIX}${entry.id}`);
+  if (removedKeys.length) await chrome.storage.local.remove(removedKeys);
+  await chrome.storage.local.set({
+    [key]: report,
+    [NETFLIX_RESEARCH_LAST_KEY]: report.id,
+    [NETFLIX_RESEARCH_INDEX_KEY]: updated
+  });
+}
+
+function netflixResearchReportMetadata(report) {
+  return {
+    id: report.id,
+    title: report.page?.title || "Netflix title",
+    netflixId: report.page?.netflixId || null,
+    contentType: report.page?.contentType || "unknown",
+    collectedAt: report.collectedAt,
+    audioLanguage: report.audio?.requestedLanguage || null,
+    selectedRole: report.audio?.selectedTrack?.role || null,
+    protectionDetectedCount: Number(report.summary?.protectionDetectedCount) || 0,
+    inspectedRepresentationCount: Number(report.summary?.inspectedRepresentationCount) || 0,
+    subtitleConclusion: report.summary?.subtitleConclusion || "unknown",
+    alignmentStatus: report.alignment?.status || "not-sampled",
+    agreementEstimate: report.alignment?.agreementEstimate != null
+      && Number.isFinite(Number(report.alignment.agreementEstimate))
+      ? Number(report.alignment.agreementEstimate)
+      : null
+  };
+}
+
+async function getNetflixResearchState() {
+  const stored = await chrome.storage.local.get([
+    NETFLIX_RESEARCH_LAST_KEY,
+    NETFLIX_RESEARCH_INDEX_KEY
+  ]);
+  const entries = Array.isArray(stored[NETFLIX_RESEARCH_INDEX_KEY])
+    ? stored[NETFLIX_RESEARCH_INDEX_KEY].slice(0, NETFLIX_RESEARCH_LIMIT)
+    : [];
+  const lastId = stored[NETFLIX_RESEARCH_LAST_KEY] || null;
+  return {
+    lastReport: entries.find((entry) => entry.id === lastId) || null,
+    entries
+  };
+}
+
+async function getNetflixResearchReport(id) {
+  if (!id) return null;
+  const key = `${netflixResearch.RESEARCH_PREFIX}${id}`;
+  const stored = await chrome.storage.local.get(key);
+  return stored[key] || null;
+}
+
+async function attachNetflixSubtitleSample() {
+  const state = await getNetflixResearchState();
+  if (!state.lastReport?.id) throw new Error("Inspect a Netflix title before attaching a subtitle sample.");
+  const report = await getNetflixResearchReport(state.lastReport.id);
+  const stored = await chrome.storage.local.get(LAST_KEY);
+  const experiment = await getExperiment(stored[LAST_KEY]);
+  if (!report || !experiment) throw new Error("No recent transcript experiment is available.");
+  if (
+    report.page?.netflixId
+    && netflixWatchId(experiment.page?.url) !== report.page.netflixId
+  ) {
+    throw new Error("The latest transcript belongs to a different Netflix title.");
+  }
+  const alignment = netflixResearch.estimateSubtitleAlignment(
+    experiment.asrSegments,
+    experiment.captionSegments
+  );
+  report.alignment = {
+    ...alignment,
+    sourceExperimentId: experiment.id,
+    audioLanguage: experiment.audioLanguage,
+    captionLanguage: experiment.captionLanguage,
+    asrSegmentCount: experiment.asrSegments?.length || 0,
+    captionSegmentCount: experiment.captionSegments?.length || 0
+  };
+  report.summary = netflixResearchSummary(report);
+  await saveNetflixResearchReport(report);
+  return { report: netflixResearchReportMetadata(report), alignment: report.alignment };
+}
+
+async function exportLastNetflixResearch() {
+  const state = await getNetflixResearchState();
+  const report = await getNetflixResearchReport(state.lastReport?.id);
+  if (!report) throw new Error("Inspect a Netflix title before exporting a research report.");
+  return {
+    report,
+    filename: `dub-transcript-lab/netflix-research/${learning.safeFilename(report.page?.title || "netflix-title")}-${report.id}.json`
+  };
+}
+
+async function exportNetflixResearchDataset() {
+  const state = await getNetflixResearchState();
+  if (!state.entries.length) throw new Error("No Netflix research reports have been collected.");
+  const reports = (await Promise.all(
+    state.entries.map((entry) => getNetflixResearchReport(entry.id))
+  )).filter(Boolean);
+  const headers = [
+    "collectedAt",
+    "netflixId",
+    "contentType",
+    "seriesTitle",
+    "title",
+    "seasonNumber",
+    "episodeNumber",
+    "releaseYear",
+    "durationSeconds",
+    "audioLanguage",
+    "audioRole",
+    "audioTrackCount",
+    "representationCount",
+    "inspectedRepresentationCount",
+    "protectionDetectedCount",
+    "shortEntityCount",
+    "webCodecsSupportedCount",
+    "sameLanguageSubtitleCount",
+    "subtitleConclusion",
+    "alignmentStatus",
+    "agreementEstimate"
+  ];
+  const rows = reports.map((report) => [
+    report.collectedAt,
+    report.page?.netflixId,
+    report.page?.contentType,
+    report.page?.seriesTitle,
+    report.page?.title,
+    report.page?.seasonNumber,
+    report.page?.episodeNumber,
+    report.page?.releaseYear,
+    report.page?.durationSeconds,
+    report.audio?.requestedLanguage,
+    report.audio?.selectedTrack?.role,
+    report.audio?.tracks?.length || 0,
+    report.audio?.representationGroups?.length || 0,
+    report.summary?.inspectedRepresentationCount || 0,
+    report.summary?.protectionDetectedCount || 0,
+    report.summary?.shortEntityCount || 0,
+    report.summary?.webCodecsSupportedCount || 0,
+    report.summary?.sameLanguageSubtitleCount || 0,
+    report.summary?.subtitleConclusion,
+    report.alignment?.status,
+    report.alignment?.agreementEstimate
+  ]);
+  return {
+    csv: [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n"),
+    filename: `dub-transcript-lab/netflix-research/netflix-audio-dataset-${new Date().toISOString().slice(0, 10)}.csv`,
+    reportCount: reports.length
+  };
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, "\"\"")}"`;
+}
+
+function netflixWatchId(url) {
+  try {
+    return new URL(String(url || "")).pathname.match(/^\/watch\/(\d+)/)?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function safeResearchInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 0 ? number : null;
+}
+
+function safeResearchYear(value) {
+  const number = Number(value);
+  const currentYear = new Date().getUTCFullYear();
+  return Number.isInteger(number) && number >= 1888 && number <= currentYear + 2
+    ? number
+    : null;
+}
+
+function browserFamily(userAgent) {
+  const text = String(userAgent || "");
+  const match = text.match(/(?:Edg|Chrome)\/(\d+)/);
+  return match ? `${text.includes("Edg/") ? "Edge" : "Chrome"} ${match[1]}` : "Chromium-compatible";
 }
 
 async function exportLibraryTranscriptText(key) {

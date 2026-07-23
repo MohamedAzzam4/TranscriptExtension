@@ -1,10 +1,14 @@
 (() => {
-  if (globalThis.__dubTranscriptMediaObserverMainVersion === 4) return;
-  globalThis.__dubTranscriptMediaObserverMainVersion = 4;
+  if (globalThis.__dubTranscriptMediaObserverMainVersion === 5) return;
+  globalThis.__dubTranscriptMediaObserverMainVersion = 5;
 
   const MESSAGE_SOURCE = "dub-transcript-media-observer";
   const IS_NETFLIX = /(^|\.)netflix\.com$/i.test(location.hostname);
   const candidates = new Map();
+  const netflixAudioTrackSummaries = new Map();
+  const netflixSubtitleTrackSummaries = new Map();
+  const netflixTitleMetadata = {};
+  let netflixCurrentMovieId = "";
   let drmProtected = false;
 
   function mediaKind(url, contentType = "") {
@@ -33,7 +37,8 @@
       source: MESSAGE_SOURCE,
       type,
       drmProtected,
-      candidates: [...candidates.values()]
+      candidates: [...candidates.values()],
+      netflixMetadata: snapshotNetflixMetadata()
     }, "*");
   }
 
@@ -96,6 +101,225 @@
     return result.movieId && Array.isArray(tracks) ? tracks : [];
   }
 
+  function netflixPayloadResult(payload) {
+    return payload?.result && typeof payload.result === "object"
+      ? payload.result
+      : payload;
+  }
+
+  function netflixPageWatchId() {
+    return String(location.pathname || "").match(/^\/watch\/(\d+)/)?.[1] || "";
+  }
+
+  function acceptNetflixMovie(result) {
+    const movieId = metadataText(result?.movieId, 64);
+    if (!movieId) return false;
+    const pageId = netflixPageWatchId();
+    if (pageId && movieId !== pageId) return false;
+    if (netflixCurrentMovieId && netflixCurrentMovieId !== movieId) {
+      candidates.clear();
+      netflixAudioTrackSummaries.clear();
+      netflixSubtitleTrackSummaries.clear();
+      for (const key of Object.keys(netflixTitleMetadata)) delete netflixTitleMetadata[key];
+    }
+    netflixCurrentMovieId = movieId;
+    return true;
+  }
+
+  function netflixTimedTextTracks(payload) {
+    if (!IS_NETFLIX || !payload || typeof payload !== "object") return [];
+    const result = payload.result && typeof payload.result === "object"
+      ? payload.result
+      : payload;
+    const tracks = result.timedTextTracks
+      || result.timed_text_tracks
+      || result.textTracks
+      || result.subtitleTracks
+      || result.subtitles;
+    return result.movieId && Array.isArray(tracks) ? tracks : [];
+  }
+
+  function metadataText(value, limit = 160) {
+    return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit);
+  }
+
+  function metadataNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function firstMetadataText(objects, keys, limit = 160) {
+    for (const object of objects) {
+      if (!object || typeof object !== "object") continue;
+      for (const key of keys) {
+        const value = metadataText(object[key], limit);
+        if (value) return value;
+      }
+    }
+    return "";
+  }
+
+  function firstMetadataNumber(objects, keys) {
+    for (const object of objects) {
+      if (!object || typeof object !== "object") continue;
+      for (const key of keys) {
+        const value = metadataNumber(object[key]);
+        if (value != null) return value;
+      }
+    }
+    return null;
+  }
+
+  function inspectNetflixTitleMetadata(payload) {
+    if (!IS_NETFLIX || !payload || typeof payload !== "object") return;
+    const result = payload.result && typeof payload.result === "object"
+      ? payload.result
+      : payload;
+    if (!result.movieId) return;
+    const objects = [
+      result,
+      result.videoMetadata,
+      result.video_metadata,
+      result.metadata,
+      result.playbackContext,
+      result.playback_context
+    ];
+    const videoId = firstMetadataText(objects, ["movieId", "videoId", "video_id", "id"], 64);
+    const seriesId = firstMetadataText(objects, ["seriesId", "series_id", "showId", "show_id"], 64);
+    const title = firstMetadataText(objects, ["title", "videoTitle", "video_title", "displayTitle"], 200);
+    const seriesTitle = firstMetadataText(objects, ["seriesTitle", "series_title", "showTitle", "show_title"], 200);
+    const episodeTitle = firstMetadataText(objects, ["episodeTitle", "episode_title"], 200);
+    const rawType = firstMetadataText(objects, ["videoType", "video_type", "type", "summaryType"], 48);
+    const seasonNumber = firstMetadataNumber(objects, ["seasonNumber", "season_number", "season"]);
+    const episodeNumber = firstMetadataNumber(objects, ["episodeNumber", "episode_number", "episode"]);
+    const rawYear = firstMetadataNumber(objects, ["releaseYear", "release_year", "year"]);
+    const currentYear = new Date().getUTCFullYear();
+    const releaseYear = Number.isInteger(rawYear) && rawYear >= 1888 && rawYear <= currentYear + 2
+      ? rawYear
+      : null;
+    const typeText = rawType.toLowerCase();
+    const contentType = /episode|show|series/.test(typeText) || seasonNumber != null || episodeNumber != null
+      ? "episode"
+      : /movie|film/.test(typeText)
+        ? "movie"
+        : "";
+    Object.assign(netflixTitleMetadata, {
+      ...(videoId ? { videoId } : {}),
+      ...(seriesId ? { seriesId } : {}),
+      ...(title ? { title } : {}),
+      ...(seriesTitle ? { seriesTitle } : {}),
+      ...(episodeTitle ? { episodeTitle } : {}),
+      ...(contentType ? { contentType } : {}),
+      ...(releaseYear != null ? { releaseYear } : {}),
+      ...(seasonNumber != null ? { seasonNumber } : {}),
+      ...(episodeNumber != null ? { episodeNumber } : {})
+    });
+  }
+
+  function rememberNetflixAudioTrack(track) {
+    const language = metadataText(track.language || track.bcp47 || track.languageCode, 64);
+    const languageDescription = metadataText(
+      track.languageDescription || track.displayName || track.name,
+      128
+    );
+    const trackId = metadataText(track.trackId || track.id || track.new_track_id || track.newTrackId, 128);
+    const selected = [track.selected, track.isSelected, track.active, track.isActive]
+      .some((value) => value === true);
+    const roleText = [
+      track.rawTrackType,
+      track.trackType,
+      track.role,
+      track.roles,
+      languageDescription
+    ].flat().filter(Boolean).join(" ").toLowerCase();
+    const role = [
+      track.isAudioDescription,
+      track.audioDescription,
+      track.isDescriptive,
+      track.descriptive
+    ].some((value) => value === true)
+      || /audio\s*description|descriptive|audiodeskription|h[öo]rfilm/.test(roleText)
+      ? "audio-description"
+      : "main";
+    const streams = Array.isArray(track.streams) ? track.streams : [];
+    const key = trackId || `${language}|${languageDescription}|${role}`;
+    if (!key) return;
+    netflixAudioTrackSummaries.set(key, {
+      language,
+      languageDescription,
+      trackId,
+      role,
+      selected,
+      channels: Math.max(
+        0,
+        ...streams.map((stream) => Number(
+          stream?.channels || stream?.channelCount || stream?.channel_count
+        ) || 0),
+        Number(track.channels || track.channelCount || track.channel_count) || 0
+      ) || null,
+      representationCount: streams.length || 1
+    });
+  }
+
+  function rememberNetflixSubtitleTrack(track) {
+    if (!track || typeof track !== "object" || track.isNoneTrack === true) return;
+    const language = metadataText(track.language || track.bcp47 || track.languageCode, 64);
+    const languageDescription = metadataText(
+      track.languageDescription || track.displayName || track.name,
+      128
+    );
+    const trackId = metadataText(track.trackId || track.id || track.new_track_id || track.newTrackId, 128);
+    const roleText = [
+      track.rawTrackType,
+      track.trackType,
+      track.role,
+      track.roles,
+      languageDescription
+    ].flat().filter(Boolean).join(" ").toLowerCase();
+    const selected = [track.selected, track.isSelected, track.active, track.isActive]
+      .some((value) => value === true);
+    const forced = [
+      track.isForcedNarrative,
+      track.forcedNarrative,
+      track.isForced,
+      track.forced
+    ].some((value) => value === true) || /forced|narrative/.test(roleText);
+    const sdh = [
+      track.isSdh,
+      track.isSDH,
+      track.sdh,
+      track.isHearingImpaired
+    ].some((value) => value === true) || /\bsdh\b|hearing.?impaired|hörgeschädigt/.test(roleText);
+    const closedCaptions = [
+      track.isClosedCaption,
+      track.closedCaption,
+      track.closedCaptions,
+      track.isCC
+    ].some((value) => value === true) || /\bcc\b|closed.?caption/.test(roleText);
+    const role = forced ? "forced" : (sdh || closedCaptions ? "sdh" : "subtitle");
+    const key = trackId || `${language}|${languageDescription}|${role}`;
+    if (!key) return;
+    netflixSubtitleTrackSummaries.set(key, {
+      language,
+      languageDescription,
+      trackId,
+      role,
+      selected,
+      forced,
+      sdh,
+      closedCaptions
+    });
+  }
+
+  function snapshotNetflixMetadata() {
+    if (!IS_NETFLIX) return null;
+    return {
+      title: { ...netflixTitleMetadata },
+      audioTracks: [...netflixAudioTrackSummaries.values()],
+      subtitleTracks: [...netflixSubtitleTrackSummaries.values()]
+    };
+  }
+
   function netflixDownloadUrls(value, depth = 0) {
     if (depth > 3 || value == null) return [];
     if (typeof value === "string") return [value];
@@ -108,8 +332,13 @@
   }
 
   function inspectNetflixPlayerMetadata(payload) {
+    const result = netflixPayloadResult(payload);
+    if (!acceptNetflixMovie(result)) return;
+    inspectNetflixTitleMetadata(payload);
+    for (const track of netflixTimedTextTracks(payload)) rememberNetflixSubtitleTrack(track);
     for (const track of netflixAudioTracks(payload)) {
       if (!track || typeof track !== "object") continue;
+      rememberNetflixAudioTrack(track);
       const language = track.language || track.bcp47 || track.languageCode || "";
       const languageDescription = track.languageDescription || track.displayName || track.name || "";
       const trackId = track.trackId || track.id || track.new_track_id || track.newTrackId || "";
@@ -165,6 +394,7 @@
         }
       }
     }
+    publish();
   }
 
   if (IS_NETFLIX) {

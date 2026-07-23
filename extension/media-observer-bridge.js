@@ -1,10 +1,20 @@
 (() => {
-  if (globalThis.__dubTranscriptMediaObserverBridgeVersion === 4) return;
-  globalThis.__dubTranscriptMediaObserverBridgeVersion = 4;
+  if (globalThis.__dubTranscriptMediaObserverBridgeVersion === 5) return;
+  globalThis.__dubTranscriptMediaObserverBridgeVersion = 5;
 
   const MESSAGE_SOURCE = "dub-transcript-media-observer";
   const candidates = new Map();
   let drmProtected = false;
+  let netflixMetadata = null;
+  let netflixMovieId = "";
+
+  function cloneMetadata(value) {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return null;
+    }
+  }
 
   function mergeCandidate(candidate) {
     if (!candidate || typeof candidate !== "object") return;
@@ -41,6 +51,15 @@
     if (event.source !== window || event.data?.source !== MESSAGE_SOURCE) return;
     if (event.data?.type === "request-snapshot") return;
     drmProtected ||= Boolean(event.data?.drmProtected);
+    if (event.data?.netflixMetadata && typeof event.data.netflixMetadata === "object") {
+      const incoming = cloneMetadata(event.data.netflixMetadata);
+      const incomingMovieId = String(incoming?.title?.videoId || "").slice(0, 64);
+      if (netflixMovieId && incomingMovieId && netflixMovieId !== incomingMovieId) {
+        candidates.clear();
+      }
+      if (incomingMovieId) netflixMovieId = incomingMovieId;
+      netflixMetadata = incoming;
+    }
     for (const candidate of event.data?.candidates || []) mergeCandidate(candidate);
   });
 
@@ -53,6 +72,7 @@
       window.postMessage({ source: MESSAGE_SOURCE, type: "request-snapshot" }, "*");
       return {
         drmProtected,
+        netflixMetadata: netflixMetadata ? cloneMetadata(netflixMetadata) : null,
         candidates: [...candidates.values()]
           .sort((left, right) => right.lastSeen - left.lastSeen)
       };

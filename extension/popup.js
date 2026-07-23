@@ -42,6 +42,14 @@ const elements = {
   diagnosticMessage: document.querySelector("#diagnosticMessage"),
   diagnosticAction: document.querySelector("#diagnosticAction"),
   diagnosticDetails: document.querySelector("#diagnosticDetails"),
+  netflixResearchPanel: document.querySelector("#netflixResearchPanel"),
+  netflixResearchCount: document.querySelector("#netflixResearchCount"),
+  analyzeNetflixTitle: document.querySelector("#analyzeNetflixTitle"),
+  attachNetflixSample: document.querySelector("#attachNetflixSample"),
+  exportNetflixResearch: document.querySelector("#exportNetflixResearch"),
+  exportNetflixDataset: document.querySelector("#exportNetflixDataset"),
+  netflixResearchStatus: document.querySelector("#netflixResearchStatus"),
+  netflixResearchDetails: document.querySelector("#netflixResearchDetails"),
   downloadTranscript: document.querySelector("#downloadTranscript"),
   export: document.querySelector("#export"),
   savedTranscripts: document.querySelector("#savedTranscripts"),
@@ -128,6 +136,68 @@ elements.stop.addEventListener("click", async () => {
   }
 });
 
+elements.analyzeNetflixTitle.addEventListener("click", async () => {
+  elements.analyzeNetflixTitle.disabled = true;
+  elements.netflixResearchPanel.open = true;
+  elements.netflixResearchStatus.textContent = "Inspecting Netflix metadata and initialization ranges…";
+  setStatus("Running privacy-safe Netflix research inspection…");
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "ANALYZE_NETFLIX_TITLE",
+      audioLanguage: elements.audioLanguage.value.trim() || "de"
+    });
+    if (!response?.ok) throw new Error(response?.error || "Netflix research inspection failed.");
+    setStatus("Netflix research report saved locally.");
+    await refreshNetflixResearch();
+  } catch (error) {
+    elements.netflixResearchStatus.textContent = error.message;
+    setStatus(error.message, true);
+  } finally {
+    elements.analyzeNetflixTitle.disabled = false;
+  }
+});
+
+elements.attachNetflixSample.addEventListener("click", async () => {
+  elements.attachNetflixSample.disabled = true;
+  setStatus("Comparing the latest ASR and caption sample…");
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "ATTACH_NETFLIX_SUBTITLE_SAMPLE" });
+    if (!response?.ok) throw new Error(response?.error || "Could not attach the subtitle sample.");
+    setStatus(`Subtitle alignment result: ${response.alignment?.status || "unknown"}.`);
+    await refreshNetflixResearch();
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    elements.attachNetflixSample.disabled = false;
+  }
+});
+
+elements.exportNetflixResearch.addEventListener("click", async () => {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "EXPORT_LAST_NETFLIX_RESEARCH" });
+    if (!response?.ok) throw new Error(response?.error || "No Netflix research report is available.");
+    await downloadDataFile(
+      JSON.stringify(response.report, null, 2),
+      response.filename,
+      "application/json"
+    );
+    setStatus("Netflix research JSON exported.");
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+});
+
+elements.exportNetflixDataset.addEventListener("click", async () => {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "EXPORT_NETFLIX_RESEARCH_DATASET" });
+    if (!response?.ok) throw new Error(response?.error || "No Netflix research dataset is available.");
+    await downloadDataFile(response.csv, response.filename, "text/csv;charset=utf-8");
+    setStatus(`Netflix research dataset exported (${response.reportCount} reports).`);
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+});
+
 elements.downloadTranscript.addEventListener("click", async () => {
   setStatus("Preparing transcript text…");
   try {
@@ -206,6 +276,7 @@ async function restoreState() {
   await refreshSavedWords();
   await refreshTranscriptLibrary();
   await refreshDiagnostics();
+  await refreshNetflixResearch();
 }
 
 async function refreshDiagnostics() {
@@ -251,6 +322,49 @@ function renderDiagnostics(diagnostics) {
     fragment.append(row);
   }
   elements.diagnosticDetails.replaceChildren(fragment);
+}
+
+async function refreshNetflixResearch() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "GET_NETFLIX_RESEARCH_STATE" });
+    if (!response?.ok) throw new Error(response?.error || "Research reports are unavailable.");
+    const entries = response.entries || [];
+    const report = response.lastReport || null;
+    elements.netflixResearchCount.textContent = `${entries.length} report${entries.length === 1 ? "" : "s"}`;
+    if (!report) {
+      elements.netflixResearchStatus.textContent = "No Netflix research report yet.";
+      elements.netflixResearchDetails.replaceChildren();
+      return;
+    }
+    const agreement = report.agreementEstimate == null
+      ? null
+      : Number(report.agreementEstimate);
+    elements.netflixResearchStatus.textContent = `${report.title} · ${report.alignmentStatus}`;
+    const details = [
+      ["Type", report.contentType],
+      ["Audio", `${report.audioLanguage || "?"} · ${report.selectedRole || "unknown role"}`],
+      ["Representations", `${report.inspectedRepresentationCount} inspected`],
+      ["Protection", `${report.protectionDetectedCount} protected`],
+      ["Subtitles", String(report.subtitleConclusion || "unknown").replace(/-/g, " ")],
+      ["Agreement", agreement != null && Number.isFinite(agreement)
+        ? `${(agreement * 100).toFixed(1)}%`
+        : "not sampled"]
+    ];
+    const fragment = document.createDocumentFragment();
+    for (const [label, rawValue] of details) {
+      if (!rawValue) continue;
+      const row = document.createElement("div");
+      const term = document.createElement("dt");
+      const value = document.createElement("dd");
+      term.textContent = label;
+      value.textContent = rawValue;
+      row.append(term, value);
+      fragment.append(row);
+    }
+    elements.netflixResearchDetails.replaceChildren(fragment);
+  } catch (error) {
+    elements.netflixResearchStatus.textContent = error.message;
+  }
 }
 
 function readSettings() {
@@ -435,7 +549,11 @@ function renderTranscriptLibrary(entries) {
 }
 
 async function downloadTextFile(text, filename) {
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  return downloadDataFile(text, filename, "text/plain;charset=utf-8");
+}
+
+async function downloadDataFile(text, filename, type) {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   try {
     await chrome.downloads.download({

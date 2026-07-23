@@ -180,6 +180,29 @@
         <dl id="diagnosticDetails" class="diagnostic-details"></dl>
       </details>
 
+      <details id="netflixResearchPanel" class="panel research-panel">
+        <summary>
+          Netflix audio research
+          <span id="netflixResearchCount" class="diagnostic-badge">0 reports</span>
+        </summary>
+        <p class="research-copy">
+          Inspects title, track, subtitle, CDN, codec, and MP4 protection metadata. It does not
+          transcribe, retain audio, inspect licenses, or save media URLs.
+        </p>
+        <button id="analyzeNetflixTitle" class="wide research-primary">Analyze this Netflix title</button>
+        <button id="attachNetflixSample" class="wide">Attach latest ASR + caption sample</button>
+        <div class="research-actions">
+          <button id="exportNetflixResearch">Report JSON</button>
+          <button id="exportNetflixDataset">Dataset CSV</button>
+        </div>
+        <p id="netflixResearchStatus" class="research-status">No Netflix research report yet.</p>
+        <dl id="netflixResearchDetails" class="diagnostic-details"></dl>
+        <small class="setting-help">
+          To test whether subtitles match the dub, first collect at least 20–60 seconds with
+          visible same-language Netflix captions, stop the analysis, then attach that sample.
+        </small>
+      </details>
+
       <button id="downloadTranscript" class="wide primary">Download transcript .txt</button>
       <button id="export" class="wide secondary-export">Export technical experiment JSON</button>
 

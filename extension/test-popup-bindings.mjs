@@ -19,6 +19,10 @@ assert.match(html, /id="transcriptBold"/);
 assert.match(html, /id="savedWords"/);
 assert.match(html, /id="downloadTranscript"/);
 assert.match(html, /id="savedTranscripts"/);
+assert.match(html, /id="analyzeNetflixTitle"/);
+assert.match(html, /id="attachNetflixSample"/);
+assert.match(html, /id="exportNetflixResearch"/);
+assert.match(html, /id="exportNetflixDataset"/);
 
 const content = fs.readFileSync(new URL("./content.js", import.meta.url), "utf8");
 assert.match(content, /class="caption-drag-handle"/);

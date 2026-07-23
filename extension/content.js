@@ -1,6 +1,6 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 12) return;
-  globalThis.__dubTranscriptLabVersion = 12;
+  if (globalThis.__dubTranscriptLabVersion === 13) return;
+  globalThis.__dubTranscriptLabVersion = 13;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
@@ -1267,8 +1267,12 @@
     const currentSrc = String(element.currentSrc || element.src || "");
     const observedMedia = globalThis.__dubTranscriptMediaObserver?.snapshot?.() || {
       drmProtected: false,
+      netflixMetadata: null,
       candidates: []
     };
+    const mediaKeysAttached = Boolean(element.mediaKeys);
+    const encryptedEventObserved = Boolean(security.encrypted);
+    const observerReportedDrm = Boolean(observedMedia.drmProtected);
     return {
       currentTime: element.currentTime,
       playbackRate: element.playbackRate,
@@ -1280,16 +1284,41 @@
       visible: rect.width > 0 && rect.height > 0,
       frameUrl: location.href,
       frameReferrer: document.referrer || null,
+      documentTitle: String(document.title || "").replace(/\s+/g, " ").trim().slice(0, 300),
+      visibleTitleText: netflixVisibleTitleText(),
       currentSrc,
       sourceKind: currentSrc.startsWith("blob:") ? "blob" : "direct",
       batchCandidates: mediaBatchCandidates(element, currentSrc, observedMedia.candidates),
+      netflixMetadata: observedMedia.netflixMetadata || null,
       drmProtected: Boolean(
-        element.mediaKeys
-        || security.encrypted
-        || observedMedia.drmProtected
+        mediaKeysAttached
+        || encryptedEventObserved
+        || observerReportedDrm
       ),
-      userAgent: navigator.userAgent
+      drmSignals: {
+        mediaKeysAttached,
+        encryptedEventObserved,
+        observerReportedDrm
+      },
+      userAgent: navigator.userAgent,
+      browserLanguage: navigator.language || null,
+      browserPlatform: navigator.userAgentData?.platform || navigator.platform || null
     };
+  }
+
+  function netflixVisibleTitleText() {
+    if (!/(^|\.)netflix\.com$/i.test(location.hostname)) return "";
+    const selectors = [
+      "[data-uia='video-title']",
+      "[data-uia='player-title']",
+      "[data-uia='video-title'] h4",
+      "[data-uia='video-title'] span"
+    ];
+    const values = selectors
+      .flatMap((selector) => [...document.querySelectorAll(selector)])
+      .map((element) => String(element.textContent || "").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    return [...new Set(values)].join(" · ").slice(0, 400);
   }
 
   function mediaBatchCandidates(element, currentSrc, observedCandidates = []) {

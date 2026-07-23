@@ -36,7 +36,8 @@ const sandbox = {
   URL,
   location: {
     hostname: "www.netflix.com",
-    href: "https://www.netflix.com/watch/123"
+    href: "https://www.netflix.com/watch/123",
+    pathname: "/watch/123"
   },
   document: {
     documentElement: {},
@@ -65,6 +66,26 @@ vm.runInContext(source, context, { filename: "media-observer-main.js" });
 const metadata = JSON.stringify({
   result: {
     movieId: 123,
+    videoType: "episode",
+    releaseYear: 2024,
+    seriesTitle: "Research Series",
+    episodeTitle: "Research Episode",
+    seasonNumber: 2,
+    episodeNumber: 5,
+    timedTextTracks: [
+      {
+        language: "deu",
+        languageDescription: "Deutsch [CC]",
+        trackId: "german-sdh",
+        isSDH: true,
+        isSelected: true
+      },
+      {
+        language: "eng",
+        languageDescription: "English",
+        trackId: "english-standard"
+      }
+    ],
     audioTracks: [
       {
         language: "eng",
@@ -122,5 +143,15 @@ assert.equal(netflixCandidates.find((candidate) => candidate.language === "deu")
 assert.equal(netflixCandidates.find((candidate) => candidate.language === "deu").role, "audio-description");
 assert.equal(netflixCandidates.find((candidate) => candidate.language === "deu").trackId, "german-ad-track");
 assert.equal(netflixCandidates.find((candidate) => candidate.language === "deu").selected, true);
+
+const latestMetadata = messages.map((message) => message.netflixMetadata).filter(Boolean).at(-1);
+assert.equal(latestMetadata.title.videoId, "123");
+assert.equal(latestMetadata.title.contentType, "episode");
+assert.equal(latestMetadata.title.releaseYear, 2024);
+assert.equal(latestMetadata.title.seriesTitle, "Research Series");
+assert.equal(latestMetadata.title.episodeTitle, "Research Episode");
+assert.equal(latestMetadata.subtitleTracks.length, 2);
+assert.equal(latestMetadata.subtitleTracks.find((track) => track.trackId === "german-sdh").sdh, true);
+assert.equal(latestMetadata.audioTracks.find((track) => track.trackId === "german-ad-track").role, "audio-description");
 
 console.log("Netflix media-observer tests passed");

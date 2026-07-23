@@ -219,6 +219,40 @@ button.wide {
 
 .secondary-export { margin-top: 6px; font-size: 11px; opacity: .82; }
 
+.research-panel {
+  background: linear-gradient(145deg, rgba(32, 37, 53, .94), rgba(20, 24, 34, .96));
+}
+
+.research-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.research-copy,
+.research-status {
+  color: #aeb7c8;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.research-primary {
+  border-color: #5f78d8;
+  background: #4059b5;
+}
+
+.research-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.research-actions button {
+  font-size: 10px;
+}
+
 .diagnostic-panel {
   position: relative;
   overflow: hidden;
