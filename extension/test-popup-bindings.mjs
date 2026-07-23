@@ -13,8 +13,18 @@ for (const id of queriedIds) {
 assert.equal(new Set(queriedIds).size, queriedIds.length, "popup element bindings must be unique");
 assert.match(html, /id="translationEnabled"/);
 assert.match(html, /id="fontSize"/);
+assert.match(html, /id="translationFontSize"/);
+assert.match(html, /id="translationTextColor"/);
+assert.match(html, /id="transcriptBold"/);
 assert.match(html, /id="savedWords"/);
 assert.match(html, /id="downloadTranscript"/);
 assert.match(html, /id="savedTranscripts"/);
+
+const content = fs.readFileSync(new URL("./content.js", import.meta.url), "utf8");
+assert.match(content, /class="caption-drag-handle"/);
+assert.match(content, /captionDragHandleElement\.addEventListener\("pointerdown", startCaptionDrag\)/);
+assert.doesNotMatch(content, /captionBoxElement\.addEventListener\("pointerdown", startCaptionDrag\)/);
+assert.match(content, /function hasActiveCaptionSelection\(\)/);
+assert.match(content, /wordElement\.setAttribute\("role", "button"\)/);
 
 console.log("Popup binding tests passed");

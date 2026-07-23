@@ -7,6 +7,8 @@ from unittest.mock import patch
 from whisperlivekit.timed_objects import ASRToken
 
 from batch_transcribe import (
+    acquire_first_accessible_source,
+    batch_worker_diagnostics,
     CaptionAnswerKey,
     ResolvedSource,
     clean_headers,
@@ -16,7 +18,13 @@ from batch_transcribe import (
     decode_source,
     download_and_decode_youtube,
     group_words_by_silence,
+    hls_child_playlists,
+    hls_relevant_playlists,
+    media_failure_category,
     parse_youtube_json3,
+    playlist_protection_reason,
+    resolve_sources,
+    select_audio_stream,
     select_youtube_caption_track,
     validate_public_http_url,
 )
@@ -53,6 +61,179 @@ class BatchTranscribeTests(unittest.TestCase):
                 "referer": "https://example.com/watch",
             },
         )
+
+    @patch("batch_transcribe.socket.getaddrinfo")
+    def test_direct_sources_keep_ranked_candidates(self, getaddrinfo):
+        getaddrinfo.return_value = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))]
+        sources = resolve_sources({
+            "sourceKind": "direct",
+            "sourceCandidates": [
+                {
+                    "url": "https://media.example/master.m3u8",
+                    "kind": "hls",
+                    "source": "netflix-player-metadata",
+                    "language": "deu",
+                    "codec": "aac",
+                    "profile": "xhe-aac-dash",
+                    "bitrate": 128000,
+                    "channels": 2,
+                    "representationIndex": 3,
+                },
+                {"url": "https://media.example/movie.mp4", "kind": "media"},
+            ],
+            "headers": {"referer": "https://player.example/watch"},
+            "durationHint": 1200,
+        })
+        self.assertEqual([source.media_kind for source in sources], ["hls", "media"])
+        self.assertEqual(sources[0].headers["referer"], "https://player.example/watch")
+        self.assertEqual(sources[0].duration, 1200)
+        self.assertEqual(sources[0].discovery_source, "netflix-player-metadata")
+        self.assertEqual(sources[0].language_hint, "deu")
+        self.assertEqual(sources[0].codec_hint, "aac")
+        self.assertEqual(sources[0].profile_hint, "xhe-aac-dash")
+        self.assertEqual(sources[0].bitrate, 128000)
+        self.assertEqual(sources[0].channels, 2)
+        self.assertEqual(sources[0].representation_index, 3)
+
+    def test_worker_diagnostics_include_decoder_versions(self):
+        diagnostics = batch_worker_diagnostics()
+        self.assertEqual(diagnostics["workerVersion"], "0.9.4")
+        self.assertIn("pyavVersion", diagnostics)
+        self.assertIn("libavcodecVersion", diagnostics)
+
+    def test_patchwelcome_is_classified_as_unsupported_decoder(self):
+        error = RuntimeError("Not yet implemented in FFmpeg, patches welcome: avcodec_send_packet")
+        self.assertEqual(media_failure_category(error), "decoder-unsupported")
+
+    def test_browser_pcm_is_loaded_and_deleted_from_local_temp_directory(self):
+        job_id = "browser-job"
+        with tempfile.TemporaryDirectory() as project_root:
+            temp_root = os.path.join(project_root, ".runtime", "batch-temp")
+            os.makedirs(temp_root)
+            pcm_path = os.path.join(temp_root, f"browser-pcm-{job_id}.s16le")
+            with open(pcm_path, "wb") as output:
+                output.write(b"\x00\x00" * 16_000)
+            with (
+                patch("batch_transcribe.PROJECT_ROOT", project_root),
+                patch("batch_transcribe.emit"),
+            ):
+                source = resolve_sources({
+                    "sourceKind": "browser-pcm",
+                    "jobId": job_id,
+                    "pcmPath": pcm_path,
+                    "pcmBytes": 32_000,
+                    "sampleRate": 16_000,
+                    "channels": 1,
+                    "durationHint": 1,
+                })[0]
+                audio = decode_source(source, job_id, "de", 1, 1)
+            self.assertEqual(len(audio), 16_000)
+            self.assertFalse(os.path.exists(pcm_path))
+
+    def test_browser_pcm_outside_local_temp_directory_is_rejected(self):
+        with tempfile.TemporaryDirectory() as project_root:
+            outside = os.path.join(project_root, "outside.s16le")
+            with open(outside, "wb") as output:
+                output.write(b"\x00\x00")
+            with patch("batch_transcribe.PROJECT_ROOT", project_root):
+                with self.assertRaises(ValueError):
+                    resolve_sources({
+                        "sourceKind": "browser-pcm",
+                        "jobId": "browser-job",
+                        "pcmPath": outside,
+                        "sampleRate": 16_000,
+                        "channels": 1,
+                    })
+
+    def test_hls_children_include_audio_and_variant_playlists(self):
+        children = hls_child_playlists(
+            """#EXTM3U
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",LANGUAGE=\"de\",URI=\"audio/de.m3u8\"
+#EXT-X-STREAM-INF:BANDWIDTH=1000000,AUDIO=\"a\"
+video/main.m3u8
+""",
+            "https://media.example/path/master.m3u8",
+        )
+        self.assertEqual(children, [
+            "https://media.example/path/audio/de.m3u8",
+            "https://media.example/path/video/main.m3u8",
+        ])
+
+    def test_hls_relevant_playlist_prefers_requested_audio_language(self):
+        selected = hls_relevant_playlists(
+            """#EXTM3U
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",LANGUAGE=\"en\",DEFAULT=YES,URI=\"audio/en.m3u8\"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",LANGUAGE=\"deu\",URI=\"audio/de.m3u8\"
+#EXT-X-STREAM-INF:BANDWIDTH=1000000,AUDIO=\"a\"
+video/main.m3u8
+""",
+            "https://media.example/path/master.m3u8",
+            "de",
+        )
+        self.assertEqual(selected, ["https://media.example/path/audio/de.m3u8"])
+
+    @patch("batch_transcribe.read_playlist_text")
+    def test_encrypted_hls_is_rejected_before_decode(self, read_playlist_text):
+        read_playlist_text.return_value = (
+            "#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"\n#EXTINF:4,\na.ts\n"
+        )
+        reason = playlist_protection_reason(ResolvedSource(
+            url="https://media.example/audio.m3u8",
+            headers={},
+            media_kind="hls",
+        ))
+        self.assertIn("encrypted media keys", reason)
+
+    @patch("batch_transcribe.read_playlist_text")
+    def test_hls_method_none_is_clear(self, read_playlist_text):
+        read_playlist_text.return_value = (
+            "#EXTM3U\n#EXT-X-KEY:METHOD=NONE\n#EXTINF:4,\na.ts\n"
+        )
+        reason = playlist_protection_reason(ResolvedSource(
+            url="https://media.example/audio.m3u8",
+            headers={},
+            media_kind="hls",
+        ))
+        self.assertIsNone(reason)
+
+    @patch("batch_transcribe.read_playlist_text")
+    def test_dash_content_protection_is_rejected(self, read_playlist_text):
+        read_playlist_text.return_value = (
+            '<MPD><Period><AdaptationSet><ContentProtection schemeIdUri="urn:uuid:test" />'
+            "</AdaptationSet></Period></MPD>"
+        )
+        reason = playlist_protection_reason(ResolvedSource(
+            url="https://media.example/stream.mpd",
+            headers={},
+            media_kind="dash",
+        ))
+        self.assertIn("ContentProtection", reason)
+
+    def test_requested_audio_language_is_selected(self):
+        class Disposition:
+            def __init__(self, default=False):
+                self.default = default
+
+        class Stream:
+            def __init__(self, index, language, default=False):
+                self.index = index
+                self.metadata = {"language": language}
+                self.disposition = Disposition(default)
+
+        english = Stream(0, "eng", True)
+        german = Stream(1, "deu")
+        self.assertIs(select_audio_stream([english, german], "de"), german)
+
+    @patch("batch_transcribe.decode_source")
+    @patch("batch_transcribe.playlist_protection_reason", return_value=None)
+    @patch("batch_transcribe.emit")
+    def test_acquisition_tries_the_next_ranked_candidate(self, _emit, _protection, decode_source_mock):
+        first = ResolvedSource(url="https://media.example/first.m3u8", headers={}, media_kind="hls")
+        second = ResolvedSource(url="https://media.example/second.m3u8", headers={}, media_kind="hls")
+        decode_source_mock.side_effect = [RuntimeError("expired"), [0.0] * 16_000]
+        selected, audio = acquire_first_accessible_source([first, second], "job", "de")
+        self.assertIs(selected, second)
+        self.assertEqual(len(audio), 16_000)
 
     def test_words_are_grouped_at_real_silence(self):
         words = [

@@ -20,14 +20,28 @@ const elements = {
   textOpacity: document.querySelector("#textOpacity"),
   textOpacityValue: document.querySelector("#textOpacityValue"),
   fontFamily: document.querySelector("#fontFamily"),
+  transcriptBold: document.querySelector("#transcriptBold"),
   edgeStyle: document.querySelector("#edgeStyle"),
   textColor: document.querySelector("#textColor"),
+  translationFontSize: document.querySelector("#translationFontSize"),
+  translationFontSizeValue: document.querySelector("#translationFontSizeValue"),
+  translationTextOpacity: document.querySelector("#translationTextOpacity"),
+  translationTextOpacityValue: document.querySelector("#translationTextOpacityValue"),
+  translationFontFamily: document.querySelector("#translationFontFamily"),
+  translationTextColor: document.querySelector("#translationTextColor"),
+  translationBold: document.querySelector("#translationBold"),
   backgroundColor: document.querySelector("#backgroundColor"),
   syncEarlier: document.querySelector("#syncEarlier"),
   syncLater: document.querySelector("#syncLater"),
   syncOffset: document.querySelector("#syncOffset"),
   start: document.querySelector("#start"),
   stop: document.querySelector("#stop"),
+  diagnosticPanel: document.querySelector("#diagnosticPanel"),
+  diagnosticBadge: document.querySelector("#diagnosticBadge"),
+  diagnosticStage: document.querySelector("#diagnosticStage"),
+  diagnosticMessage: document.querySelector("#diagnosticMessage"),
+  diagnosticAction: document.querySelector("#diagnosticAction"),
+  diagnosticDetails: document.querySelector("#diagnosticDetails"),
   downloadTranscript: document.querySelector("#downloadTranscript"),
   export: document.querySelector("#export"),
   savedTranscripts: document.querySelector("#savedTranscripts"),
@@ -44,6 +58,8 @@ let displayUpdateTimer = null;
 let resetTranslationCache = false;
 
 void restoreState();
+const diagnosticRefreshTimer = setInterval(() => void refreshDiagnostics(), 1_200);
+window.addEventListener("unload", () => clearInterval(diagnosticRefreshTimer), { once: true });
 
 elements.syncEarlier.addEventListener("click", () => void adjustSyncOffset(-0.1));
 elements.syncLater.addEventListener("click", () => void adjustSyncOffset(0.1));
@@ -58,8 +74,14 @@ for (const element of [
   elements.backgroundOpacity,
   elements.textOpacity,
   elements.fontFamily,
+  elements.transcriptBold,
   elements.edgeStyle,
   elements.textColor,
+  elements.translationFontSize,
+  elements.translationTextOpacity,
+  elements.translationFontFamily,
+  elements.translationTextColor,
+  elements.translationBold,
   elements.backgroundColor
 ]) {
   element.addEventListener("input", scheduleDisplaySettingsUpdate);
@@ -85,6 +107,7 @@ elements.start.addEventListener("click", async () => {
         ? "Saved transcript restored. Playback started without transcribing again."
         : "Live transcription fallback is preparing automatically.");
     await refreshTranscriptLibrary();
+    await refreshDiagnostics();
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -99,6 +122,7 @@ elements.stop.addEventListener("click", async () => {
     if (!response?.ok) throw new Error(response?.error || "Could not stop the experiment.");
     setStatus("Stopped. The result is cached locally and ready to export.");
     await refreshTranscriptLibrary();
+    await refreshDiagnostics();
   } catch (error) {
     setStatus(error.message, true);
   }
@@ -141,6 +165,7 @@ elements.export.addEventListener("click", async () => {
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "EXPERIMENT_STATUS") {
     setStatus(message.error || message.status, Boolean(message.error));
+    void refreshDiagnostics();
     if (/transcript ready|saved transcript|cached locally/i.test(message.status || "")) {
       void refreshTranscriptLibrary();
     }
@@ -167,13 +192,65 @@ async function restoreState() {
   elements.backgroundOpacity.value = caption.backgroundOpacity;
   elements.textOpacity.value = caption.textOpacity;
   elements.fontFamily.value = caption.fontFamily;
+  elements.transcriptBold.checked = caption.bold;
   elements.edgeStyle.value = caption.edgeStyle;
   elements.textColor.value = caption.textColor.toLowerCase();
+  elements.translationFontSize.value = translation.fontSize;
+  elements.translationTextOpacity.value = translation.textOpacity;
+  elements.translationFontFamily.value = translation.fontFamily;
+  elements.translationTextColor.value = translation.textColor.toLowerCase();
+  elements.translationBold.checked = translation.bold;
   elements.backgroundColor.value = caption.backgroundColor.toLowerCase();
   currentSyncOffset = normalizeSyncOffset(settings.syncOffset);
   renderControls();
   await refreshSavedWords();
   await refreshTranscriptLibrary();
+  await refreshDiagnostics();
+}
+
+async function refreshDiagnostics() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "GET_VISIBLE_DIAGNOSTICS" });
+    if (!response?.ok) throw new Error(response?.error || "Diagnostics are unavailable.");
+    renderDiagnostics(response.diagnostics || {});
+  } catch (error) {
+    renderDiagnostics({
+      level: "error",
+      stage: "Diagnostics unavailable",
+      message: error.message,
+      details: []
+    });
+  }
+}
+
+function renderDiagnostics(diagnostics) {
+  const level = ["idle", "working", "success", "warning", "error"].includes(diagnostics.level)
+    ? diagnostics.level
+    : "idle";
+  elements.diagnosticPanel.dataset.level = level;
+  elements.diagnosticBadge.textContent = {
+    idle: "Ready",
+    working: "Working",
+    success: "Complete",
+    warning: "Fallback",
+    error: "Failed"
+  }[level];
+  elements.diagnosticStage.textContent = diagnostics.stage || "Ready";
+  elements.diagnosticMessage.textContent = diagnostics.message || "No diagnostic message.";
+  elements.diagnosticAction.hidden = !diagnostics.action;
+  elements.diagnosticAction.textContent = diagnostics.action || "";
+  const fragment = document.createDocumentFragment();
+  for (const detail of diagnostics.details || []) {
+    if (!detail?.label || !detail?.value) continue;
+    const row = document.createElement("div");
+    const term = document.createElement("dt");
+    const value = document.createElement("dd");
+    term.textContent = detail.label;
+    value.textContent = detail.value;
+    row.append(term, value);
+    fragment.append(row);
+  }
+  elements.diagnosticDetails.replaceChildren(fragment);
 }
 
 function readSettings() {
@@ -191,6 +268,7 @@ function readSettings() {
       backgroundOpacity: elements.backgroundOpacity.value,
       textOpacity: elements.textOpacity.value,
       fontFamily: elements.fontFamily.value,
+      bold: elements.transcriptBold.checked,
       edgeStyle: elements.edgeStyle.value,
       textColor: elements.textColor.value,
       backgroundColor: elements.backgroundColor.value
@@ -198,7 +276,12 @@ function readSettings() {
     translationPreferences: learning.normalizeTranslationPreferences({
       enabled: elements.translationEnabled.checked,
       targetLanguage: elements.translationLanguage.value,
-      provider: elements.translationProvider.value
+      provider: elements.translationProvider.value,
+      fontSize: elements.translationFontSize.value,
+      textOpacity: elements.translationTextOpacity.value,
+      fontFamily: elements.translationFontFamily.value,
+      textColor: elements.translationTextColor.value,
+      bold: elements.translationBold.checked
     })
   };
 }
@@ -435,6 +518,8 @@ function renderControls() {
   elements.verticalPositionValue.textContent = `${Number(elements.verticalPosition.value)}%`;
   elements.backgroundOpacityValue.textContent = `${Number(elements.backgroundOpacity.value)}%`;
   elements.textOpacityValue.textContent = `${Number(elements.textOpacity.value)}%`;
+  elements.translationFontSizeValue.textContent = `${Number(elements.translationFontSize.value)} px`;
+  elements.translationTextOpacityValue.textContent = `${Number(elements.translationTextOpacity.value)}%`;
   const browserTranslatorAvailable = "Translator" in globalThis;
   elements.translationAvailability.textContent = browserTranslatorAvailable
     ? "On-device translation is detected. Automatic mode uses it before Google Cloud."

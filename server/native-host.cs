@@ -25,6 +25,12 @@ internal static class NativeHost
     private static Process batchProcess;
     private static string batchJobId;
     private static bool batchCancelRequested;
+    private static FileStream browserPcmStream;
+    private static string browserPcmPath;
+    private static string browserPcmJobId;
+    private static Dictionary<string, object> browserPcmRequest;
+    private static long browserPcmBytes;
+    private const long MaxBrowserPcmBytes = 1024L * 1024L * 1024L;
 
     public static int Main()
     {
@@ -69,6 +75,21 @@ internal static class NativeHost
         if (command == "cancel_batch")
         {
             CancelBatch(GetString(message, "jobId"), true);
+            return;
+        }
+        if (command == "browser_pcm_begin")
+        {
+            BeginBrowserPcm(message);
+            return;
+        }
+        if (command == "browser_pcm_chunk")
+        {
+            AppendBrowserPcm(message);
+            return;
+        }
+        if (command == "browser_pcm_finish")
+        {
+            FinishBrowserPcm(message);
             return;
         }
         throw new InvalidOperationException("Unknown native host command: " + command);
@@ -245,18 +266,150 @@ internal static class NativeHost
         }
     }
 
+    private static void BeginBrowserPcm(Dictionary<string, object> message)
+    {
+        string jobId = GetString(message, "jobId");
+        if (String.IsNullOrWhiteSpace(jobId) || jobId.Length > 100)
+            throw new InvalidOperationException("The browser PCM request has an invalid job ID.");
+        foreach (char character in jobId)
+            if (!Char.IsLetterOrDigit(character) && character != '-' && character != '_')
+                throw new InvalidOperationException("The browser PCM job ID contains unsupported characters.");
+
+        lock (BatchLock)
+        {
+            CleanupBrowserPcmLocked();
+            string projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName;
+            string tempDirectory = Path.Combine(projectRoot, ".runtime", "batch-temp");
+            Directory.CreateDirectory(tempDirectory);
+            browserPcmPath = Path.Combine(tempDirectory, "browser-pcm-" + jobId + ".s16le");
+            browserPcmStream = new FileStream(browserPcmPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            browserPcmJobId = jobId;
+            browserPcmRequest = new Dictionary<string, object>(message);
+            browserPcmBytes = 0;
+        }
+        SendState("batch_status", "Chrome decoded the Netflix audio; receiving local PCM for Whisper.", jobId);
+    }
+
+    private static void AppendBrowserPcm(Dictionary<string, object> message)
+    {
+        string jobId = GetString(message, "jobId");
+        string encoded = GetString(message, "data");
+        if (String.IsNullOrEmpty(encoded) || encoded.Length > 900000)
+            throw new InvalidOperationException("A browser PCM chunk exceeded the local message limit.");
+        byte[] bytes;
+        try { bytes = Convert.FromBase64String(encoded); }
+        catch (FormatException) { throw new InvalidOperationException("A browser PCM chunk was not valid base64."); }
+        lock (BatchLock)
+        {
+            if (browserPcmStream == null || browserPcmJobId != jobId)
+                throw new InvalidOperationException("No matching browser PCM transfer is active.");
+            if (browserPcmBytes + bytes.LongLength > MaxBrowserPcmBytes)
+            {
+                CleanupBrowserPcmLocked();
+                throw new InvalidOperationException("Browser-decoded audio exceeded the 1 GB local safety limit.");
+            }
+            browserPcmStream.Write(bytes, 0, bytes.Length);
+            browserPcmBytes += bytes.LongLength;
+        }
+    }
+
+    private static void FinishBrowserPcm(Dictionary<string, object> message)
+    {
+        string jobId = GetString(message, "jobId");
+        string path;
+        Dictionary<string, object> request;
+        long byteCount;
+        lock (BatchLock)
+        {
+            if (browserPcmStream == null || browserPcmJobId != jobId)
+                throw new InvalidOperationException("No matching browser PCM transfer is active.");
+            browserPcmStream.Flush();
+            browserPcmStream.Dispose();
+            browserPcmStream = null;
+            path = browserPcmPath;
+            request = browserPcmRequest;
+            byteCount = browserPcmBytes;
+            browserPcmPath = null;
+            browserPcmJobId = null;
+            browserPcmRequest = null;
+            browserPcmBytes = 0;
+        }
+        if (byteCount <= 0)
+        {
+            TryDelete(path);
+            throw new InvalidOperationException("Chrome returned an empty decoded PCM stream.");
+        }
+        request["command"] = "batch_transcribe";
+        request["sourceKind"] = "browser-pcm";
+        request["pcmPath"] = path;
+        request["pcmBytes"] = byteCount;
+        try
+        {
+            DateTime deadline = DateTime.UtcNow.AddSeconds(5);
+            while (DateTime.UtcNow < deadline)
+            {
+                lock (BatchLock)
+                {
+                    if (String.IsNullOrEmpty(batchJobId)) break;
+                }
+                Thread.Sleep(50);
+            }
+            StartBatch(Json.Serialize(request), jobId);
+        }
+        catch
+        {
+            TryDelete(path);
+            throw;
+        }
+    }
+
+    private static void CleanupBrowserPcmLocked()
+    {
+        string path = browserPcmPath;
+        if (browserPcmStream != null)
+        {
+            try { browserPcmStream.Dispose(); } catch { }
+        }
+        browserPcmStream = null;
+        browserPcmPath = null;
+        browserPcmJobId = null;
+        browserPcmRequest = null;
+        browserPcmBytes = 0;
+        TryDelete(path);
+    }
+
+    private static void TryDelete(string path)
+    {
+        if (String.IsNullOrWhiteSpace(path)) return;
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch (Exception error) { Log("Could not delete temporary browser PCM: " + error.Message); }
+    }
+
     private static void CancelBatch(string requestedJobId, bool notifyIfMissing)
     {
         Process process = null;
         string activeJobId = null;
+        bool pcmCancelled = false;
         lock (BatchLock)
         {
+            if (browserPcmStream != null && (
+                String.IsNullOrEmpty(requestedJobId) || requestedJobId == browserPcmJobId
+            ))
+            {
+                CleanupBrowserPcmLocked();
+                pcmCancelled = true;
+            }
             activeJobId = batchJobId;
             if (String.IsNullOrEmpty(activeJobId) || (
                 !String.IsNullOrEmpty(requestedJobId) && requestedJobId != activeJobId
             ))
             {
-                if (notifyIfMissing) SendState("batch_cancelled", "No matching batch job is running.", requestedJobId);
+                if (notifyIfMissing)
+                    SendState(
+                        "batch_cancelled",
+                        pcmCancelled ? "Browser audio decoding cancelled." : "No matching batch job is running.",
+                        requestedJobId
+                    );
                 return;
             }
             batchCancelRequested = true;

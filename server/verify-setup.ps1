@@ -9,6 +9,10 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $ConfigPath = Join-Path $ProjectRoot ".runtime\user-settings.json"
 $ManifestPath = Join-Path $ProjectRoot ".runtime\native-host\com.dub_transcript_lab.recognizer.json"
+$ExpectedNativeHosts = @(
+  [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "native-host.exe")),
+  [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "native-host-prebuilt.exe"))
+)
 $Python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $HealthUrl = "http://127.0.0.1:8000/health"
 $Failures = New-Object System.Collections.Generic.List[string]
@@ -53,8 +57,10 @@ if (Test-Path -LiteralPath $ManifestPath) {
   try {
     $Manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
     $ExpectedOrigin = if ($Config.extensionId) { "chrome-extension://$($Config.extensionId)/" } else { "" }
+    $RegisteredExecutable = [System.IO.Path]::GetFullPath([string]$Manifest.path)
     $ManifestReady = $Manifest.name -eq "com.dub_transcript_lab.recognizer" -and
-      (Test-Path -LiteralPath $Manifest.path) -and
+      ($ExpectedNativeHosts -contains $RegisteredExecutable) -and
+      (Test-Path -LiteralPath $RegisteredExecutable) -and
       [bool]$ExpectedOrigin -and
       $Manifest.allowed_origins -contains $ExpectedOrigin
   } catch { }
@@ -66,9 +72,17 @@ foreach ($RegistryPath in @(
   "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.dub_transcript_lab.recognizer",
   "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\com.dub_transcript_lab.recognizer"
 )) {
-  if (-not (Test-Path $RegistryPath)) { $RegistryReady = $false }
+  if (-not (Test-Path $RegistryPath)) {
+    $RegistryReady = $false
+    continue
+  }
+  $RegisteredManifestPath = [string](Get-Item -LiteralPath $RegistryPath).GetValue("")
+  if (-not $RegisteredManifestPath -or
+      [System.IO.Path]::GetFullPath($RegisteredManifestPath) -ne [System.IO.Path]::GetFullPath($ManifestPath)) {
+    $RegistryReady = $false
+  }
 }
-Report $RegistryReady "Chrome and Edge native-host registration"
+Report $RegistryReady "Chrome and Edge native-host registration" $ManifestPath
 
 if ($Config -and $Config.autostart) {
   $Shortcut = Join-Path ([Environment]::GetFolderPath("Startup")) "Dub Transcript Lab Recognizer.lnk"

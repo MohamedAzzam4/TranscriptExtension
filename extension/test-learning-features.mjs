@@ -17,7 +17,8 @@ assert.deepEqual(
     textColor: "#ffcc00",
     backgroundColor: "bad",
     fontFamily: "serif",
-    edgeStyle: "outline"
+    edgeStyle: "outline",
+    bold: false
   }) },
   {
     fontSize: 52,
@@ -28,16 +29,36 @@ assert.deepEqual(
     textColor: "#FFCC00",
     backgroundColor: "#05070C",
     fontFamily: "serif",
-    edgeStyle: "outline"
+    edgeStyle: "outline",
+    bold: false
   }
 );
 assert.deepEqual(
   { ...helpers.normalizeTranslationPreferences({
     enabled: false,
     targetLanguage: "EN-us!",
-    provider: "GOOGLE"
+    provider: "GOOGLE",
+    fontSize: 99,
+    textOpacity: 81,
+    textColor: "#22cc88",
+    fontFamily: "mono",
+    bold: true
   }) },
-  { enabled: false, targetLanguage: "en-us", provider: "google" }
+  {
+    enabled: false,
+    targetLanguage: "en-us",
+    provider: "google",
+    fontSize: 42,
+    textOpacity: 81,
+    textColor: "#22CC88",
+    fontFamily: "mono",
+    bold: true
+  }
+);
+assert.notEqual(
+  helpers.DEFAULT_CAPTION_PREFERENCES.textColor,
+  helpers.DEFAULT_TRANSLATION_PREFERENCES.textColor,
+  "the transcript and translation should have visibly different default colors"
 );
 assert.equal(helpers.rgbaFromHex("#05070C", 86), "rgba(5, 7, 12, 0.86)");
 assert.equal(helpers.sanitizeWord("  Häuser?! "), "Häuser");

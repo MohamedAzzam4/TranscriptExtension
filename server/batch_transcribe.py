@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Iterable
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 # CTranslate2 loads these DLLs lazily when inference begins, so the directory
@@ -43,10 +43,13 @@ from subtitle_lines import split_tokens
 
 SILENCE_BREAK_SECONDS = 0.65
 RESULT_CHUNK_SIZE = 100
-ALLOWED_SOURCE_KINDS = {"direct", "youtube"}
+ALLOWED_SOURCE_KINDS = {"browser-pcm", "direct", "youtube"}
 MAX_CAPTION_BYTES = 8 * 1024 * 1024
 HTTP_AUDIO_CHUNK_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_BYTES = 1024 * 1024 * 1024
+MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
+MAX_DIRECT_CANDIDATES = 10
+WORKER_VERSION = "0.9.4"
 
 
 @dataclass(frozen=True)
@@ -67,6 +70,15 @@ class ResolvedSource:
     answer_key_status: str = "not-requested"
     youtube_page_url: str | None = None
     media_extension: str | None = None
+    media_kind: str | None = None
+    discovery_source: str | None = None
+    language_hint: str | None = None
+    codec_hint: str | None = None
+    profile_hint: str | None = None
+    bitrate: int | None = None
+    channels: int | None = None
+    representation_index: int | None = None
+    local_pcm_path: str | None = None
 
 
 def emit(state: str, job_id: str, **payload) -> None:
@@ -275,22 +287,97 @@ def parse_youtube_json3(payload: dict, language: str, kind: str) -> list[dict]:
     return result
 
 
-def resolve_source(request: dict) -> ResolvedSource:
+def resolve_sources(request: dict) -> list[ResolvedSource]:
     source_kind = str(request.get("sourceKind") or "")
     if source_kind not in ALLOWED_SOURCE_KINDS:
         raise ValueError("Unsupported batch source type.")
 
-    if source_kind == "direct":
-        return ResolvedSource(
-            url=validate_public_http_url(request.get("sourceUrl")),
-            headers=clean_headers(request.get("headers")),
-            duration=number_or_none(request.get("durationHint")),
-            answer_key_status=(
-                "unsupported-for-direct-media"
-                if request.get("collectCaptions")
-                else "not-requested"
-            ),
+    if source_kind == "browser-pcm":
+        sample_rate = positive_int_or_none(request.get("sampleRate"))
+        channels = positive_int_or_none(request.get("channels"))
+        if sample_rate != 16_000 or channels != 1:
+            raise ValueError("Browser-decoded PCM must be mono 16 kHz audio.")
+        pcm_path = validate_browser_pcm_path(
+            request.get("pcmPath"),
+            str(request.get("jobId") or ""),
         )
+        file_size = os.path.getsize(pcm_path)
+        declared_size = positive_int_or_none(request.get("pcmBytes"))
+        if declared_size and declared_size != file_size:
+            raise ValueError("Browser-decoded PCM size did not match the completed transfer.")
+        return [ResolvedSource(
+            url="",
+            headers={},
+            duration=number_or_none(request.get("durationHint")),
+            answer_key_status="not-requested",
+            media_kind="browser-decoded-xhe-aac",
+            codec_hint="pcm-s16le",
+            profile_hint="Chrome/Windows platform decoder",
+            channels=1,
+            local_pcm_path=pcm_path,
+        )]
+
+    if source_kind == "direct":
+        raw_candidates = request.get("sourceCandidates") or [request.get("sourceUrl")]
+        if not isinstance(raw_candidates, list):
+            raise ValueError("Direct media candidates must be a list.")
+        headers = clean_headers(request.get("headers"))
+        duration = number_or_none(request.get("durationHint"))
+        answer_key_status = (
+            "unsupported-for-direct-media"
+            if request.get("collectCaptions")
+            else "not-requested"
+        )
+        result: list[ResolvedSource] = []
+        seen: set[str] = set()
+        for raw_candidate in raw_candidates[:MAX_DIRECT_CANDIDATES]:
+            if isinstance(raw_candidate, dict):
+                raw_url = raw_candidate.get("url")
+                media_kind = re.sub(
+                    r"[^a-z-]",
+                    "",
+                    str(raw_candidate.get("kind") or "").casefold(),
+                )[:32] or None
+                discovery_source = safe_diagnostic_hint(raw_candidate.get("source"), 64)
+                language_hint = safe_diagnostic_hint(raw_candidate.get("language"), 32)
+                codec_hint = safe_diagnostic_hint(raw_candidate.get("codec"), 64)
+                profile_hint = safe_diagnostic_hint(raw_candidate.get("profile"), 96)
+                bitrate = positive_int_or_none(raw_candidate.get("bitrate"))
+                channels = positive_int_or_none(raw_candidate.get("channels"))
+                representation_index = nonnegative_int_or_none(
+                    raw_candidate.get("representationIndex")
+                )
+            else:
+                raw_url = raw_candidate
+                media_kind = None
+                discovery_source = None
+                language_hint = None
+                codec_hint = None
+                profile_hint = None
+                bitrate = None
+                channels = None
+                representation_index = None
+            url = validate_public_http_url(raw_url)
+            if url in seen:
+                continue
+            seen.add(url)
+            result.append(ResolvedSource(
+                url=url,
+                headers=headers,
+                duration=duration,
+                answer_key_status=answer_key_status,
+                media_kind=media_kind,
+                discovery_source=discovery_source,
+                language_hint=language_hint,
+                codec_hint=codec_hint,
+                profile_hint=profile_hint,
+                bitrate=bitrate,
+                channels=channels,
+                representation_index=representation_index,
+            ))
+        if not result:
+            raise ValueError("No valid direct HTTP media candidates were supplied.")
+        return result
 
     page_url = validate_public_http_url(request.get("sourceUrl"), youtube_only=True)
     try:
@@ -319,7 +406,7 @@ def resolve_source(request: dict) -> ResolvedSource:
         except Exception as error:
             answer_key_status = f"caption-retrieval-failed: {error}"
     source_url = validate_public_http_url(info.get("url"))
-    return ResolvedSource(
+    return [ResolvedSource(
         url=source_url,
         headers=clean_headers(info.get("http_headers")),
         title=info.get("title"),
@@ -328,7 +415,13 @@ def resolve_source(request: dict) -> ResolvedSource:
         answer_key_status=answer_key_status,
         youtube_page_url=page_url,
         media_extension=re.sub(r"[^a-z0-9]", "", str(info.get("ext") or "").casefold())[:8] or None,
-    )
+        media_kind="youtube-audio",
+    )]
+
+
+def resolve_source(request: dict) -> ResolvedSource:
+    """Return the first source for compatibility with focused unit tests."""
+    return resolve_sources(request)[0]
 
 
 def number_or_none(value) -> float | None:
@@ -339,7 +432,81 @@ def number_or_none(value) -> float | None:
     return number if number > 0 else None
 
 
-def decode_source(source: ResolvedSource, job_id: str):
+def positive_int_or_none(value) -> int | None:
+    try:
+        number = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if number > 0 else None
+
+
+def nonnegative_int_or_none(value) -> int | None:
+    try:
+        number = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if number >= 0 else None
+
+
+def safe_diagnostic_hint(value, limit: int) -> str | None:
+    text = re.sub(r"[^a-zA-Z0-9._+ /:@-]", "", str(value or "")).strip()
+    return text[:limit] or None
+
+
+def validate_browser_pcm_path(value, job_id: str) -> str:
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", job_id):
+        raise ValueError("The browser PCM job ID is invalid.")
+    temp_root = os.path.realpath(os.path.join(PROJECT_ROOT, ".runtime", "batch-temp"))
+    expected = os.path.realpath(os.path.join(temp_root, f"browser-pcm-{job_id}.s16le"))
+    candidate = os.path.realpath(str(value or ""))
+    if candidate != expected or os.path.commonpath([temp_root, candidate]) != temp_root:
+        raise ValueError("The browser PCM file was outside the local batch directory.")
+    if not os.path.isfile(candidate):
+        raise ValueError("The browser PCM file was not found.")
+    size = os.path.getsize(candidate)
+    if size <= 0 or size > MAX_AUDIO_BYTES:
+        raise ValueError("The browser PCM file had an invalid size.")
+    return candidate
+
+
+def decode_source(
+    source: ResolvedSource,
+    job_id: str,
+    language: str = "",
+    attempt: int | None = None,
+    candidate_count: int | None = None,
+):
+    if source.local_pcm_path:
+        import numpy as np
+
+        path = source.local_pcm_path
+        try:
+            audio = np.fromfile(path, dtype="<i2")
+        finally:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
+        if not audio.size:
+            raise RuntimeError("Chrome produced no decoded PCM audio samples.")
+        emit(
+            "batch_candidate_probe",
+            job_id,
+            attempt=attempt,
+            candidateCount=candidate_count,
+            sourceHost=None,
+            sourceKind=source.media_kind,
+            language=language,
+            containerFormat="raw-s16le",
+            codec="pcm_s16le",
+            codecLongName="Chrome/Windows platform-decoded PCM",
+            profile="mono-16-khz",
+            sampleRate=16_000,
+            channels=1,
+            layout="mono",
+        )
+        return audio.astype(np.float32) / 32768.0
+
     if source.youtube_page_url:
         try:
             return download_and_decode_youtube(source, job_id)
@@ -388,39 +555,75 @@ def decode_source(source: ResolvedSource, job_id: str):
     with av.open(source.url, mode="r", options=options, metadata_errors="ignore") as container:
         if not container.streams.audio:
             raise RuntimeError("The selected media source has no audio stream.")
-        for frame in container.decode(audio=0):
-            converted = resampler.resample(frame)
-            if converted is None:
-                continue
-            converted_frames = converted if isinstance(converted, list) else [converted]
-            for converted_frame in converted_frames:
-                samples = converted_frame.to_ndarray().reshape(-1)
-                chunks.append(samples)
-                decoded_sample_count += samples.size
-            decoded_seconds = (
-                float(frame.time)
-                if frame.time is not None
-                else decoded_sample_count / 16_000
+        audio_stream = select_audio_stream(container.streams.audio, language)
+        stream_language = audio_stream_language(audio_stream)
+        probe = audio_stream_probe(container, audio_stream)
+        emit(
+            "batch_candidate_probe",
+            job_id,
+            attempt=attempt,
+            candidateCount=candidate_count,
+            sourceHost=urlsplit(source.url).hostname,
+            sourceKind=source.media_kind,
+            language=stream_language or source.language_hint,
+            **probe,
+        )
+        if len(container.streams.audio) > 1:
+            emit(
+                "batch_status",
+                job_id,
+                message=(
+                    f"Selected audio track {audio_stream.index + 1} of {len(container.streams.audio)}"
+                    + (f" ({stream_language})" if stream_language else "")
+                    + "."
+                ),
             )
-            now = time.monotonic()
-            if source.duration:
-                percent = min(99, int(max(0.0, decoded_seconds) / source.duration * 100))
-                should_report = percent >= last_reported_percent + 5
-            else:
-                percent = None
-                should_report = decoded_seconds >= last_reported_seconds + 30
-            if should_report and now - last_reported_at >= 0.5:
-                emit(
-                    "batch_decode_progress",
-                    job_id,
-                    percent=percent,
-                    decodedSeconds=round(decoded_seconds, 3),
-                    duration=round(source.duration, 3) if source.duration else None,
+        try:
+            for frame in container.decode(audio_stream):
+                converted = resampler.resample(frame)
+                if converted is None:
+                    continue
+                converted_frames = converted if isinstance(converted, list) else [converted]
+                for converted_frame in converted_frames:
+                    samples = converted_frame.to_ndarray().reshape(-1)
+                    chunks.append(samples)
+                    decoded_sample_count += samples.size
+                decoded_seconds = (
+                    float(frame.time)
+                    if frame.time is not None
+                    else decoded_sample_count / 16_000
                 )
-                if percent is not None:
-                    last_reported_percent = percent
-                last_reported_seconds = decoded_seconds
-                last_reported_at = now
+                now = time.monotonic()
+                if source.duration:
+                    percent = min(99, int(max(0.0, decoded_seconds) / source.duration * 100))
+                    should_report = percent >= last_reported_percent + 5
+                else:
+                    percent = None
+                    should_report = decoded_seconds >= last_reported_seconds + 30
+                if should_report and now - last_reported_at >= 0.5:
+                    emit(
+                        "batch_decode_progress",
+                        job_id,
+                        percent=percent,
+                        decodedSeconds=round(decoded_seconds, 3),
+                        duration=round(source.duration, 3) if source.duration else None,
+                        attempt=attempt,
+                    )
+                    if percent is not None:
+                        last_reported_percent = percent
+                    last_reported_seconds = decoded_seconds
+                    last_reported_at = now
+        except Exception as error:
+            if is_ffmpeg_unimplemented_error(error):
+                codec = probe.get("codec") or "unknown audio"
+                profile = probe.get("profile")
+                description = f"{codec}/{profile}" if profile else codec
+                raise RuntimeError(
+                    f"Local FFmpeg opened the audio as {description}, but cannot decode a feature "
+                    "used by this representation. Netflix xHE-AAC with eSBR is a common cause; "
+                    "a Chrome/Windows decoder fallback is required."
+                ) from error
+            raise
         flushed = resampler.resample(None)
         flushed_frames = flushed if isinstance(flushed, list) else ([flushed] if flushed else [])
         for converted_frame in flushed_frames:
@@ -430,6 +633,262 @@ def decode_source(source: ResolvedSource, job_id: str):
         raise RuntimeError("No audio samples could be decoded from the selected source.")
     audio = np.concatenate(chunks).astype(np.float32) / 32768.0
     return audio
+
+
+def audio_stream_probe(container, stream) -> dict:
+    codec_context = getattr(stream, "codec_context", None)
+    codec = getattr(codec_context, "codec", None)
+    profile = getattr(stream, "profile", None) or getattr(codec_context, "profile", None)
+    layout = getattr(codec_context, "layout", None)
+    layout_name = getattr(layout, "name", None) or (str(layout) if layout else None)
+    container_format = getattr(getattr(container, "format", None), "name", None)
+    return {
+        "containerFormat": safe_diagnostic_hint(container_format, 64),
+        "codec": safe_diagnostic_hint(getattr(codec_context, "name", None), 64),
+        "codecLongName": safe_diagnostic_hint(getattr(codec, "long_name", None), 96),
+        "profile": safe_diagnostic_hint(profile, 96),
+        "sampleRate": positive_int_or_none(getattr(codec_context, "sample_rate", None)),
+        "channels": positive_int_or_none(getattr(codec_context, "channels", None)),
+        "layout": safe_diagnostic_hint(layout_name, 64),
+    }
+
+
+def is_ffmpeg_unimplemented_error(error: Exception) -> bool:
+    text = str(error).casefold()
+    return "not yet implemented in ffmpeg" in text or "patches welcome" in text
+
+
+def normalize_media_language(value: str | None) -> str:
+    language = re.sub(r"[^a-z]", "", str(value or "").casefold())
+    aliases = {
+        "deu": "de",
+        "ger": "de",
+        "german": "de",
+        "eng": "en",
+        "english": "en",
+        "jpn": "ja",
+        "japanese": "ja",
+        "fra": "fr",
+        "fre": "fr",
+        "french": "fr",
+    }
+    return aliases.get(language, language[:2] if len(language) >= 2 else language)
+
+
+def audio_stream_language(stream) -> str:
+    metadata = getattr(stream, "metadata", None) or {}
+    for key in ("language", "LANGUAGE", "lang", "title", "name"):
+        value = metadata.get(key)
+        if value:
+            return str(value).strip()[:64]
+    return ""
+
+
+def select_audio_stream(streams, requested_language: str):
+    available = list(streams)
+    if not available:
+        raise RuntimeError("The selected media source has no audio stream.")
+    requested = normalize_media_language(requested_language)
+
+    def score(stream) -> tuple[int, int]:
+        metadata = getattr(stream, "metadata", None) or {}
+        values = [str(value) for value in metadata.values() if value]
+        normalized = [normalize_media_language(value) for value in values]
+        language_score = 0
+        if requested and requested in normalized:
+            language_score = 100
+        elif requested and any(requested in value.casefold() for value in values):
+            language_score = 80
+        disposition = getattr(stream, "disposition", None)
+        default_score = 10 if bool(getattr(disposition, "default", False)) else 0
+        index = int(getattr(stream, "index", 0) or 0)
+        return language_score + default_score, -index
+
+    return max(available, key=score)
+
+
+def playlist_request(url: str, headers: dict[str, str]) -> Request:
+    request_headers = {
+        "Accept": "application/vnd.apple.mpegurl, application/dash+xml, text/plain, */*",
+        "Accept-Encoding": "identity",
+        **{
+            "-".join(part.capitalize() for part in name.split("-")): value
+            for name, value in headers.items()
+        },
+    }
+    return Request(url, headers=request_headers, method="GET")
+
+
+def read_playlist_text(url: str, headers: dict[str, str]) -> str:
+    opener = build_opener(PublicCaptionRedirectHandler())
+    with opener.open(playlist_request(url, headers), timeout=20) as response:
+        content_length = number_or_none(response.headers.get("Content-Length"))
+        if content_length and content_length > MAX_PLAYLIST_BYTES:
+            raise RuntimeError("The media playlist is unexpectedly large.")
+        payload = response.read(MAX_PLAYLIST_BYTES + 1)
+    if len(payload) > MAX_PLAYLIST_BYTES:
+        raise RuntimeError("The media playlist exceeded the local safety limit.")
+    return payload.decode("utf-8-sig", errors="replace")
+
+
+def hls_child_playlists(text: str, base_url: str) -> list[str]:
+    children: list[str] = []
+    expect_variant = False
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#EXT-X-STREAM-INF"):
+            expect_variant = True
+        for match in re.finditer(r'URI=(?:"([^"]+)"|([^,\s]+))', line, flags=re.IGNORECASE):
+            child = match.group(1) or match.group(2)
+            if child and (".m3u8" in child.casefold() or line.startswith("#EXT-X-MEDIA")):
+                children.append(urljoin(base_url, child))
+        if expect_variant and not line.startswith("#"):
+            children.append(urljoin(base_url, line))
+            expect_variant = False
+    result: list[str] = []
+    for child in children:
+        if child not in result:
+            result.append(child)
+    return result[:12]
+
+
+def hls_relevant_playlists(text: str, base_url: str, requested_language: str) -> list[str]:
+    requested = normalize_media_language(requested_language)
+    audio_entries: list[tuple[int, str]] = []
+    for line in text.splitlines():
+        if not line.strip().casefold().startswith("#ext-x-media:") or "type=audio" not in line.casefold():
+            continue
+        attributes = {
+            key.casefold(): (quoted or plain or "")
+            for key, quoted, plain in re.findall(r'([A-Z0-9-]+)=(?:"([^"]*)"|([^,]*))', line, re.IGNORECASE)
+        }
+        uri = attributes.get("uri")
+        if not uri:
+            continue
+        labels = [attributes.get("language", ""), attributes.get("name", "")]
+        normalized = [normalize_media_language(label) for label in labels if label]
+        score = 100 if requested and requested in normalized else 0
+        if requested and any(requested in label.casefold() for label in labels):
+            score = max(score, 80)
+        if attributes.get("default", "").casefold() == "yes":
+            score += 10
+        audio_entries.append((score, urljoin(base_url, uri)))
+    if audio_entries:
+        return [max(audio_entries, key=lambda entry: entry[0])[1]]
+    return hls_child_playlists(text, base_url)[:1]
+
+
+def playlist_protection_reason(source: ResolvedSource, requested_language: str = "") -> str | None:
+    lowered_url = source.url.casefold()
+    kind = str(source.media_kind or "").casefold()
+    is_hls = kind == "hls" or ".m3u8" in lowered_url
+    is_dash = kind == "dash" or ".mpd" in lowered_url
+    if not is_hls and not is_dash:
+        return None
+
+    text = read_playlist_text(source.url, source.headers)
+    lowered = text.casefold()
+    if is_dash:
+        if "<contentprotection" in lowered or any(
+            marker in lowered for marker in ("widevine", "playready", "fairplay", "urn:mpeg:dash:mp4protection")
+        ):
+            return "the DASH manifest declares DRM ContentProtection"
+        return None
+
+    if re.search(r"#ext-x-(?:session-)?key:[^\r\n]*method=(?!none(?:[,\s]|$))", lowered):
+        return "the HLS playlist declares encrypted media keys"
+    if "#ext-x-stream-inf" not in lowered and "#ext-x-media" not in lowered:
+        return None
+    for child_url in hls_relevant_playlists(text, source.url, requested_language):
+        validate_public_http_url(child_url)
+        child = read_playlist_text(child_url, source.headers).casefold()
+        if re.search(r"#ext-x-(?:session-)?key:[^\r\n]*method=(?!none(?:[,\s]|$))", child):
+            return "a selected HLS media playlist declares encrypted media keys"
+    return None
+
+
+def acquire_first_accessible_source(
+    sources: list[ResolvedSource],
+    job_id: str,
+    language: str,
+) -> tuple[ResolvedSource, object]:
+    failures: list[str] = []
+    for index, source in enumerate(sources, start=1):
+        source_host = urlsplit(source.url).hostname
+        emit(
+            "batch_candidate_attempt",
+            job_id,
+            attempt=index,
+            candidateCount=len(sources),
+            sourceHost=source_host,
+            sourceKind=source.media_kind,
+            discoverySource=source.discovery_source,
+            languageHint=source.language_hint,
+            codecHint=source.codec_hint,
+            profileHint=source.profile_hint,
+            bitrate=source.bitrate,
+            channels=source.channels,
+            representationIndex=source.representation_index,
+        )
+        emit(
+            "batch_status",
+            job_id,
+            message=f"Checking media source {index} of {len(sources)} ({source.media_kind or 'direct'}).",
+        )
+        try:
+            protection = playlist_protection_reason(source, language)
+            if protection:
+                raise RuntimeError(f"Protected media is not eligible for full-audio acquisition: {protection}.")
+            audio = decode_source(source, job_id, language, index, len(sources))
+            decoded_duration = len(audio) / 16_000
+            if source.duration and source.duration >= 60:
+                ratio = decoded_duration / source.duration
+                if ratio < 0.70 or ratio > 1.30:
+                    raise RuntimeError(
+                        "decoded duration does not match the active video "
+                        f"({decoded_duration:.1f}s versus {source.duration:.1f}s)"
+                    )
+            return source, audio
+        except Exception as error:
+            failure_message = str(error)[:500]
+            failures.append(f"candidate {index}: {failure_message[:220]}")
+            emit(
+                "batch_candidate_failed",
+                job_id,
+                attempt=index,
+                candidateCount=len(sources),
+                sourceHost=source_host,
+                sourceKind=source.media_kind,
+                category=media_failure_category(error),
+                message=failure_message,
+            )
+            emit(
+                "batch_status",
+                job_id,
+                message=f"Media source {index} was unsuitable; trying the next candidate.",
+            )
+    detail = "; ".join(failures[:3])
+    raise RuntimeError(
+        "None of the detected media sources provided accessible, matching clear audio."
+        + (f" {detail}" if detail else "")
+    )
+
+
+def media_failure_category(error: Exception) -> str:
+    text = str(error).casefold()
+    if is_ffmpeg_unimplemented_error(error) or "chrome/windows decoder fallback is required" in text:
+        return "decoder-unsupported"
+    if "protected media" in text or "drm" in text or "encrypted" in text:
+        return "protected-media"
+    if "duration does not match" in text:
+        return "duration-mismatch"
+    if "http " in text or "timed out" in text or "network" in text:
+        return "network"
+    if "no audio" in text or "no audio samples" in text:
+        return "no-audio"
+    return "decode-or-access-error"
 
 
 def content_range_total(value: str | None) -> int | None:
@@ -784,6 +1243,23 @@ def compute_answer_key_evaluation(
     }
 
 
+def batch_worker_diagnostics() -> dict:
+    details = {
+        "workerVersion": WORKER_VERSION,
+        "pythonVersion": ".".join(str(part) for part in sys.version_info[:3]),
+    }
+    try:
+        import av
+
+        details["pyavVersion"] = str(av.__version__)
+        libavcodec = av.library_versions.get("libavcodec")
+        if libavcodec:
+            details["libavcodecVersion"] = ".".join(str(part) for part in libavcodec)
+    except Exception as error:
+        details["pyavInspectionError"] = str(error)[:160]
+    return details
+
+
 def run(request: dict) -> None:
     job_id = str(request.get("jobId") or "")
     if not job_id:
@@ -791,8 +1267,10 @@ def run(request: dict) -> None:
     language = str(request.get("language") or "de")[:16]
     model_name = str(request.get("model") or "small")[:64]
 
+    emit("batch_worker_info", job_id, **batch_worker_diagnostics())
     emit("batch_status", job_id, message="Resolving the authorized media source.")
-    source = resolve_source(request)
+    sources = resolve_sources(request)
+    source = sources[0]
     if source.answer_key:
         emit(
             "batch_status",
@@ -808,13 +1286,23 @@ def run(request: dict) -> None:
         message=(
             "Downloading the authorized audio to a temporary local file. Nothing is uploaded."
             if source.youtube_page_url
-            else "Decoding the full audio locally. Nothing is uploaded."
+            else (
+                f"Found {len(sources)} possible media source"
+                f"{'s' if len(sources) != 1 else ''}. Acquiring clear audio locally; nothing is uploaded."
+            )
         ),
         title=source.title,
     )
-    audio = decode_source(source, job_id)
+    source, audio = acquire_first_accessible_source(sources, job_id, language)
     duration = len(audio) / 16_000
-    emit("batch_started", job_id, duration=round(duration, 3), title=source.title)
+    emit(
+        "batch_started",
+        job_id,
+        duration=round(duration, 3),
+        title=source.title,
+        sourceKind=source.media_kind,
+        sourceHost=urlsplit(source.url).hostname,
+    )
 
     model, device = load_model(model_name, job_id)
     try:
@@ -869,7 +1357,13 @@ def main() -> int:
         return 0
     except Exception as error:
         job_id = str(request.get("jobId") or "unknown")
-        emit("batch_error", job_id, message=str(error))
+        emit(
+            "batch_error",
+            job_id,
+            message=str(error),
+            category=media_failure_category(error),
+            workerVersion=WORKER_VERSION,
+        )
         return 1
 
 

@@ -1,6 +1,6 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 9) return;
-  globalThis.__dubTranscriptLabVersion = 9;
+  if (globalThis.__dubTranscriptLabVersion === 12) return;
+  globalThis.__dubTranscriptLabVersion = 12;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
@@ -17,6 +17,7 @@
   let playerInlinePosition = null;
   let wrapElement = null;
   let captionBoxElement = null;
+  let captionDragHandleElement = null;
   let transcriptElement = null;
   let translationElement = null;
   let statusElement = null;
@@ -246,6 +247,7 @@
     suppressTranscriptClick = false;
     wrapElement = null;
     captionBoxElement = null;
+    captionDragHandleElement = null;
     translationElement = null;
     session = null;
   }
@@ -341,45 +343,86 @@
           transform: translateX(-50%);
           width: min(880px, 88%);
           pointer-events: none;
-          font-family: var(--caption-font-family, Inter, ui-sans-serif, system-ui, sans-serif);
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
           text-align: center;
         }
         .caption-box {
+          position: relative;
           box-sizing: border-box;
           display: inline-block;
           max-width: 100%;
           padding: 8px 13px;
           border-radius: 8px;
           background: var(--caption-background, rgba(5, 7, 12, .86));
-          color: var(--caption-color, white);
-          font-size: var(--caption-font-size, 31px);
-          font-weight: 650;
           line-height: 1.25;
-          text-shadow: var(--caption-text-shadow, 0 1px 2px black);
           box-shadow: 0 4px 20px rgba(0,0,0,.35);
           pointer-events: auto;
           user-select: text;
+          -webkit-user-select: text;
+          cursor: text;
+        }
+        .caption-box.dragging { user-select: none; -webkit-user-select: none; }
+        .caption-box[hidden] { display: none; }
+        .caption-drag-handle {
+          position: absolute;
+          top: 50%;
+          left: -27px;
+          width: 22px;
+          height: 32px;
+          transform: translateY(-50%);
+          border: 1px solid rgba(255,255,255,.22);
+          border-radius: 7px;
+          padding: 0;
+          background: rgba(5, 7, 12, .78);
+          color: rgba(255,255,255,.82);
+          font: 700 17px/1 system-ui, sans-serif;
+          text-shadow: none;
           cursor: grab;
           touch-action: none;
+          user-select: none;
+          -webkit-user-select: none;
+          opacity: .58;
         }
-        .caption-box.dragging { cursor: grabbing; user-select: none; }
-        .caption-box[hidden] { display: none; }
+        .caption-box:hover .caption-drag-handle,
+        .caption-drag-handle:focus-visible { opacity: 1; }
+        .caption-drag-handle:focus-visible {
+          outline: 2px solid #9b87ff;
+          outline-offset: 2px;
+        }
+        .caption-box.dragging .caption-drag-handle { cursor: grabbing; opacity: 1; }
+        .transcript,
+        .translation,
+        .word {
+          user-select: text;
+          -webkit-user-select: text;
+        }
+        .transcript::selection,
+        .translation::selection,
+        .word::selection {
+          background: rgba(121, 91, 255, .86);
+          color: white;
+        }
         .transcript {
           max-height: 2.5em;
           overflow: hidden;
+          color: var(--transcript-color, white);
+          font-family: var(--transcript-font-family, Inter, ui-sans-serif, system-ui, sans-serif);
+          font-size: var(--transcript-font-size, 31px);
+          font-weight: var(--transcript-font-weight, 700);
+          text-shadow: var(--caption-text-shadow, 0 1px 2px black);
         }
         .transcript.long {
           max-height: 3.75em;
-          font-size: .84em;
+          font-size: calc(var(--transcript-font-size, 31px) * .84);
         }
         .translation {
           margin-top: 4px;
-          color: inherit;
-          font-size: .68em;
-          font-weight: 500;
+          color: var(--translation-color, #ffd166);
+          font-family: var(--translation-font-family, Inter, ui-sans-serif, system-ui, sans-serif);
+          font-size: var(--translation-font-size, 21px);
+          font-weight: var(--translation-font-weight, 400);
           line-height: 1.3;
-          opacity: .92;
-          text-shadow: inherit;
+          text-shadow: var(--caption-text-shadow, 0 1px 2px black);
         }
         .translation[hidden] { display: none; }
         .translation.pending { opacity: .62; font-style: italic; }
@@ -389,8 +432,7 @@
           overflow: hidden;
         }
         .word {
-          appearance: none;
-          border: 0;
+          display: inline;
           border-radius: 3px;
           margin: 0;
           padding: 0 1px;
@@ -518,6 +560,7 @@
       <div class="wrap">
         <div class="status">Starting…</div>
         <div class="caption-box" hidden>
+          <button class="caption-drag-handle" type="button" aria-label="Drag captions" title="Drag captions">&#8942;</button>
           <div class="transcript"></div>
           <div class="translation" hidden></div>
         </div>
@@ -565,6 +608,7 @@
 
     wrapElement = shadow.querySelector(".wrap");
     captionBoxElement = shadow.querySelector(".caption-box");
+    captionDragHandleElement = shadow.querySelector(".caption-drag-handle");
     transcriptElement = shadow.querySelector(".transcript");
     translationElement = shadow.querySelector(".translation");
     statusElement = shadow.querySelector(".status");
@@ -585,8 +629,9 @@
     shadow.querySelector(".word-close").addEventListener("click", closeWordCard);
     wordSaveElement.addEventListener("click", toggleSavedWord);
     wordReplayElement.addEventListener("click", replaySelectedWord);
-    captionBoxElement.addEventListener("pointerdown", startCaptionDrag);
+    captionDragHandleElement.addEventListener("pointerdown", startCaptionDrag);
     transcriptElement.addEventListener("click", handleTranscriptClick);
+    transcriptElement.addEventListener("keydown", handleTranscriptKeydown);
     captionBoxElement.addEventListener("click", stopPlayerClick);
     wordCardElement.addEventListener("pointerdown", stopPlayerClick);
     wordCardElement.addEventListener("click", (event) => event.stopPropagation());
@@ -612,17 +657,29 @@
     if (!wrapElement || !captionBoxElement) return;
 
     const caption = session.captionPreferences;
+    const translation = session.translationPreferences;
     wrapElement.style.setProperty("--caption-left", `${caption.horizontalPosition}%`);
     wrapElement.style.setProperty("--caption-bottom", `${caption.verticalPosition}%`);
-    wrapElement.style.setProperty("--caption-font-size", `${caption.fontSize}px`);
-    wrapElement.style.setProperty("--caption-font-family", learning.fontFamilyValue(caption.fontFamily));
+    wrapElement.style.setProperty("--transcript-font-size", `${caption.fontSize}px`);
+    wrapElement.style.setProperty("--transcript-font-family", learning.fontFamilyValue(caption.fontFamily));
+    wrapElement.style.setProperty("--transcript-font-weight", caption.bold ? "700" : "400");
+    wrapElement.style.setProperty("--translation-font-size", `${translation.fontSize}px`);
+    wrapElement.style.setProperty(
+      "--translation-font-family",
+      learning.fontFamilyValue(translation.fontFamily)
+    );
+    wrapElement.style.setProperty("--translation-font-weight", translation.bold ? "700" : "400");
     wrapElement.style.setProperty(
       "--caption-background",
       learning.rgbaFromHex(caption.backgroundColor, caption.backgroundOpacity)
     );
     wrapElement.style.setProperty(
-      "--caption-color",
+      "--transcript-color",
       learning.rgbaFromHex(caption.textColor, caption.textOpacity)
+    );
+    wrapElement.style.setProperty(
+      "--translation-color",
+      learning.rgbaFromHex(translation.textColor, translation.textOpacity)
     );
     const shadows = {
       none: "none",
@@ -665,7 +722,7 @@
     if (!playerRect.width || !playerRect.height) return;
     const horizontalMargin = Math.min(
       48,
-      Math.max(2, captionRect.width / 2 / playerRect.width * 100 + 1)
+      Math.max(2, (captionRect.width / 2 + 30) / playerRect.width * 100 + 1)
     );
     const wrapHeight = Math.max(0, wrapRect.height / playerRect.height * 100);
     captionDrag = {
@@ -685,6 +742,7 @@
     window.addEventListener("pointerup", finishCaptionDrag, true);
     window.addEventListener("pointercancel", finishCaptionDrag, true);
     captionBoxElement.classList.add("dragging");
+    event.preventDefault();
     event.stopPropagation();
   }
 
@@ -807,18 +865,20 @@
     let wordIndex = 0;
     for (const token of tokens) {
       if (/^[\p{L}\p{M}]/u.test(token)) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "word";
-        button.dataset.word = token;
+        const wordElement = document.createElement("span");
+        wordElement.className = "word";
+        wordElement.dataset.word = token;
+        wordElement.tabIndex = 0;
+        wordElement.setAttribute("role", "button");
+        wordElement.setAttribute("aria-label", `Look up ${token}`);
         const timing = wordTimings[wordIndex++];
         if (timing && Number.isFinite(Number(timing.start)) && Number.isFinite(Number(timing.end))) {
-          button.dataset.start = String(timing.start);
-          button.dataset.end = String(timing.end);
-          button.dataset.timing = timing.timing || "estimated";
+          wordElement.dataset.start = String(timing.start);
+          wordElement.dataset.end = String(timing.end);
+          wordElement.dataset.timing = timing.timing || "estimated";
         }
-        button.textContent = token;
-        fragment.append(button);
+        wordElement.textContent = token;
+        fragment.append(wordElement);
       } else {
         fragment.append(document.createTextNode(token));
       }
@@ -907,10 +967,28 @@
       event.preventDefault();
       return;
     }
+    if (hasActiveCaptionSelection()) return;
     const wordButton = event.target.closest(".word");
     if (!wordButton) return;
     event.preventDefault();
     void showWordDefinition(wordButton.dataset.word, wordButton);
+  }
+
+  function handleTranscriptKeydown(event) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const wordElement = event.target.closest(".word");
+    if (!wordElement || hasActiveCaptionSelection()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void showWordDefinition(wordElement.dataset.word, wordElement);
+  }
+
+  function hasActiveCaptionSelection() {
+    const root = transcriptElement?.getRootNode();
+    const selection = typeof root?.getSelection === "function"
+      ? root.getSelection()
+      : window.getSelection();
+    return Boolean(selection && !selection.isCollapsed && selection.toString().trim());
   }
 
   async function showWordDefinition(word, wordButton) {
@@ -1187,6 +1265,10 @@
     }
     const rect = element.getBoundingClientRect();
     const currentSrc = String(element.currentSrc || element.src || "");
+    const observedMedia = globalThis.__dubTranscriptMediaObserver?.snapshot?.() || {
+      drmProtected: false,
+      candidates: []
+    };
     return {
       currentTime: element.currentTime,
       playbackRate: element.playbackRate,
@@ -1200,22 +1282,67 @@
       frameReferrer: document.referrer || null,
       currentSrc,
       sourceKind: currentSrc.startsWith("blob:") ? "blob" : "direct",
-      batchCandidates: mediaBatchCandidates(element, currentSrc),
-      drmProtected: Boolean(element.mediaKeys || security.encrypted),
+      batchCandidates: mediaBatchCandidates(element, currentSrc, observedMedia.candidates),
+      drmProtected: Boolean(
+        element.mediaKeys
+        || security.encrypted
+        || observedMedia.drmProtected
+      ),
       userAgent: navigator.userAgent
     };
   }
 
-  function mediaBatchCandidates(element, currentSrc) {
+  function mediaBatchCandidates(element, currentSrc, observedCandidates = []) {
     const sourceUrls = [...element.querySelectorAll("source[src]")]
-      .map((source) => source.src);
+      .map((source) => ({
+        url: source.src,
+        kind: mediaCandidateKind(source.src, source.type),
+        source: "source-element",
+        contentType: source.type || ""
+      }));
     const resourceUrls = performance.getEntriesByType("resource")
       .map((entry) => entry.name)
       .filter((url) => /(?:\.m3u8|\.mpd|\.mp4|\.m4a|\.webm|videoplayback|manifest|playlist)/i.test(url))
       .slice(-20)
-      .reverse();
-    return [...new Set([currentSrc, ...sourceUrls, ...resourceUrls])]
-      .filter((url) => /^https?:\/\//i.test(url))
-      .slice(0, 20);
+      .reverse()
+      .map((url) => ({
+        url,
+        kind: mediaCandidateKind(url),
+        source: "performance",
+        contentType: ""
+      }));
+    const rawCandidates = [
+      {
+        url: currentSrc,
+        kind: mediaCandidateKind(currentSrc, element.type),
+        source: "current-src",
+        contentType: element.type || ""
+      },
+      ...sourceUrls,
+      ...observedCandidates,
+      ...resourceUrls
+    ];
+    const unique = new Map();
+    for (const candidate of rawCandidates) {
+      try {
+        const parsed = new URL(String(candidate?.url || ""));
+        if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password) continue;
+        parsed.hash = "";
+        const url = parsed.href;
+        if (!unique.has(url)) unique.set(url, { ...candidate, url });
+      } catch {
+        // Ignore blob URLs and malformed resource names.
+      }
+    }
+    return [...unique.values()].slice(0, 100);
+  }
+
+  function mediaCandidateKind(url, contentType = "") {
+    const value = `${url || ""} ${contentType || ""}`.toLowerCase();
+    if (/\.m3u8(?:$|[\s?#])|mpegurl/.test(value)) return "hls";
+    if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(value)) return "dash";
+    if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
+    if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
+    return "unknown-media";
   }
 })();

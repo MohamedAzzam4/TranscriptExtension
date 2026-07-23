@@ -2,22 +2,25 @@
 
 Dub Transcript Lab is a Windows browser-extension experiment that creates subtitles from the audio actually playing in a video. If a German dub is selected, it transcribes that German dub instead of relying on subtitles translated from another language.
 
-It can analyze an accessible, non-DRM video before playback or fall back to transcribing the audio as it plays. Completed captions are cached in the browser, remain synchronized when you rewind, and appear inside the video player.
+It can analyze an accessible video before playback or fall back to transcribing the audio as it plays. Completed captions are cached in the browser, remain synchronized when you rewind, and appear inside the video player.
 
 ## Current features
 
-- Full-video local transcription for public YouTube pages and accessible non-DRM MP4/HLS media.
+- Full-video local transcription for public YouTube pages and accessible non-DRM MP4, HLS, and DASH media.
+- Experimental Netflix full-audio acquisition when Netflix player metadata exposes a separate clear, signed audio-only CDN track for the selected dub. Unsupported xHE-AAC representations—including raw FFmpeg failures that appear partway through a title—retry through Chrome's Windows platform decoder before live fallback.
+- Document-start media discovery inside embedded player frames, ranked fallback sources, requested-language audio selection, and encrypted-playlist detection.
 - Automatic live-audio fallback when a complete media source is unavailable.
 - Clickable transcript words with a structured, source-backed German learning card: meanings, English glosses, paired examples, grammar, collocations, synonyms, and pronunciation when Wiktionary provides them.
 - Replay a selected word from the current video, or open the word directly in German YouGlish.
 - Browser-local saved vocabulary with video context, examples, and word timing when available.
-- Optional English translation under the original transcript.
-- Draggable captions plus font, color, opacity, edge, size, and position controls.
+- Optional English translation under the original transcript, with a distinct warm-yellow color by default.
+- Selectable transcript and translation text. Click a word for its learning card, select normally to copy text, and use the caption grip to drag the overlay.
+- Independent transcript and translation font, color, opacity, size, and bold controls, plus shared background, edge, and position controls.
 - A timing adjustment that moves captions earlier or later without retranscribing.
 - One-click UTF-8 transcript download plus technical JSON experiment export.
 - A browser-local library of up to 20 complete transcripts. Opening the same video and audio language restores the saved transcript automatically instead of transcribing again.
 
-This is still an experiment, not a finished store extension. Netflix and other DRM-protected subscription services are intentionally excluded from full-media acquisition.
+This is still an experiment, not a finished store extension. Netflix support is conditional and does not bypass DRM: encrypted or unavailable sources still use live decoded-tab-audio transcription.
 
 ## Beginner installation on Windows
 
@@ -48,8 +51,9 @@ Keep the existing project folder and extension card so the extension ID and brow
 1. Download and extract the new ZIP to a temporary folder.
 2. Copy its contents over the existing project folder and allow Windows to replace matching files. Do not delete the existing `.model-cache`, `.runtime`, or `.venv` folders.
 3. Open `chrome://extensions` or `edge://extensions` and click **Reload** on the existing Dub Transcript Lab card. Do not remove the extension or load the new files from a different folder.
-4. Run **`INSTALL.cmd`** again from the existing project folder. Paste the same extension ID when requested. Existing packages and models are reused when compatible.
-5. Run **`CHECK-SETUP.cmd`**, refresh the video page, and start a short test.
+4. Run **`CHECK-SETUP.cmd`**, refresh the video page, and start a short test.
+
+Do not rerun `INSTALL.cmd` for an ordinary same-folder update. Run it only when the project was moved, the browser extension ID changed, or `CHECK-SETUP.cmd` reports that registration must be repaired.
 
 Download important transcripts as text before an update as a precaution. Do not run `UNINSTALL.cmd` for a normal update.
 
@@ -81,7 +85,7 @@ The uninstaller removes the Startup shortcut and Chrome/Edge native-host registr
 
 Transcription runs locally. Audio is not uploaded to a transcription service.
 
-- Batch mode reads an authorized public media source and converts its audio in local memory. YouTube uses a temporary media file that is deleted immediately after decoding.
+- Batch mode reads an authorized media source and converts its audio in local memory. YouTube uses a temporary media file that is deleted immediately after decoding. Netflix batch mode is attempted only for a clear audio-only URL already exposed to the signed-in player.
 - Live mode captures only the decoded audio played in the current tab and sends PCM chunks to `127.0.0.1` on the same computer.
 - Definitions are requested from English and German Wiktionary after a word click.
 - The learning card is deterministic and source-backed. It does not send words to an AI service and does not invent simplified explanations, B2 advice, collocations, or grammar when the dictionaries do not provide them.
@@ -91,12 +95,13 @@ Transcription runs locally. Audio is not uploaded to a transcription service.
 
 ## How transcription works
 
-1. **Analyze automatically** pauses the selected player and searches its frame for a safe media source.
-2. Public YouTube media is resolved with `yt-dlp`. Accessible non-DRM HTTP media is read with PyAV. Faster-Whisper transcribes the complete audio locally.
-3. When batch acquisition is not possible, Chrome tab capture sends 0.5-second mono 16 kHz PCM chunks to a local WhisperLiveKit server started with `--pcm-input`.
-4. Both paths produce the same timestamped cue format in `chrome.storage.local`.
-5. Existing captions are evaluation-only and never feed the recognizer.
-6. Sentence, phrase, silence, and bounded-length breaks are used to create readable caption blocks.
+1. A small document-start observer records HLS, DASH, and direct-media candidates inside the page and embedded player frames. It records URLs and media metadata only; it does not download anything until the user chooses **Analyze automatically**.
+2. **Analyze automatically** pauses the selected player, ranks up to ten candidates, and rejects encrypted media. The only narrow exception is a validated clear Netflix audio-only URL exposed by Netflix player metadata. Locally decodable profiles are tried before xHE-AAC when profile metadata is available.
+3. Public YouTube media is resolved with `yt-dlp`. For other sites, the local worker checks HLS/DASH manifests for encryption, tries the clear candidates in rank order, selects the requested audio language when track metadata is available, and rejects sources whose duration does not match the active video. Netflix URLs are accepted only from Netflix pages, from the metadata observer, and on Netflix's HTTPS media CDN.
+4. Accessible media is decoded locally with PyAV and transcribed with Faster-Whisper. If FFmpeg reports an unsupported Netflix xHE-AAC feature, Chrome can decode the already-authorized audio with Windows' platform codec and stream temporary mono PCM to the local worker. Media URLs, signed query parameters, compressed audio, and PCM are not uploaded or stored in the transcript library; temporary PCM is deleted after loading.
+5. When batch acquisition is not possible, Chrome tab capture sends 0.5-second mono 16 kHz PCM chunks to a local WhisperLiveKit server started with `--pcm-input`.
+6. Both paths produce the same timestamped cue format in `chrome.storage.local`. Existing captions are evaluation-only and never feed the recognizer.
+7. Sentence, phrase, silence, and bounded-length breaks are used to create readable caption blocks.
 
 On direct streaming sites, the current **Decoding** phase may also include fetching remote media. Its speed can therefore depend on the selected provider/CDN even though transcription itself is local.
 
@@ -169,10 +174,15 @@ Only compare ASR with captions that represent the selected audio track. A German
 
 ## Current boundaries
 
-- Full-video mode supports public YouTube pages and accessible non-DRM HTTP MP4/HLS media.
+- Full-video mode supports public YouTube pages and accessible non-DRM HTTP MP4, HLS, and DASH media.
+- Netflix full-audio mode works only when player metadata exposes a separate clear, signed audio-only `nflxvideo.net` URL for the requested language. The URL can expire and this availability may vary by title, profile, browser, and Netflix changes.
+- The xHE-AAC fallback first tries Chrome's `decodeAudioData`, then demuxes MP4 audio with the bundled BSD-licensed MP4Box.js 2.4.1 and checks the lower-level WebCodecs `AudioDecoder`. Browser/OS codec support still varies. It temporarily holds decoded 16 kHz audio in browser memory, so very long titles need more memory.
+- Netflix candidates now retain track ID, player-selected state, and audio-description role when Netflix exposes them. The cache identity includes the track role so a German audio-description transcript is not silently reused for the normal German dub.
+- The requested audio language and exact role can be selected only when the stream exposes reliable metadata. A mislabeled provider can still supply the wrong dub.
 - Blob-only, expired, rejected, or inaccessible sources use live tab capture.
-- Multi-provider streaming sites can expose different CDNs on different runs; acquisition performance is not yet normalized.
-- Netflix and other DRM subscription platforms are outside the current acquisition scope.
+- Multi-provider streaming sites can expose different CDNs on different runs. The extension now tries multiple ranked candidates, but providers can still block cookie-free native access.
+- Encrypted Netflix streams and other DRM subscription platforms remain outside full-media acquisition and use decoded live tab audio. The extension never requests DRM keys or sends browser cookies to the local worker.
+- The popup shows the current acquisition/decoder stage, candidate number, received-versus-expected audio size, and actionable failures without requiring an export. Technical JSON remains available for deeper investigation; signed URLs and page query strings are redacted.
 - The transcript library is browser-local and intentionally bounded to 20 entries and about 7.5 MB. Removing the extension or clearing its storage removes the library, so download important transcripts as text.
 - Only complete transcripts are promoted to the reusable library. A partially watched live-transcription session remains an experiment record and will not suppress future analysis.
 - Exact batch word timestamps produce the best replay clips. Live cues without word timestamps use an estimated interval inside the cue.
@@ -185,3 +195,4 @@ Only compare ASR with captions that represent the selected audio track. A German
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [Chrome tabCapture](https://developer.chrome.com/docs/extensions/reference/api/tabCapture)
 - [Chrome offscreen documents](https://developer.chrome.com/docs/extensions/reference/api/offscreen)
+- [MP4Box.js](https://github.com/gpac/mp4box.js) (BSD-3-Clause; bundled license in `extension/vendor/MP4BOX-LICENSE.txt`)

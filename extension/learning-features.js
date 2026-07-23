@@ -1,5 +1,5 @@
 (() => {
-  if (globalThis.DubTranscriptLearning?.version === 2) return;
+  if (globalThis.DubTranscriptLearning?.version === 3) return;
 
   const DEFAULT_CAPTION_PREFERENCES = Object.freeze({
     fontSize: 31,
@@ -10,12 +10,18 @@
     textColor: "#FFFFFF",
     backgroundColor: "#05070C",
     fontFamily: "sans",
-    edgeStyle: "shadow"
+    edgeStyle: "shadow",
+    bold: true
   });
   const DEFAULT_TRANSLATION_PREFERENCES = Object.freeze({
     enabled: true,
     targetLanguage: "en",
-    provider: "auto"
+    provider: "auto",
+    fontSize: 21,
+    textOpacity: 100,
+    textColor: "#FFD166",
+    fontFamily: "sans",
+    bold: false
   });
   const FONT_FAMILIES = Object.freeze({
     sans: "Inter, ui-sans-serif, system-ui, sans-serif",
@@ -60,7 +66,8 @@
         DEFAULT_CAPTION_PREFERENCES.backgroundColor
       ),
       fontFamily: Object.hasOwn(FONT_FAMILIES, fontFamily) ? fontFamily : "sans",
-      edgeStyle: EDGE_STYLES.has(edgeStyle) ? edgeStyle : "shadow"
+      edgeStyle: EDGE_STYLES.has(edgeStyle) ? edgeStyle : "shadow",
+      bold: raw.bold !== false
     };
   }
 
@@ -71,10 +78,29 @@
       .slice(0, 16)
       .toLowerCase();
     const provider = String(raw.provider || "").toLowerCase();
+    const fontFamily = String(raw.fontFamily || "").toLowerCase();
     return {
       enabled: raw.enabled !== false,
       targetLanguage: targetLanguage || DEFAULT_TRANSLATION_PREFERENCES.targetLanguage,
-      provider: TRANSLATION_PROVIDERS.has(provider) ? provider : "auto"
+      provider: TRANSLATION_PROVIDERS.has(provider) ? provider : "auto",
+      fontSize: clampNumber(
+        raw.fontSize,
+        12,
+        42,
+        DEFAULT_TRANSLATION_PREFERENCES.fontSize
+      ),
+      textOpacity: clampNumber(
+        raw.textOpacity,
+        25,
+        100,
+        DEFAULT_TRANSLATION_PREFERENCES.textOpacity
+      ),
+      textColor: normalizeHexColor(
+        raw.textColor,
+        DEFAULT_TRANSLATION_PREFERENCES.textColor
+      ),
+      fontFamily: Object.hasOwn(FONT_FAMILIES, fontFamily) ? fontFamily : "sans",
+      bold: raw.bold === true
     };
   }
 
@@ -500,7 +526,7 @@
   }
 
   globalThis.DubTranscriptLearning = Object.freeze({
-    version: 2,
+    version: 3,
     DEFAULT_CAPTION_PREFERENCES,
     DEFAULT_TRANSLATION_PREFERENCES,
     normalizeCaptionPreferences,

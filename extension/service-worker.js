@@ -48,6 +48,8 @@ async function handleMessage(message, sender) {
       return exportLastTranscriptText();
     case "GET_TRANSCRIPT_LIBRARY":
       return getTranscriptLibrary();
+    case "GET_VISIBLE_DIAGNOSTICS":
+      return getVisibleDiagnostics();
     case "EXPORT_LIBRARY_TRANSCRIPT_TEXT":
       return exportLibraryTranscriptText(message.key);
     case "REMOVE_TRANSCRIPT_LIBRARY_ENTRY":
@@ -97,6 +99,24 @@ async function handleMessage(message, sender) {
     case "OFFSCREEN_STATUS":
       await broadcastStatus(message.status, message.error);
       return {};
+    case "BROWSER_BATCH_PROGRESS":
+      await handleBrowserBatchProgress(message);
+      return {};
+    case "BROWSER_BATCH_PCM_BEGIN":
+      await handleBrowserBatchPcmBegin(message);
+      return {};
+    case "BROWSER_BATCH_PCM_CHUNK":
+      await handleBrowserBatchPcmChunk(message);
+      return {};
+    case "BROWSER_BATCH_PCM_FINISH":
+      await handleBrowserBatchPcmFinish(message);
+      return {};
+    case "BROWSER_BATCH_PCM_ABORT":
+      await handleBrowserBatchPcmAbort(message);
+      return {};
+    case "BROWSER_BATCH_ERROR":
+      await handleBrowserBatchError(message);
+      return {};
     default:
       return {};
   }
@@ -109,12 +129,20 @@ async function startSmartExperiment(settings) {
   if (existing) await stopExperiment();
 
   const prepared = await prepareMediaTarget();
-  const identity = learning.stableVideoIdentity(prepared.tab.url, settings.audioLanguage);
+  const candidate = chooseBatchCandidate(
+    prepared.tab,
+    prepared.mediaTarget.context,
+    settings.audioLanguage
+  );
+  const identity = transcriptIdentityForCandidate(
+    prepared.tab.url,
+    settings.audioLanguage,
+    candidate
+  );
   const savedTranscript = await getStoredTranscript(identity);
   if (savedTranscript && isStoredTranscriptCompatible(savedTranscript, prepared.mediaTarget.context)) {
     return startLibraryExperiment(settings, prepared, savedTranscript);
   }
-  const candidate = chooseBatchCandidate(prepared.tab, prepared.mediaTarget.context);
   if (candidate.supported) {
     return startBatchExperiment(settings, prepared, candidate);
   }
@@ -132,7 +160,8 @@ async function startLibraryExperiment(settings, prepared, savedTranscript) {
     sourceKind: "local-library",
     sourceHost: null,
     fallbackReason: null,
-    restoredFrom: savedTranscript.sourceExperimentId || null
+    restoredFrom: savedTranscript.sourceExperimentId || null,
+    transcriptIdentity: savedTranscript.identity || null
   });
   experiment.asrSegments = sanitizeTranscriptSegments(savedTranscript.segments);
   const duration = Math.max(
@@ -219,6 +248,16 @@ async function startBatchExperiment(settings, prepared, candidate) {
     status: "queued",
     sourceKind: candidate.sourceKind,
     sourceHost: safeHost(candidate.sourceUrl),
+    discoveryKind: candidate.discoveryKind || candidate.sourceKind,
+    candidateSummary: summarizeBatchCandidates(candidate),
+    transcriptIdentity: transcriptIdentityForCandidate(tab.url, settings.audioLanguage, candidate),
+    selectedAudioTrack: summarizeSelectedAudioTrack(candidate),
+    diagnostics: {
+      extensionVersion: installedExtensionVersion(),
+      worker: null,
+      attempts: [],
+      statusHistory: []
+    },
     fallbackReason: null
   });
   const active = {
@@ -227,6 +266,13 @@ async function startBatchExperiment(settings, prepared, candidate) {
     mediaFrameId: mediaTarget.frameId,
     mode: "batch-analyzing",
     batchJobId: jobId,
+    browserAudioFallback: candidate.discoveryKind === "netflix-audio" ? {
+      sourceUrl: candidate.sourceUrl,
+      sourceCandidates: candidate.sourceCandidates,
+      headers: candidate.headers,
+      durationHint: Number(context.duration) || null
+    } : null,
+    browserDecodeAttempted: false,
     settings,
     syncOffset: normalizeSyncOffset(settings.syncOffset),
     replay: null,
@@ -252,6 +298,7 @@ async function startBatchExperiment(settings, prepared, candidate) {
       jobId,
       sourceKind: candidate.sourceKind,
       sourceUrl: candidate.sourceUrl,
+      sourceCandidates: candidate.sourceCandidates,
       headers: candidate.headers,
       durationHint: context.duration,
       language: settings.audioLanguage,
@@ -264,7 +311,10 @@ async function startBatchExperiment(settings, prepared, candidate) {
     return { experimentId: id, mode: "live-fallback" };
   }
 
-  await broadcastStatus("Full-video source found. Analyzing the audio locally before playback…");
+  const sourceStatus = candidate.discoveryKind === "netflix-audio"
+    ? "Clear Netflix audio track found. Acquiring and analyzing it locally before playback…"
+    : "Full-video source found. Analyzing the audio locally before playback…";
+  await broadcastStatus(sourceStatus);
   return { experimentId: id, mode: "batch" };
 }
 
@@ -343,7 +393,8 @@ function createExperimentRecord(id, tab, context, settings, pipeline) {
     page: {
       title: tab.title || "Untitled video",
       url: tab.url,
-      videoIdentity: learning.stableVideoIdentity(tab.url, settings.audioLanguage),
+      videoIdentity: pipeline.transcriptIdentity
+        || learning.stableVideoIdentity(tab.url, settings.audioLanguage),
       playerFrameUrl: context.frameUrl || tab.url,
       duration: context.duration
     },
@@ -368,10 +419,7 @@ function createExperimentRecord(id, tab, context, settings, pipeline) {
   };
 }
 
-function chooseBatchCandidate(tab, context) {
-  if (context.drmProtected) {
-    return { supported: false, reason: "the player reported encrypted media" };
-  }
+function chooseBatchCandidate(tab, context, audioLanguage = "") {
   if (identifyPlatform(tab.url) === "youtube") {
     return {
       supported: true,
@@ -380,9 +428,35 @@ function chooseBatchCandidate(tab, context) {
       headers: {}
     };
   }
-  const sourceUrl = (context.batchCandidates || [])
-    .find((url) => /^https?:\/\//i.test(url));
-  if (!sourceUrl) {
+  let sourceCandidates = rankBatchCandidates(context.batchCandidates, audioLanguage);
+  if (context.drmProtected) {
+    sourceCandidates = sourceCandidates.filter((candidate) => (
+      isValidatedNetflixAudioCandidate(tab, candidate)
+    ));
+    const requestedLanguage = normalizeMediaLanguageHint(audioLanguage);
+    const matchingLanguage = requestedLanguage
+      ? sourceCandidates.filter((candidate) => (
+        normalizeMediaLanguageHint(candidate.language) === requestedLanguage
+      ))
+      : [];
+    if (requestedLanguage && !matchingLanguage.length) {
+      return {
+        supported: false,
+        reason: `no clear Netflix audio track matched ${requestedLanguage}`
+      };
+    }
+    if (matchingLanguage.length) sourceCandidates = matchingLanguage;
+    if (sourceCandidates[0]?.kind === "netflix-audio") {
+      const selectedTrack = sourceCandidates[0];
+      sourceCandidates = sourceCandidates.filter((candidate) => (
+        isSameNetflixAudioTrack(candidate, selectedTrack)
+      ));
+    }
+    if (!sourceCandidates.length) {
+      return { supported: false, reason: "the player reported encrypted media" };
+    }
+  }
+  if (!sourceCandidates.length) {
     return {
       supported: false,
       reason: context.sourceKind === "blob"
@@ -399,7 +473,162 @@ function chooseBatchCandidate(tab, context) {
   } catch {
     // Referer and user agent are sufficient when the frame URL is unusual.
   }
-  return { supported: true, sourceKind: "direct", sourceUrl, headers };
+  return {
+    supported: true,
+    sourceKind: "direct",
+    discoveryKind: sourceCandidates[0].kind,
+    sourceUrl: sourceCandidates[0].url,
+    sourceCandidates,
+    headers
+  };
+}
+
+function isSameNetflixAudioTrack(candidate, selected) {
+  const candidateId = diagnosticText(candidate?.trackId || candidate?.downloadableId, 128);
+  const selectedId = diagnosticText(selected?.trackId || selected?.downloadableId, 128);
+  if (selectedId) return candidateId === selectedId;
+  const candidateRole = String(candidate?.role || "main").toLowerCase();
+  const selectedRole = String(selected?.role || "main").toLowerCase();
+  return normalizeMediaLanguageHint(candidate?.language || candidate?.languageDescription)
+      === normalizeMediaLanguageHint(selected?.language || selected?.languageDescription)
+    && candidateRole === selectedRole;
+}
+
+function rankBatchCandidates(rawCandidates, audioLanguage = "") {
+  const language = normalizeMediaLanguageHint(audioLanguage);
+  const unique = new Map();
+  for (const [index, rawCandidate] of (rawCandidates || []).entries()) {
+    const candidate = typeof rawCandidate === "string"
+      ? { url: rawCandidate, source: "legacy", kind: "" }
+      : { ...rawCandidate };
+    let parsed;
+    try {
+      parsed = new URL(String(candidate.url || ""));
+    } catch {
+      continue;
+    }
+    if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password) continue;
+    parsed.hash = "";
+    const url = parsed.href;
+    const text = `${url} ${candidate.contentType || ""}`.toLowerCase();
+    let kind = String(candidate.kind || "").toLowerCase();
+    if (kind === "netflix-audio") {
+      // Netflix clear-audio URLs can be query-only CDN URLs with no file extension.
+    } else if (/\.m3u8(?:$|[\s?#])|mpegurl/.test(text)) kind = "hls";
+    else if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(text)) kind = "dash";
+    else if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(text)) kind = "audio";
+    else if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(text)) kind = "media";
+    else if (!/(?:videoplayback|manifest|playlist)(?:[/?#=&]|$)/.test(text)) continue;
+    else kind = "unknown-media";
+
+    if (/\.(?:vtt|srt|ass|ssa|ttml)(?:$|[?#])|(?:subtitle|caption|timedtext)/.test(text)) continue;
+    let score = {
+      "netflix-audio": 170,
+      hls: 120,
+      dash: 115,
+      audio: 105,
+      media: 80,
+      "unknown-media": 60
+    }[kind] || 0;
+    const source = String(candidate.source || "").toLowerCase();
+    if (source === "current-src") score += 25;
+    else if (source === "source-element" || source === "media-element") score += 20;
+    else if (source.startsWith("xhr") || source.startsWith("fetch")) score += 15;
+    else if (source === "performance") score += 5;
+    if (/(?:^|[/?&_.=-])audio(?:[/?&_.=-]|$)|(?:^|[/?&_.=-])bestaudio(?:[/?&_.=-]|$)/.test(text)) score += 15;
+    const candidateLanguage = normalizeMediaLanguageHint(
+      candidate.language || candidate.languageDescription
+    );
+    if (language && candidateLanguage === language) score += 60;
+    else if (language && candidateLanguage) score -= 25;
+    else if (language && new RegExp(`(?:^|[/?&_.=-])(?:${language}|deu|ger|german)(?:[/?&_.=-]|$)`, "i").test(text)) score += 10;
+    const bitrate = Math.max(0, Number(candidate.bitrate) || 0);
+    const codec = String(candidate.codec || "").slice(0, 64);
+    const profile = String(candidate.profile || "").slice(0, 96);
+    const codecDescription = `${codec} ${profile}`.toLowerCase();
+    if (kind === "netflix-audio") {
+      if (candidate.selected === true) score += 500;
+      if (String(candidate.role || "").toLowerCase() === "audio-description") {
+        score += candidate.selected === true ? 40 : -220;
+      }
+      if (/(?:aac[- _]?lc|mp4a\.40\.2|he[- _]?aac|heaac)/.test(codecDescription)
+        && !/(?:xhe|x-he|usac|mp4a\.40\.42)/.test(codecDescription)) score += 35;
+      if (/(?:e-?ac-?3|ec-3|ddplus)/.test(codecDescription)) score += 20;
+      if (/(?:xhe|x-he|usac|mp4a\.40\.42)/.test(codecDescription)) score -= 80;
+      if (/(?:ac-?4|atmos)/.test(codecDescription)) score -= 30;
+      if (bitrate) score += Math.min(5, bitrate / 200_000);
+    }
+    if (/(?:^|[/?&_.=-])(?:ad|ads|advert|promo|trailer)(?:[/?&_.=-]|$)/.test(text)) score -= 80;
+    score -= Math.min(index, 30) * 0.01;
+
+    const previous = unique.get(url);
+    if (!previous || score > previous.score) {
+      const ranked = {
+        url,
+        kind,
+        source: String(candidate.source || "page").slice(0, 64),
+        score
+      };
+      if (candidate.language) ranked.language = String(candidate.language).slice(0, 64);
+      if (candidate.languageDescription) {
+        ranked.languageDescription = String(candidate.languageDescription).slice(0, 128);
+      }
+      if (candidate.trackId) ranked.trackId = String(candidate.trackId).slice(0, 128);
+      if (candidate.downloadableId) {
+        ranked.downloadableId = String(candidate.downloadableId).slice(0, 128);
+      }
+      if (kind === "netflix-audio") {
+        if (candidate.role) ranked.role = String(candidate.role).slice(0, 32);
+        if (typeof candidate.selected === "boolean") ranked.selected = candidate.selected;
+      }
+      if (codec) ranked.codec = codec;
+      if (profile) ranked.profile = profile;
+      const channels = Math.max(0, Number(candidate.channels) || 0);
+      if (channels) ranked.channels = channels;
+      const representationIndex = Math.max(0, Number(candidate.representationIndex) || 0);
+      if (representationIndex) ranked.representationIndex = representationIndex;
+      if (bitrate) ranked.bitrate = bitrate;
+      unique.set(url, ranked);
+    }
+  }
+  return [...unique.values()]
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 10)
+    .map(({ score: _score, ...candidate }) => candidate);
+}
+
+function normalizeMediaLanguageHint(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  const primary = raw.split(/[-_]/)[0].replace(/[^a-z]/g, "");
+  const aliases = {
+    deu: "de",
+    ger: "de",
+    german: "de",
+    deutsch: "de",
+    eng: "en",
+    english: "en",
+    jpn: "ja",
+    japanese: "ja"
+  };
+  return aliases[primary] || (primary.length >= 2 ? primary.slice(0, 2) : primary);
+}
+
+function isValidatedNetflixAudioCandidate(tab, candidate) {
+  if (candidate?.kind !== "netflix-audio" || candidate?.source !== "netflix-player-metadata") {
+    return false;
+  }
+  let pageHost;
+  let mediaUrl;
+  try {
+    pageHost = new URL(tab.url).hostname.toLowerCase();
+    mediaUrl = new URL(candidate.url);
+  } catch {
+    return false;
+  }
+  const isNetflixPage = pageHost === "netflix.com" || pageHost.endsWith(".netflix.com");
+  const mediaHost = mediaUrl.hostname.toLowerCase();
+  const isNetflixMedia = mediaHost === "nflxvideo.net" || mediaHost.endsWith(".nflxvideo.net");
+  return isNetflixPage && mediaUrl.protocol === "https:" && isNetflixMedia;
 }
 
 function safeHost(value) {
@@ -408,6 +637,72 @@ function safeHost(value) {
   } catch {
     return null;
   }
+}
+
+function installedExtensionVersion() {
+  try {
+    return chrome.runtime.getManifest?.().version || null;
+  } catch {
+    return null;
+  }
+}
+
+function summarizeBatchCandidates(candidate) {
+  const values = candidate.sourceCandidates?.length
+    ? candidate.sourceCandidates
+    : [{ url: candidate.sourceUrl, kind: candidate.discoveryKind || candidate.sourceKind }];
+  return values.slice(0, 10).map((value, index) => ({
+    index: index + 1,
+    sourceHost: safeHost(value.url),
+    kind: String(value.kind || "direct").slice(0, 32),
+    discoverySource: String(value.source || "").slice(0, 64) || null,
+    language: String(value.language || "").slice(0, 32) || null,
+    languageDescription: String(value.languageDescription || "").slice(0, 128) || null,
+    trackId: String(value.trackId || "").slice(0, 128) || null,
+    downloadableId: String(value.downloadableId || "").slice(0, 128) || null,
+    role: String(value.role || "main").slice(0, 32),
+    selected: value.selected === true,
+    codecHint: String(value.codec || "").slice(0, 64) || null,
+    profileHint: String(value.profile || "").slice(0, 96) || null,
+    bitrate: Math.max(0, Number(value.bitrate) || 0) || null,
+    channels: Math.max(0, Number(value.channels) || 0) || null,
+    representationIndex: Math.max(0, Number(value.representationIndex) || 0)
+  }));
+}
+
+function summarizeSelectedAudioTrack(candidate) {
+  const selected = candidate?.sourceCandidates?.[0];
+  if (!selected || selected.kind !== "netflix-audio") return null;
+  return {
+    language: diagnosticText(selected.language, 32),
+    label: diagnosticText(selected.languageDescription, 128),
+    trackId: diagnosticText(selected.trackId, 128),
+    downloadableId: diagnosticText(selected.downloadableId, 128),
+    role: diagnosticText(selected.role, 32) || "main",
+    selectedByPlayer: selected.selected === true,
+    codecHint: diagnosticText(selected.codec, 64),
+    profileHint: diagnosticText(selected.profile, 96),
+    bitrate: Math.max(0, Number(selected.bitrate) || 0) || null,
+    representationIndex: Math.max(0, Number(selected.representationIndex) || 0)
+  };
+}
+
+function transcriptIdentityForCandidate(rawUrl, audioLanguage, candidate) {
+  const base = learning.stableVideoIdentity(rawUrl, audioLanguage);
+  if (!base || identifyPlatform(rawUrl) !== "netflix.com") return base;
+  const selected = candidate?.sourceCandidates?.[0];
+  if (!candidate?.supported || selected?.kind !== "netflix-audio") {
+    return `${base}|track:live-unknown`;
+  }
+  const language = normalizeMediaLanguageHint(selected.language || audioLanguage) || "unknown";
+  const role = String(selected.role || "main").toLowerCase() === "audio-description"
+    ? "audio-description"
+    : "main";
+  const stableTrackId = diagnosticText(selected.trackId || selected.downloadableId, 128);
+  const trackKey = stableTrackId
+    ? stableTrackId.replace(/[^a-z0-9._-]+/gi, "-")
+    : `${language}-${role}`;
+  return `${base}|track:${trackKey}|role:${role}`;
 }
 
 async function ensureRecognizerRunning(serverUrl) {
@@ -499,6 +794,15 @@ async function handleBatchNativeMessage(message) {
     || active.batchJobId !== message.jobId
   ) return;
 
+  if (message.state === "batch_error" || message.state === "batch_candidate_failed") {
+    message = {
+      ...message,
+      category: batchFailureCategory(message)
+    };
+  }
+
+  await persistBatchDiagnostic(active, message);
+
   if (message.state === "batch_queued") {
     await broadcastStatus("Full-video analysis queued locally.");
     return;
@@ -515,6 +819,22 @@ async function handleBatchNativeMessage(message) {
       experiment.pipeline.decodeProgress = 100;
       experiment.pipeline.decodedSeconds = experiment.pipeline.duration;
       experiment.pipeline.title = message.title || null;
+      experiment.pipeline.acquisitionKind = message.sourceKind || experiment.pipeline.sourceKind;
+      experiment.pipeline.sourceHost = message.sourceHost || experiment.pipeline.sourceHost;
+      const attempts = experiment.pipeline.diagnostics?.attempts || [];
+      const selectedAttempt = [...attempts].reverse().find((attempt) => (
+        !message.sourceHost || attempt.sourceHost === message.sourceHost
+      ));
+      if (selectedAttempt) {
+        selectedAttempt.phase = "succeeded";
+        experiment.pipeline.diagnostics.selectedAttempt = selectedAttempt.attempt;
+      }
+      if (
+        message.sourceKind === "browser-decoded-xhe-aac"
+        && experiment.pipeline.diagnostics?.browserDecoder
+      ) {
+        experiment.pipeline.diagnostics.browserDecoder.state = "decoded";
+      }
       await saveExperiment(experiment);
     }
     await broadcastStatus("Audio decoded. Transcribing the complete video locally…");
@@ -589,8 +909,352 @@ async function handleBatchNativeMessage(message) {
     return;
   }
   if (message.state === "batch_error") {
+    if (
+      batchFailureCategory(message) === "decoder-unsupported"
+      && active.browserAudioFallback
+      && !active.browserDecodeAttempted
+    ) {
+      await startBrowserAudioFallback(active, message);
+      return;
+    }
     await fallbackBatchToLive(active, message.message || "the media source could not be analyzed");
   }
+}
+
+function batchFailureCategory(message = {}) {
+  const explicit = diagnosticText(message.category, 64);
+  if (explicit) return explicit;
+  const detail = String(message.message || "").toLowerCase();
+  if (
+    detail.includes("not yet implemented in ffmpeg")
+    || detail.includes("patches welcome")
+    || detail.includes("avcodec_send_packet")
+    || detail.includes("aac usac esbr")
+    || detail.includes("chrome/windows decoder fallback is required")
+    || (/unsupported|cannot decode|could not decode/.test(detail) && /xhe[- ]?aac|esbr/.test(detail))
+  ) return "decoder-unsupported";
+  return null;
+}
+
+async function persistBatchDiagnostic(active, message) {
+  const trackedStates = new Set([
+    "batch_worker_info",
+    "batch_candidate_attempt",
+    "batch_candidate_probe",
+    "batch_candidate_failed",
+    "batch_status",
+    "batch_error"
+  ]);
+  if (!trackedStates.has(message.state)) return;
+  const experiment = await getExperiment(active.experimentId);
+  if (!experiment) return;
+  experiment.pipeline.diagnostics ||= {
+    extensionVersion: installedExtensionVersion(),
+    worker: null,
+    attempts: [],
+    statusHistory: []
+  };
+  const diagnostics = experiment.pipeline.diagnostics;
+  diagnostics.attempts ||= [];
+  diagnostics.statusHistory ||= [];
+
+  if (message.state === "batch_worker_info") {
+    diagnostics.worker = {
+      workerVersion: diagnosticText(message.workerVersion, 32),
+      pythonVersion: diagnosticText(message.pythonVersion, 32),
+      pyavVersion: diagnosticText(message.pyavVersion, 32),
+      libavcodecVersion: diagnosticText(message.libavcodecVersion, 32),
+      inspectionError: diagnosticMessage(message.pyavInspectionError)
+    };
+  } else if (message.state.startsWith("batch_candidate_")) {
+    const sourceAttempt = Math.max(1, Number(message.attempt) || 1);
+    const sourceKind = diagnosticText(message.sourceKind, 32) || "direct";
+    const attemptKey = `${sourceKind}:${sourceAttempt}`;
+    let attempt = diagnostics.attempts.find((value) => value.attemptKey === attemptKey);
+    if (!attempt) {
+      attempt = {
+        attempt: diagnostics.attempts.length + 1,
+        attemptKey,
+        sourceAttempt
+      };
+      diagnostics.attempts.push(attempt);
+    }
+    Object.assign(attempt, {
+      candidateCount: Math.max(1, Number(message.candidateCount) || 1),
+      sourceHost: diagnosticText(message.sourceHost, 255),
+      sourceKind
+    });
+    if (message.state === "batch_candidate_attempt") {
+      Object.assign(attempt, {
+        phase: "attempting",
+        discoverySource: diagnosticText(message.discoverySource, 64),
+        languageHint: diagnosticText(message.languageHint, 32),
+        codecHint: diagnosticText(message.codecHint, 64),
+        profileHint: diagnosticText(message.profileHint, 96),
+        bitrate: Math.max(0, Number(message.bitrate) || 0) || null,
+        channels: Math.max(0, Number(message.channels) || 0) || null,
+        representationIndex: Math.max(0, Number(message.representationIndex) || 0)
+      });
+    } else if (message.state === "batch_candidate_probe") {
+      Object.assign(attempt, {
+        phase: "decoding",
+        containerFormat: diagnosticText(message.containerFormat, 64),
+        codec: diagnosticText(message.codec, 64),
+        codecLongName: diagnosticText(message.codecLongName, 96),
+        profile: diagnosticText(message.profile, 96),
+        sampleRate: Math.max(0, Number(message.sampleRate) || 0) || null,
+        channels: Math.max(0, Number(message.channels) || 0) || attempt.channels || null,
+        layout: diagnosticText(message.layout, 64),
+        detectedLanguage: diagnosticText(message.language, 32)
+      });
+    } else {
+      Object.assign(attempt, {
+        phase: "failed",
+        failureCategory: diagnosticText(message.category, 64),
+        failureMessage: diagnosticMessage(message.message)
+      });
+    }
+    diagnostics.attempts.sort((left, right) => left.attempt - right.attempt);
+    diagnostics.attempts = diagnostics.attempts.slice(0, 10);
+  } else {
+    diagnostics.statusHistory.push({
+      at: new Date().toISOString(),
+      type: message.state === "batch_error" ? "error" : "status",
+      category: diagnosticText(message.category, 64),
+      message: diagnosticMessage(message.message)
+    });
+    diagnostics.statusHistory = diagnostics.statusHistory.slice(-30);
+    if (message.state === "batch_error") {
+      diagnostics.finalError = {
+        category: diagnosticText(message.category, 64),
+        message: diagnosticMessage(message.message),
+        workerVersion: diagnosticText(message.workerVersion, 32)
+      };
+    }
+  }
+  await saveExperiment(experiment);
+}
+
+function diagnosticText(value, limit) {
+  return String(value || "").replace(/[\r\n\t]+/g, " ").trim().slice(0, limit) || null;
+}
+
+function diagnosticMessage(value) {
+  return String(value || "")
+    .replace(/https?:\/\/[^\s)]+/gi, (url) => {
+      const host = safeHost(url);
+      return host ? `https://${host}/[redacted]` : "[redacted-url]";
+    })
+    .replace(/[\r\n\t]+/g, " ")
+    .trim()
+    .slice(0, 800) || null;
+}
+
+async function startBrowserAudioFallback(active, nativeError) {
+  const latest = await getActive();
+  if (
+    !latest
+    || latest.mode !== "batch-analyzing"
+    || latest.batchJobId !== active.batchJobId
+    || latest.browserDecodeAttempted
+  ) return;
+  latest.browserDecodeAttempted = true;
+  await setActive(latest);
+
+  const experiment = await getExperiment(latest.experimentId);
+  if (!experiment) return;
+  experiment.pipeline.status = "browser-decoder-preparing";
+  experiment.pipeline.diagnostics ||= {};
+  experiment.pipeline.diagnostics.browserDecoder = {
+    state: "preparing",
+    reason: diagnosticMessage(nativeError.message),
+    implementation: "Chrome decodeAudioData + MP4Box/WebCodecs"
+  };
+  await saveExperiment(experiment);
+  await broadcastStatus(
+    "FFmpeg cannot decode this Netflix xHE-AAC track. Retrying with Chrome’s Windows audio decoder…"
+  );
+
+  try {
+    await ensureOffscreenDocument();
+    const response = await sendToOffscreen({
+      type: "OFFSCREEN_DECODE_BATCH_AUDIO",
+      jobId: latest.batchJobId,
+      sourceUrl: latest.browserAudioFallback.sourceUrl,
+      sourceCandidates: latest.browserAudioFallback.sourceCandidates,
+      headers: latest.browserAudioFallback.headers,
+      referrer: experiment.page.playerFrameUrl || experiment.page.url,
+      durationHint: latest.browserAudioFallback.durationHint
+    });
+    if (!response?.ok) throw new Error(response?.error || "Chrome audio decoding could not start.");
+  } catch (error) {
+    await handleBrowserBatchError({
+      jobId: latest.batchJobId,
+      error: error.message
+    });
+  }
+}
+
+async function handleBrowserBatchProgress(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  const experiment = await getExperiment(active.experimentId);
+  if (!experiment) return;
+  const phase = diagnosticText(message.phase, 48) || "preparing";
+  const percent = Number(message.percent);
+  const receivedBytes = Math.max(0, Number(message.receivedBytes) || 0);
+  const totalBytes = Math.max(0, Number(message.totalBytes) || 0);
+  const previousBrowserDecoder = experiment.pipeline.diagnostics?.browserDecoder || {};
+  experiment.pipeline.status = `browser-${phase}`;
+  experiment.pipeline.diagnostics ||= {};
+  experiment.pipeline.diagnostics.browserDecoder = {
+    ...(experiment.pipeline.diagnostics.browserDecoder || {}),
+    state: phase,
+    percent: Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : null,
+    receivedBytes: receivedBytes || null,
+    totalBytes: totalBytes || null,
+    decodedDuration: Math.max(0, Number(message.decodedDuration) || 0) || null,
+    pcmBytesSent: Math.max(0, Number(message.pcmBytesSent) || 0) || null,
+    strategy: diagnosticText(message.strategy, 64) || previousBrowserDecoder.strategy || null,
+    candidateIndex: Math.max(0, Number(message.candidateIndex) || 0)
+      || previousBrowserDecoder.candidateIndex || null,
+    candidateCount: Math.max(0, Number(message.candidateCount) || 0)
+      || previousBrowserDecoder.candidateCount || null,
+    sourceHost: diagnosticText(message.sourceHost, 255) || previousBrowserDecoder.sourceHost || null,
+    codecHint: diagnosticText(message.codecHint, 64) || previousBrowserDecoder.codecHint || null,
+    profileHint: diagnosticText(message.profileHint, 96) || previousBrowserDecoder.profileHint || null,
+    expectedBytes: Math.max(0, Number(message.expectedBytes) || 0)
+      || previousBrowserDecoder.expectedBytes || null,
+    coverageRatio: Number.isFinite(Number(message.coverageRatio))
+      ? Math.max(0, Number(message.coverageRatio))
+      : previousBrowserDecoder.coverageRatio ?? null,
+    responseStatus: Math.max(0, Number(message.responseStatus) || 0)
+      || previousBrowserDecoder.responseStatus || null,
+    contentRange: diagnosticText(message.contentRange, 128)
+      || previousBrowserDecoder.contentRange || null,
+    webCodecsSupported: typeof message.webCodecsSupported === "boolean"
+      ? message.webCodecsSupported
+      : experiment.pipeline.diagnostics.browserDecoder?.webCodecsSupported
+  };
+  if (phase === "candidate-failed") {
+    experiment.pipeline.diagnostics.browserDecoder.attempts ||= [];
+    experiment.pipeline.diagnostics.browserDecoder.attempts.push({
+      candidateIndex: Math.max(1, Number(message.candidateIndex) || 1),
+      sourceHost: diagnosticText(message.sourceHost, 255),
+      strategy: diagnosticText(message.strategy, 64),
+      category: diagnosticText(message.category, 64),
+      error: diagnosticMessage(message.error),
+      receivedBytes: receivedBytes || null,
+      expectedBytes: Math.max(0, Number(message.expectedBytes) || 0) || null,
+      coverageRatio: Number.isFinite(Number(message.coverageRatio))
+        ? Math.max(0, Number(message.coverageRatio))
+        : null
+    });
+    experiment.pipeline.diagnostics.browserDecoder.attempts =
+      experiment.pipeline.diagnostics.browserDecoder.attempts.slice(-10);
+  }
+  await saveExperiment(experiment);
+  if (phase === "candidate-failed") {
+    const suffix = Number(message.candidateCount) > 1
+      ? ` ${Math.max(1, Number(message.candidateIndex) || 1)}/${Number(message.candidateCount)}`
+      : "";
+    await broadcastStatus(
+      `Audio representation${suffix} failed (${message.category || "decoder error"}); trying another one.`
+    );
+    return;
+  }
+  if (phase === "decoding" && message.strategy) {
+    await broadcastStatus(`Chrome is decoding the audio with ${message.strategy}.`);
+    return;
+  }
+  const status = phase === "downloading"
+    ? (Number.isFinite(percent)
+      ? `Chrome is downloading the xHE-AAC track locally… ${Math.round(percent)}%`
+      : `Chrome is downloading the xHE-AAC track locally… ${formatMegabytes(receivedBytes)} received`)
+    : phase === "decoding"
+      ? "Chrome is decoding the xHE-AAC track with the Windows media decoder…"
+      : phase === "sending-pcm"
+        ? (Number.isFinite(percent)
+          ? `Sending browser-decoded audio to local Whisper… ${Math.round(percent)}%`
+          : "Sending browser-decoded audio to local Whisper…")
+        : "Preparing Chrome’s Windows audio decoder…";
+  await broadcastStatus(status);
+}
+
+async function handleBrowserBatchPcmBegin(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  const sampleRate = Math.max(8_000, Math.min(96_000, Number(message.sampleRate) || 16_000));
+  const channels = Math.max(1, Math.min(2, Number(message.channels) || 1));
+  ensureNativeHostPort().postMessage({
+    command: "browser_pcm_begin",
+    jobId: active.batchJobId,
+    sampleRate,
+    channels,
+    durationHint: Number(message.duration) || active.browserAudioFallback?.durationHint || null,
+    language: active.settings.audioLanguage,
+    model: active.settings.batchModel || "small",
+    captionLanguage: active.settings.captionLanguage,
+    collectCaptions: false
+  });
+}
+
+async function handleBrowserBatchPcmChunk(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  const data = String(message.data || "");
+  if (!data || data.length > 900_000) throw new Error("A browser-decoded PCM chunk exceeded the local safety limit.");
+  ensureNativeHostPort().postMessage({
+    command: "browser_pcm_chunk",
+    jobId: active.batchJobId,
+    data
+  });
+}
+
+async function handleBrowserBatchPcmFinish(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  ensureNativeHostPort().postMessage({
+    command: "browser_pcm_finish",
+    jobId: active.batchJobId
+  });
+  active.browserAudioFallback = null;
+  await setActive(active);
+}
+
+async function handleBrowserBatchPcmAbort(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  try {
+    ensureNativeHostPort().postMessage({
+      command: "cancel_batch",
+      jobId: active.batchJobId
+    });
+  } catch {
+    // The decoder error remains available even if no temporary PCM stream existed.
+  }
+}
+
+async function handleBrowserBatchError(message) {
+  const active = await getActive();
+  if (!active || active.mode !== "batch-analyzing" || active.batchJobId !== message.jobId) return;
+  const experiment = await getExperiment(active.experimentId);
+  const lastCategory = experiment?.pipeline?.diagnostics?.browserDecoder?.attempts?.at(-1)?.category;
+  const reasonPrefix = lastCategory === "incomplete-download"
+    ? "Netflix returned incomplete audio representations"
+    : "Chrome/Windows audio decoding failed";
+  const reason = `${reasonPrefix}: ${diagnosticMessage(message.error) || "unknown error"}`;
+  if (experiment) {
+    experiment.pipeline.diagnostics ||= {};
+    experiment.pipeline.diagnostics.browserDecoder = {
+      ...(experiment.pipeline.diagnostics.browserDecoder || {}),
+      state: "failed",
+      error: diagnosticMessage(message.error)
+    };
+    await saveExperiment(experiment);
+  }
+  await sendToOffscreen({ type: "OFFSCREEN_STOP" });
+  await fallbackBatchToLive(active, reason);
 }
 
 async function completeBatchExperiment(active, message) {
@@ -639,6 +1303,9 @@ async function completeBatchExperiment(active, message) {
     segmentCount: experiment.asrSegments.length,
     completedAt: new Date().toISOString()
   };
+  if (experiment.pipeline.diagnostics?.browserDecoder?.state === "decoded") {
+    experiment.pipeline.diagnostics.browserDecoder.state = "complete";
+  }
   experiment.evaluation = message.evaluation || null;
   await saveExperiment(experiment);
   await trySaveTranscriptToLibrary(experiment);
@@ -770,8 +1437,10 @@ async function stopExperiment() {
   if (batchJobId && nativeHostPort) {
     try { nativeHostPort.postMessage({ command: "cancel_batch", jobId: batchJobId }); } catch { }
   }
-  if (wasLive) {
+  if (wasLive || active.browserDecodeAttempted) {
     await sendToOffscreen({ type: "OFFSCREEN_STOP" });
+  }
+  if (wasLive) {
     await persistAudioCoverage(active, true);
   }
 
@@ -1056,10 +1725,168 @@ async function exportLastExperiment() {
   const experiment = await getExperiment(id);
   if (!experiment) throw new Error("The last experiment is no longer in local storage.");
   const title = experiment.page.title.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 60) || "video";
+  const technicalExperiment = structuredClone(experiment);
+  if (technicalExperiment.page) {
+    technicalExperiment.page.url = redactTechnicalPageUrl(technicalExperiment.page.url);
+    technicalExperiment.page.playerFrameUrl = redactTechnicalPageUrl(
+      technicalExperiment.page.playerFrameUrl
+    );
+  }
   return {
-    experiment,
+    experiment: technicalExperiment,
     filename: `dub-transcript-lab/${title}-${id}.json`
   };
+}
+
+async function getVisibleDiagnostics() {
+  const active = await getActive();
+  const stored = await chrome.storage.local.get(LAST_KEY);
+  const experimentId = active?.experimentId || stored[LAST_KEY];
+  const experiment = experimentId ? await getExperiment(experimentId) : null;
+  if (!experiment) {
+    return {
+      diagnostics: {
+        level: "idle",
+        stage: "Ready",
+        message: "No analysis has been run yet.",
+        action: null,
+        details: []
+      }
+    };
+  }
+  const pipeline = experiment.pipeline || {};
+  const diagnostics = pipeline.diagnostics || {};
+  const browser = diagnostics.browserDecoder || {};
+  const completed = pipeline.status === "complete" || pipeline.mode === "library";
+  const finalError = completed ? null : (
+    pipeline.fallbackError
+      || browser.error
+      || diagnostics.finalError?.message
+      || pipeline.fallbackReason
+      || null
+  );
+  const category = completed ? null : (
+    browser.attempts?.at(-1)?.category
+      || diagnostics.finalError?.category
+      || (String(finalError || "").toLowerCase().includes("incomplete")
+        ? "incomplete-download"
+        : null)
+  );
+  let level = "working";
+  if (completed) level = "success";
+  else if (pipeline.status === "error") level = "error";
+  else if (pipeline.mode === "live-fallback" || finalError) level = "warning";
+  const details = [];
+  details.push({ label: "Mode", value: diagnosticModeLabel(pipeline) });
+  if (pipeline.selectedAudioTrack) {
+    const track = pipeline.selectedAudioTrack;
+    details.push({
+      label: "Audio track",
+      value: [track.label || track.language, track.role, track.selectedByPlayer ? "player-selected" : null]
+        .filter(Boolean).join(" · ")
+    });
+  }
+  if (diagnostics.extensionVersion || diagnostics.worker?.workerVersion) {
+    details.push({
+      label: "Versions",
+      value: `extension ${diagnostics.extensionVersion || "?"} · worker ${diagnostics.worker?.workerVersion || "not reported"}`
+    });
+  }
+  if (diagnostics.attempts?.length) {
+    details.push({
+      label: "Local decoder",
+      value: `${diagnostics.attempts.length} representation attempt${diagnostics.attempts.length === 1 ? "" : "s"}`
+    });
+  }
+  if (browser.state) {
+    const candidate = browser.candidateCount
+      ? ` · candidate ${browser.candidateIndex || 1}/${browser.candidateCount}`
+      : "";
+    details.push({
+      label: "Browser decoder",
+      value: `${browser.state}${candidate}${browser.strategy ? ` · ${browser.strategy}` : ""}`
+    });
+  }
+  if (browser.receivedBytes || browser.expectedBytes) {
+    details.push({
+      label: "Audio received",
+      value: `${formatMegabytes(browser.receivedBytes || 0)}`
+        + (browser.expectedBytes ? ` / about ${formatMegabytes(browser.expectedBytes)}` : "")
+    });
+  }
+  let message = finalError || diagnosticStageMessage(pipeline, browser);
+  let action = null;
+  if (category === "incomplete-download") {
+    message = "Netflix returned only part of the selected audio representation. The extension will try the remaining representations before using live transcription.";
+    action = "Keep the Netflix tab open and try Analyze automatically again. If every candidate is partial, the visible candidate counter will show it.";
+  } else if (category === "decoder-unsupported" || /xhe|esbr|webcodecs|decode/i.test(finalError || "")) {
+    message = "The audio was found, but the available FFmpeg/Chrome decoder paths could not decode this codec configuration.";
+    action = "Try another Netflix audio track if one exists. Otherwise the extension will use live transcription for this title.";
+  } else if (diagnostics.finalError && !diagnostics.worker) {
+    action = "The native worker did not report its version. Run CHECK-SETUP.cmd and repair native-host registration if it is marked FAIL.";
+  }
+  return {
+    diagnostics: {
+      level,
+      stage: diagnosticStageLabel(pipeline.status),
+      message: diagnosticMessage(message) || "Waiting for the next analysis update.",
+      action,
+      category,
+      updatedAt: experiment.finishedAt || experiment.createdAt,
+      details
+    }
+  };
+}
+
+function diagnosticModeLabel(pipeline) {
+  if (pipeline.mode === "library") return "saved transcript replay";
+  if (pipeline.mode === "live-fallback") return "live transcription fallback";
+  if (pipeline.mode === "batch") return "full-video analysis";
+  return pipeline.mode || pipeline.requested || "unknown";
+}
+
+function diagnosticStageLabel(status) {
+  const labels = {
+    queued: "Queued",
+    "downloading-audio": "Downloading audio",
+    decoding: "Decoding audio",
+    transcribing: "Transcribing",
+    "browser-decoder-preparing": "Preparing browser decoder",
+    "browser-preparing": "Preparing browser decoder",
+    "browser-downloading": "Browser downloading audio",
+    "browser-decoding": "Browser decoding audio",
+    "browser-candidate-failed": "Trying another audio representation",
+    "browser-sending-pcm": "Sending decoded audio to Whisper",
+    "preparing-live": "Preparing live transcription",
+    running: "Live transcription",
+    complete: "Complete",
+    error: "Failed"
+  };
+  return labels[status] || String(status || "Ready").replace(/-/g, " ");
+}
+
+function diagnosticStageMessage(pipeline, browser) {
+  if (pipeline.status === "complete") return "The complete transcript is ready and cached locally.";
+  if (pipeline.status === "browser-downloading") {
+    return browser.percent != null
+      ? `The browser has downloaded ${Math.round(browser.percent)}% of this audio candidate.`
+      : "The browser is downloading the selected audio candidate.";
+  }
+  if (pipeline.status === "decoding" && pipeline.decodeProgress != null) {
+    return `The local decoder has processed ${Math.round(pipeline.decodeProgress)}% of the audio.`;
+  }
+  return "Analysis is still running. This panel updates automatically.";
+}
+
+function redactTechnicalPageUrl(value) {
+  try {
+    const parsed = new URL(String(value || ""));
+    parsed.hash = "";
+    if (parsed.search) parsed.search = "?query=redacted";
+    return parsed.href;
+  } catch {
+    return diagnosticText(value, 500);
+  }
 }
 
 async function exportLastTranscriptText() {

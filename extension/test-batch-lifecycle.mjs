@@ -6,6 +6,7 @@ const local = {};
 const session = {};
 const tabMessages = [];
 const runtimeMessages = [];
+const nativeMessages = [];
 const listener = { addListener() {} };
 const storageArea = (values) => ({
   async get(key) {
@@ -31,6 +32,24 @@ context = vm.createContext({
   chrome: {
     runtime: {
       onMessage: listener,
+      getManifest() {
+        return { version: "0.9.4" };
+      },
+      getURL(path) {
+        return `chrome-extension://test/${path}`;
+      },
+      async getContexts() {
+        return [{ contextType: "OFFSCREEN_DOCUMENT" }];
+      },
+      connectNative() {
+        return {
+          postMessage(message) {
+            nativeMessages.push(structuredClone(message));
+          },
+          onMessage: listener,
+          onDisconnect: listener
+        };
+      },
       async sendMessage(message) {
         runtimeMessages.push(structuredClone(message));
         return { ok: true };
@@ -171,6 +190,68 @@ context.testCompleteMessage = {
 
 vm.runInContext(`
   handleNativeHostMessage({
+    state: "batch_worker_info",
+    jobId: "batch-job",
+    workerVersion: "0.9.4",
+    pythonVersion: "3.12.10",
+    pyavVersion: "18.0.0",
+    libavcodecVersion: "62.28.102"
+  });
+  handleNativeHostMessage({
+    state: "batch_candidate_attempt",
+    jobId: "batch-job",
+    attempt: 1,
+    candidateCount: 2,
+    sourceHost: "first.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    languageHint: "deu",
+    profileHint: "xhe-aac-dash"
+  });
+  handleNativeHostMessage({
+    state: "batch_candidate_probe",
+    jobId: "batch-job",
+    attempt: 1,
+    candidateCount: 2,
+    sourceHost: "first.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    codec: "aac",
+    profile: "xHE-AAC",
+    sampleRate: 48000,
+    channels: 2
+  });
+  handleNativeHostMessage({
+    state: "batch_candidate_failed",
+    jobId: "batch-job",
+    attempt: 1,
+    candidateCount: 2,
+    sourceHost: "first.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    category: "decoder-unsupported",
+    message: "https://first.nflxvideo.net/?token=secret could not decode xHE-AAC"
+  });
+  handleNativeHostMessage({
+    state: "batch_candidate_attempt",
+    jobId: "batch-job",
+    attempt: 2,
+    candidateCount: 2,
+    sourceHost: "second.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    languageHint: "deu",
+    profileHint: "heaac-2-dash"
+  });
+  handleNativeHostMessage({
+    state: "batch_candidate_probe",
+    jobId: "batch-job",
+    attempt: 2,
+    candidateCount: 2,
+    sourceHost: "second.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    codec: "aac",
+    profile: "HE-AAC",
+    sampleRate: 48000,
+    channels: 2
+  });
+  handleNativeHostMessage({
     state: "batch_download_progress",
     jobId: "batch-job",
     percent: 100,
@@ -189,7 +270,9 @@ vm.runInContext(`
     state: "batch_started",
     jobId: "batch-job",
     duration: 250,
-    title: "Test video"
+    title: "Test video",
+    sourceKind: "netflix-audio",
+    sourceHost: "second.nflxvideo.net"
   });
   handleNativeHostMessage({
     state: "batch_segments",
@@ -229,6 +312,16 @@ assert.equal(local["experiment:batch-experiment"].pipeline.decodeProgress, 100);
 assert.equal(local["experiment:batch-experiment"].pipeline.downloadProgress, 100);
 assert.equal(local["experiment:batch-experiment"].pipeline.downloadBytesPerSecond, 1048576);
 assert.equal(local["experiment:batch-experiment"].pipeline.segmentCount, 250);
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.worker.workerVersion, "0.9.4");
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.attempts.length, 2);
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.attempts[0].profile, "xHE-AAC");
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.attempts[0].failureCategory, "decoder-unsupported");
+assert.doesNotMatch(
+  local["experiment:batch-experiment"].pipeline.diagnostics.attempts[0].failureMessage,
+  /token=secret/
+);
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].phase, "succeeded");
+assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.selectedAttempt, 2);
 assert.equal(local["experiment:batch-experiment"].asrSegments.length, 250);
 assert.equal(local["experiment:batch-experiment"].asrSegments[0].id, "batch:0");
 assert.equal(local["experiment:batch-experiment"].asrSegments.at(-1).id, "batch:249");
@@ -244,6 +337,13 @@ assert.equal(local.transcriptLibraryIndex.length, 1);
 assert.equal(local.transcriptLibraryIndex[0].key, libraryKey);
 assert.equal(local[libraryKey].segments.length, 250);
 assert.equal(local[libraryKey].url, "https://www.youtube.com/watch?v=test123");
+assert.equal(
+  vm.runInContext(
+    `redactTechnicalPageUrl("https://www.netflix.com/watch/81304576?trackId=secret#fragment")`,
+    context
+  ),
+  "https://www.netflix.com/watch/81304576?query=redacted"
+);
 context.savedCompatibilityRecord = structuredClone(local[libraryKey]);
 assert.equal(
   await vm.runInContext(
@@ -418,5 +518,98 @@ await assert.rejects(
   ),
   /received 1 of 2 transcript segments/
 );
+
+const rawDecoderFailureActive = {
+  ...active,
+  experimentId: "raw-decoder-failure",
+  batchJobId: "raw-decoder-job",
+  browserDecodeAttempted: false,
+  browserAudioFallback: {
+    sourceUrl: "https://audio.nflxvideo.net/?token=secret",
+    headers: {},
+    durationHint: 120
+  }
+};
+session.activeExperiment = structuredClone(rawDecoderFailureActive);
+local["experiment:raw-decoder-failure"] = {
+  ...structuredClone(experiment),
+  id: "raw-decoder-failure",
+  pipeline: {
+    mode: "batch",
+    status: "decoding",
+    diagnostics: {
+      extensionVersion: "0.9.4",
+      worker: null,
+      attempts: [],
+      statusHistory: []
+    }
+  }
+};
+context.rawDecoderFailure = {
+  state: "batch_error",
+  jobId: "raw-decoder-job",
+  message: "[Errno 1163346256] Not yet implemented in FFmpeg, patches welcome: 'avcodec_send_packet()'"
+};
+vm.runInContext("handleNativeHostMessage(rawDecoderFailure)", context);
+await vm.runInContext("batchNativeMessageQueue", context);
+assert.equal(session.activeExperiment.browserDecodeAttempted, true);
+assert.equal(session.activeExperiment.mode, "batch-analyzing");
+assert.equal(
+  local["experiment:raw-decoder-failure"].pipeline.diagnostics.finalError.category,
+  "decoder-unsupported"
+);
+assert.equal(
+  local["experiment:raw-decoder-failure"].pipeline.diagnostics.browserDecoder.state,
+  "preparing"
+);
+assert.ok(runtimeMessages.some((message) => (
+  message.type === "OFFSCREEN_DECODE_BATCH_AUDIO"
+  && message.jobId === "raw-decoder-job"
+)));
+
+const browserActive = {
+  ...active,
+  experimentId: "browser-batch",
+  batchJobId: "browser-job",
+  browserDecodeAttempted: true,
+  browserAudioFallback: { durationHint: 60 }
+};
+session.activeExperiment = structuredClone(browserActive);
+local["experiment:browser-batch"] = {
+  ...structuredClone(experiment),
+  id: "browser-batch",
+  pipeline: {
+    mode: "batch",
+    status: "browser-decoding",
+    diagnostics: { browserDecoder: { state: "decoding" } }
+  }
+};
+context.browserBegin = {
+  jobId: "browser-job",
+  sampleRate: 16_000,
+  channels: 1,
+  duration: 60
+};
+context.browserChunk = {
+  jobId: "browser-job",
+  data: "AAAAAA=="
+};
+context.browserFinish = { jobId: "browser-job" };
+await vm.runInContext("handleBrowserBatchPcmBegin(browserBegin)", context);
+await vm.runInContext("handleBrowserBatchPcmChunk(browserChunk)", context);
+await vm.runInContext("handleBrowserBatchPcmFinish(browserFinish)", context);
+assert.deepEqual(
+  nativeMessages.map((message) => message.command),
+  ["browser_pcm_begin", "browser_pcm_chunk", "browser_pcm_finish"]
+);
+assert.equal(session.activeExperiment.browserAudioFallback, null);
+
+session.activeExperiment = null;
+local.lastExperimentId = "raw-decoder-failure";
+const visibleDiagnostics = await vm.runInContext("getVisibleDiagnostics()", context);
+assert.equal(visibleDiagnostics.diagnostics.level, "warning");
+assert.equal(visibleDiagnostics.diagnostics.category, "decoder-unsupported");
+assert.match(visibleDiagnostics.diagnostics.message, /audio was found/i);
+assert.ok(visibleDiagnostics.diagnostics.details.some((detail) => detail.label === "Versions"));
 
 console.log("Batch lifecycle tests passed");

@@ -57,10 +57,68 @@
 
       <details class="panel">
         <summary>Caption appearance</summary>
-        <label class="range-setting">
-          <span>Font size <output id="fontSizeValue">31 px</output></span>
-          <input id="fontSize" type="range" min="16" max="52" step="1" value="31">
-        </label>
+        <fieldset class="appearance-section">
+          <legend>Transcript</legend>
+          <label class="range-setting">
+            <span>Font size <output id="fontSizeValue">31 px</output></span>
+            <input id="fontSize" type="range" min="16" max="52" step="1" value="31">
+          </label>
+          <label class="range-setting">
+            <span>Text opacity <output id="textOpacityValue">100%</output></span>
+            <input id="textOpacity" type="range" min="25" max="100" step="1" value="100">
+          </label>
+          <div class="appearance-grid">
+            <label>
+              Font
+              <select id="fontFamily">
+                <option value="sans">Sans serif</option>
+                <option value="serif">Serif</option>
+                <option value="mono">Monospace</option>
+              </select>
+            </label>
+            <label>
+              Text color
+              <input id="textColor" type="color" value="#ffffff">
+            </label>
+          </div>
+          <label class="check compact-check">
+            <input id="transcriptBold" type="checkbox" checked>
+            Bold transcript
+          </label>
+        </fieldset>
+
+        <fieldset class="appearance-section">
+          <legend>Translation</legend>
+          <label class="range-setting">
+            <span>Font size <output id="translationFontSizeValue">21 px</output></span>
+            <input id="translationFontSize" type="range" min="12" max="42" step="1" value="21">
+          </label>
+          <label class="range-setting">
+            <span>Text opacity <output id="translationTextOpacityValue">100%</output></span>
+            <input id="translationTextOpacity" type="range" min="25" max="100" step="1" value="100">
+          </label>
+          <div class="appearance-grid">
+            <label>
+              Font
+              <select id="translationFontFamily">
+                <option value="sans">Sans serif</option>
+                <option value="serif">Serif</option>
+                <option value="mono">Monospace</option>
+              </select>
+            </label>
+            <label>
+              Text color
+              <input id="translationTextColor" type="color" value="#ffd166">
+            </label>
+          </div>
+          <label class="check compact-check">
+            <input id="translationBold" type="checkbox">
+            Bold translation
+          </label>
+        </fieldset>
+
+        <fieldset class="appearance-section">
+          <legend>Caption box</legend>
         <label class="range-setting">
           <span>Horizontal position <output id="horizontalPositionValue">50%</output></span>
           <input id="horizontalPosition" type="range" min="2" max="98" step="1" value="50">
@@ -73,19 +131,7 @@
           <span>Background opacity <output id="backgroundOpacityValue">86%</output></span>
           <input id="backgroundOpacity" type="range" min="0" max="100" step="1" value="86">
         </label>
-        <label class="range-setting">
-          <span>Text opacity <output id="textOpacityValue">100%</output></span>
-          <input id="textOpacity" type="range" min="25" max="100" step="1" value="100">
-        </label>
         <div class="appearance-grid">
-          <label>
-            Font
-            <select id="fontFamily">
-              <option value="sans">Sans serif</option>
-              <option value="serif">Serif</option>
-              <option value="mono">Monospace</option>
-            </select>
-          </label>
           <label>
             Edge style
             <select id="edgeStyle">
@@ -95,14 +141,12 @@
             </select>
           </label>
           <label>
-            Text color
-            <input id="textColor" type="color" value="#ffffff">
-          </label>
-          <label>
             Background
             <input id="backgroundColor" type="color" value="#05070c">
           </label>
         </div>
+        </fieldset>
+        <small class="setting-help">Select transcript or translation text normally. Use the small grip beside the caption to drag it.</small>
       </details>
 
       <div class="sync-control">
@@ -124,6 +168,18 @@
         <button id="start" class="primary">Analyze automatically</button>
         <button id="stop">Stop</button>
       </div>
+
+      <details id="diagnosticPanel" class="panel diagnostic-panel" open>
+        <summary>
+          Analysis diagnostics
+          <span id="diagnosticBadge" class="diagnostic-badge">Ready</span>
+        </summary>
+        <div id="diagnosticStage" class="diagnostic-stage">Ready</div>
+        <p id="diagnosticMessage" class="diagnostic-message">No analysis has been run yet.</p>
+        <p id="diagnosticAction" class="diagnostic-action" hidden></p>
+        <dl id="diagnosticDetails" class="diagnostic-details"></dl>
+      </details>
+
       <button id="downloadTranscript" class="wide primary">Download transcript .txt</button>
       <button id="export" class="wide secondary-export">Export technical experiment JSON</button>
 
