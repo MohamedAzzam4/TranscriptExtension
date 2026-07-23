@@ -7,6 +7,7 @@ never copied into the native process.
 
 from __future__ import annotations
 
+import io
 import ipaddress
 import json
 import os
@@ -48,8 +49,10 @@ MAX_CAPTION_BYTES = 8 * 1024 * 1024
 HTTP_AUDIO_CHUNK_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_BYTES = 1024 * 1024 * 1024
 MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
+MAX_HLS_SEGMENT_BYTES = 64 * 1024 * 1024
+MAX_HLS_SEGMENTS = 5_000
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.10.2"
+WORKER_VERSION = "0.10.3"
 
 
 @dataclass(frozen=True)
@@ -79,6 +82,14 @@ class ResolvedSource:
     channels: int | None = None
     representation_index: int | None = None
     local_pcm_path: str | None = None
+
+
+@dataclass(frozen=True)
+class HlsPngTsInspection:
+    segments: list[tuple[str, float | None]]
+    first_transport_stream: bytes
+    first_payload_bytes: int
+    wrapper_kind: str
 
 
 def emit(state: str, job_id: str, **payload) -> None:
@@ -665,6 +676,141 @@ def decode_source(
     return audio
 
 
+def decode_png_wrapped_hls(
+    source: ResolvedSource,
+    inspection: HlsPngTsInspection,
+    job_id: str,
+    language: str = "",
+    attempt: int | None = None,
+    candidate_count: int | None = None,
+):
+    import av
+    import numpy as np
+
+    segments = inspection.segments
+    if not segments:
+        raise RuntimeError("The PNG-wrapped HLS playlist contains no media segments.")
+    emit(
+        "batch_candidate_wrapper",
+        job_id,
+        attempt=attempt,
+        candidateCount=candidate_count,
+        sourceHost=urlsplit(source.url).hostname,
+        sourceKind=source.media_kind,
+        wrapperKind=inspection.wrapper_kind,
+        segmentCount=len(segments),
+    )
+    emit(
+        "batch_status",
+        job_id,
+        message=(
+            "The player uses PNG-wrapped clear HLS segments. "
+            "Unwrapping and decoding them locally; nothing is uploaded."
+        ),
+    )
+
+    resampler = av.audio.resampler.AudioResampler(format="s16", layout="mono", rate=16_000)
+    chunks: list = []
+    decoded_sample_count = 0
+    downloaded_bytes = inspection.first_payload_bytes
+    if downloaded_bytes > MAX_AUDIO_BYTES:
+        raise RuntimeError(
+            "The PNG-wrapped HLS media exceeded the local streaming safety limit."
+        )
+    last_reported_percent = -5
+    probe_emitted = False
+
+    for segment_index, (segment_url, _declared_duration) in enumerate(segments):
+        if segment_index == 0:
+            transport_stream = inspection.first_transport_stream
+        else:
+            payload, _content_type = read_media_payload(segment_url, source.headers)
+            downloaded_bytes += len(payload)
+            if downloaded_bytes > MAX_AUDIO_BYTES:
+                raise RuntimeError(
+                    "The PNG-wrapped HLS media exceeded the local streaming safety limit."
+                )
+            transport_stream = unwrap_png_appended_mpegts(payload)
+            if transport_stream is None:
+                raise RuntimeError(
+                    f"PNG-wrapped HLS segment {segment_index + 1} did not contain "
+                    "the expected appended MPEG-TS payload."
+                )
+
+        try:
+            with av.open(
+                io.BytesIO(transport_stream),
+                mode="r",
+                format="mpegts",
+                metadata_errors="ignore",
+                buffer_size=min(max(len(transport_stream), 32_768), 1024 * 1024),
+            ) as container:
+                if not container.streams.audio:
+                    raise RuntimeError(
+                        f"PNG-wrapped HLS segment {segment_index + 1} contains no audio stream."
+                    )
+                audio_stream = select_audio_stream(container.streams.audio, language)
+                if not probe_emitted:
+                    stream_language = audio_stream_language(audio_stream)
+                    probe = audio_stream_probe(container, audio_stream)
+                    probe["containerFormat"] = "png-envelope/mpegts"
+                    emit(
+                        "batch_candidate_probe",
+                        job_id,
+                        attempt=attempt,
+                        candidateCount=candidate_count,
+                        sourceHost=urlsplit(source.url).hostname,
+                        sourceKind="hls-png-ts",
+                        language=stream_language or source.language_hint or language,
+                        **probe,
+                    )
+                    probe_emitted = True
+                for frame in container.decode(audio_stream):
+                    # HLS segment containers can restart timestamps. Segment
+                    # order is the source of truth for this streaming decode.
+                    frame.pts = None
+                    converted_frames = resampler.resample(frame)
+                    if converted_frames is None:
+                        continue
+                    if not isinstance(converted_frames, list):
+                        converted_frames = [converted_frames]
+                    for converted_frame in converted_frames:
+                        samples = converted_frame.to_ndarray().reshape(-1)
+                        chunks.append(samples)
+                        decoded_sample_count += samples.size
+        except Exception as error:
+            raise RuntimeError(
+                f"PNG-wrapped HLS segment {segment_index + 1} could not be decoded: "
+                f"{str(error)[:240]}"
+            ) from error
+
+        percent = min(99, int((segment_index + 1) / len(segments) * 100))
+        if percent >= last_reported_percent + 5 or segment_index + 1 == len(segments):
+            emit(
+                "batch_decode_progress",
+                job_id,
+                percent=percent,
+                decodedSeconds=round(decoded_sample_count / 16_000, 3),
+                duration=round(source.duration, 3) if source.duration else None,
+                downloadedBytes=downloaded_bytes,
+                attempt=attempt,
+            )
+            last_reported_percent = percent
+
+    flushed_frames = resampler.resample(None)
+    if flushed_frames is None:
+        flushed_frames = []
+    elif not isinstance(flushed_frames, list):
+        flushed_frames = [flushed_frames]
+    for converted_frame in flushed_frames:
+        samples = converted_frame.to_ndarray().reshape(-1)
+        chunks.append(samples)
+
+    if not chunks:
+        raise RuntimeError("No audio samples were decoded from the PNG-wrapped HLS source.")
+    return np.concatenate(chunks).astype(np.float32) / 32768.0
+
+
 def audio_stream_probe(container, stream) -> dict:
     codec_context = getattr(stream, "codec_context", None)
     codec = getattr(codec_context, "codec", None)
@@ -686,6 +832,14 @@ def audio_stream_probe(container, stream) -> dict:
 def is_ffmpeg_unimplemented_error(error: Exception) -> bool:
     text = str(error).casefold()
     return "not yet implemented in ffmpeg" in text or "patches welcome" in text
+
+
+def is_ffmpeg_invalid_data_error(error: Exception) -> bool:
+    text = str(error).casefold()
+    return (
+        "invalid data found when processing input" in text
+        or "invaliddataerror" in text
+    )
 
 
 def normalize_media_language(value: str | None) -> str:
@@ -761,6 +915,36 @@ def read_playlist_text(url: str, headers: dict[str, str]) -> str:
     return payload.decode("utf-8-sig", errors="replace")
 
 
+def media_payload_request(url: str, headers: dict[str, str]) -> Request:
+    request_headers = {
+        "Accept": "video/mp2t, image/png, application/octet-stream, */*",
+        "Accept-Encoding": "identity",
+        **{
+            "-".join(part.capitalize() for part in name.split("-")): value
+            for name, value in headers.items()
+        },
+    }
+    return Request(url, headers=request_headers, method="GET")
+
+
+def read_media_payload(
+    url: str,
+    headers: dict[str, str],
+    limit: int = MAX_HLS_SEGMENT_BYTES,
+) -> tuple[bytes, str]:
+    validate_public_http_url(url)
+    opener = build_opener(PublicCaptionRedirectHandler())
+    with opener.open(media_payload_request(url, headers), timeout=30) as response:
+        content_length = number_or_none(response.headers.get("Content-Length"))
+        if content_length and content_length > limit:
+            raise RuntimeError("An HLS media segment exceeded the local safety limit.")
+        content_type = str(response.headers.get("Content-Type") or "")
+        payload = response.read(limit + 1)
+    if len(payload) > limit:
+        raise RuntimeError("An HLS media segment exceeded the local safety limit.")
+    return payload, content_type.split(";", 1)[0].strip().casefold()
+
+
 def hls_child_playlists(text: str, base_url: str) -> list[str]:
     children: list[str] = []
     expect_variant = False
@@ -782,6 +966,90 @@ def hls_child_playlists(text: str, base_url: str) -> list[str]:
         if child not in result:
             result.append(child)
     return result[:12]
+
+
+def hls_media_segments(text: str, base_url: str) -> list[tuple[str, float | None]]:
+    segments: list[tuple[str, float | None]] = []
+    pending_duration: float | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.casefold().startswith("#extinf:"):
+            duration_text = line.split(":", 1)[1].split(",", 1)[0].strip()
+            try:
+                pending_duration = max(0.0, float(duration_text))
+            except (TypeError, ValueError, OverflowError):
+                pending_duration = None
+            continue
+        if line.startswith("#"):
+            continue
+        segments.append((urljoin(base_url, line), pending_duration))
+        pending_duration = None
+        if len(segments) > MAX_HLS_SEGMENTS:
+            raise RuntimeError("The HLS playlist contains too many media segments.")
+    return segments
+
+
+def mpegts_sync_offset(payload: bytes) -> int | None:
+    packet_size = 188
+    if len(payload) < packet_size * 3:
+        return None
+    max_offset = min(packet_size, len(payload) - packet_size * 3 + 1)
+    for offset in range(max_offset):
+        if all(payload[offset + index * packet_size] == 0x47 for index in range(3)):
+            return offset
+    return None
+
+
+def unwrap_png_appended_mpegts(payload: bytes) -> bytes | None:
+    if not payload.startswith(b"\x89PNG\r\n\x1a\n"):
+        return None
+    offset = 8
+    while offset + 12 <= len(payload):
+        chunk_length = int.from_bytes(payload[offset:offset + 4], "big")
+        chunk_end = offset + 12 + chunk_length
+        if chunk_end > len(payload):
+            return None
+        chunk_type = payload[offset + 4:offset + 8]
+        if chunk_type == b"IEND":
+            transport_stream = payload[chunk_end:]
+            sync_offset = mpegts_sync_offset(transport_stream)
+            return (
+                transport_stream[sync_offset:]
+                if sync_offset is not None
+                else None
+            )
+        offset = chunk_end
+    return None
+
+
+def inspect_png_wrapped_hls(source: ResolvedSource) -> HlsPngTsInspection | None:
+    text = read_playlist_text(source.url, source.headers)
+    require_hls_playlist(text)
+    lowered = text.casefold()
+    if "#ext-x-stream-inf" in lowered:
+        return None
+    if "#ext-x-playlist-type:vod" not in lowered and "#ext-x-endlist" not in lowered:
+        return None
+    if hls_encryption_reason(text):
+        return None
+    segments = hls_media_segments(text, source.url)
+    if not segments:
+        return None
+    first_url, _duration = segments[0]
+    payload, content_type = read_media_payload(first_url, source.headers)
+    if content_type and content_type != "image/png" and not payload.startswith(b"\x89PNG"):
+        return None
+    transport_stream = unwrap_png_appended_mpegts(payload)
+    if transport_stream is None:
+        return None
+    return HlsPngTsInspection(
+        segments=segments,
+        first_transport_stream=transport_stream,
+        first_payload_bytes=len(payload),
+        wrapper_kind="png-appended-mpegts",
+    )
 
 
 def hls_audio_playlists(text: str, base_url: str, requested_language: str) -> list[str]:
@@ -1039,13 +1307,28 @@ def acquire_first_accessible_source(
                         f"{protection}."
                     )
                 decode_source_candidate = source
-            audio = decode_source(
-                decode_source_candidate,
-                job_id,
-                language,
-                index,
-                len(sources),
-            )
+            try:
+                audio = decode_source(
+                    decode_source_candidate,
+                    job_id,
+                    language,
+                    index,
+                    len(sources),
+                )
+            except Exception as decode_error:
+                if not is_hls or not is_ffmpeg_invalid_data_error(decode_error):
+                    raise
+                png_inspection = inspect_png_wrapped_hls(decode_source_candidate)
+                if png_inspection is None:
+                    raise
+                audio = decode_png_wrapped_hls(
+                    decode_source_candidate,
+                    png_inspection,
+                    job_id,
+                    language,
+                    index,
+                    len(sources),
+                )
             decoded_duration = len(audio) / 16_000
             if decode_source_candidate.duration and decode_source_candidate.duration >= 60:
                 ratio = decoded_duration / decode_source_candidate.duration
@@ -1082,6 +1365,8 @@ def acquire_first_accessible_source(
 
 def media_failure_category(error: Exception) -> str:
     text = str(error).casefold()
+    if "png-wrapped hls segment" in text:
+        return "segment-wrapper-error"
     if is_ffmpeg_unimplemented_error(error) or "chrome/windows decoder fallback is required" in text:
         return "decoder-unsupported"
     if "protected media" in text or "drm" in text or "encrypted" in text:

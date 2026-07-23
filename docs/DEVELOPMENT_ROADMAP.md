@@ -35,13 +35,13 @@ deferred until the core extension has been proven.
 | WP2.3 | Experimental | Version 0.10.0 adds temporary player-control avoidance while preserving the dragged base position. |
 | WP2.4 | Experimental | The compact English word card and sanitized diagnostic panel are integrated into the new hierarchy. |
 | WP2.5 | In progress | Focus, live-region, and reduced-motion contracts are implemented; U-01–U-17 remain manual. |
-| WP4.1 | Experimental | AniWorld passed one user-run 0.10.1 experiment. Version 0.10.2 adds HLS audio-rendition selection, playlist validation, language honesty, telemetry rejection, and complete diagnostic URL redaction for the still-failing AnimeKai path. |
+| WP4.1 | Experimental | AniWorld passed one user-run 0.10.1 experiment. Version 0.10.3 adds a verified local decoder for AnimeKai's PNG-wrapped clear MPEG-TS segments and closes the remaining legacy JW Player telemetry path; a full Episode 5 browser retest is required. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
 
 The current evidence records are
 [`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md)
 through
-[`docs/test-results/0.10.2-animekai-hls-candidate.md`](test-results/0.10.2-animekai-hls-candidate.md).
+[`docs/test-results/0.10.3-animekai-png-hls-candidate.md`](test-results/0.10.3-animekai-png-hls-candidate.md).
 
 ## Product outcome
 

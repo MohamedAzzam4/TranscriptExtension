@@ -10,11 +10,13 @@ from batch_transcribe import (
     acquire_first_accessible_source,
     batch_worker_diagnostics,
     CaptionAnswerKey,
+    HlsPngTsInspection,
     ResolvedSource,
     clean_headers,
     content_range_total,
     compute_answer_key_evaluation,
     create_cues,
+    decode_png_wrapped_hls,
     decode_source,
     download_and_decode_youtube,
     ffmpeg_http_options,
@@ -22,7 +24,9 @@ from batch_transcribe import (
     hls_child_playlists,
     hls_audio_playlists,
     hls_audio_languages,
+    hls_media_segments,
     hls_relevant_playlists,
+    inspect_png_wrapped_hls,
     media_failure_category,
     parse_youtube_json3,
     playlist_protection_reason,
@@ -30,6 +34,7 @@ from batch_transcribe import (
     resolve_sources,
     select_audio_stream,
     select_youtube_caption_track,
+    unwrap_png_appended_mpegts,
     validate_public_http_url,
 )
 
@@ -128,7 +133,7 @@ class BatchTranscribeTests(unittest.TestCase):
 
     def test_worker_diagnostics_include_decoder_versions(self):
         diagnostics = batch_worker_diagnostics()
-        self.assertEqual(diagnostics["workerVersion"], "0.10.2")
+        self.assertEqual(diagnostics["workerVersion"], "0.10.3")
         self.assertIn("pyavVersion", diagnostics)
         self.assertIn("libavcodecVersion", diagnostics)
 
@@ -334,6 +339,148 @@ video/main.m3u8
             media_kind="hls",
         ))
         self.assertIsNone(reason)
+
+    def test_hls_media_segments_preserve_order_duration_and_relative_urls(self):
+        segments = hls_media_segments(
+            """#EXTM3U
+#EXT-X-TARGETDURATION:10
+#EXTINF:9.92,
+segment-one
+#EXTINF:2.84,
+https://cdn.example/segment-two
+""",
+            "https://media.example/path/index.m3u8",
+        )
+        self.assertEqual(
+            segments,
+            [
+                ("https://media.example/path/segment-one", 9.92),
+                ("https://cdn.example/segment-two", 2.84),
+            ],
+        )
+
+    def test_png_envelope_is_removed_only_when_appended_payload_is_mpegts(self):
+        png_signature = b"\x89PNG\r\n\x1a\n"
+        ihdr = (
+            (13).to_bytes(4, "big")
+            + b"IHDR"
+            + b"\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00"
+            + b"\x00\x00\x00\x00"
+        )
+        iend = b"\x00\x00\x00\x00IEND\x00\x00\x00\x00"
+        transport_stream = (
+            b"\x47" + b"\x00" * 187
+            + b"\x47" + b"\x01" * 187
+            + b"\x47" + b"\x02" * 187
+        )
+        wrapped = png_signature + ihdr + iend + transport_stream
+        self.assertEqual(unwrap_png_appended_mpegts(wrapped), transport_stream)
+        truncated_packet_prefix = b"\x47" + b"\x99" * 181
+        self.assertEqual(
+            unwrap_png_appended_mpegts(
+                png_signature + ihdr + iend + truncated_packet_prefix + transport_stream
+            ),
+            transport_stream,
+        )
+        self.assertIsNone(unwrap_png_appended_mpegts(png_signature + ihdr + iend))
+        self.assertIsNone(unwrap_png_appended_mpegts(transport_stream))
+
+    @patch("batch_transcribe.validate_public_http_url", side_effect=lambda value: value)
+    @patch("batch_transcribe.read_media_payload")
+    @patch("batch_transcribe.read_playlist_text")
+    def test_png_wrapped_hls_is_identified_from_the_first_media_segment(
+        self,
+        read_playlist_text,
+        read_media_payload,
+        _validate,
+    ):
+        read_playlist_text.return_value = (
+            "#EXTM3U\n#EXT-X-PLAYLIST-TYPE:VOD\n"
+            "#EXTINF:10,\nsegment-one\n#EXTINF:8,\nsegment-two\n"
+        )
+        transport_stream = (
+            b"\x47" + b"\x00" * 187
+            + b"\x47" + b"\x01" * 187
+            + b"\x47" + b"\x02" * 187
+        )
+        read_media_payload.return_value = (
+            b"\x89PNG\r\n\x1a\n"
+            b"\x00\x00\x00\x00IEND\x00\x00\x00\x00"
+            + transport_stream,
+            "image/png",
+        )
+        source = ResolvedSource(
+            url="https://media.example/path/index.m3u8",
+            headers={"referer": "https://player.example/watch"},
+            media_kind="hls",
+        )
+        inspection = inspect_png_wrapped_hls(source)
+        self.assertIsNotNone(inspection)
+        self.assertEqual(inspection.wrapper_kind, "png-appended-mpegts")
+        self.assertEqual(len(inspection.segments), 2)
+        self.assertEqual(inspection.first_transport_stream, transport_stream)
+
+    @patch("batch_transcribe.read_playlist_text")
+    def test_png_wrapper_path_does_not_treat_live_or_master_hls_as_complete(
+        self,
+        read_playlist_text,
+    ):
+        source = ResolvedSource(
+            url="https://media.example/path/index.m3u8",
+            headers={},
+            media_kind="hls",
+        )
+        read_playlist_text.side_effect = [
+            "#EXTM3U\n#EXTINF:10,\nsegment-one\n",
+            "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000\nchild.m3u8\n",
+        ]
+        self.assertIsNone(inspect_png_wrapped_hls(source))
+        self.assertIsNone(inspect_png_wrapped_hls(source))
+
+    @patch("batch_transcribe.decode_png_wrapped_hls")
+    @patch("batch_transcribe.inspect_png_wrapped_hls")
+    @patch("batch_transcribe.decode_source")
+    @patch("batch_transcribe.resolve_hls_audio_source")
+    @patch("batch_transcribe.emit")
+    def test_invalid_native_hls_input_retries_with_verified_png_segment_unwrap(
+        self,
+        _emit,
+        resolve_hls_audio_source_mock,
+        decode_source_mock,
+        inspect_png_wrapped_hls_mock,
+        decode_png_wrapped_hls_mock,
+    ):
+        source = ResolvedSource(
+            url="https://media.example/path/index.m3u8",
+            headers={},
+            media_kind="hls",
+            duration=1,
+        )
+        inspection = HlsPngTsInspection(
+            segments=[("https://media.example/segment-one", 1.0)],
+            first_transport_stream=b"\x47" + b"\x00" * 187,
+            first_payload_bytes=200,
+            wrapper_kind="png-appended-mpegts",
+        )
+        resolve_hls_audio_source_mock.return_value = source
+        decode_source_mock.side_effect = RuntimeError(
+            "Invalid data found when processing input"
+        )
+        inspect_png_wrapped_hls_mock.return_value = inspection
+        decode_png_wrapped_hls_mock.return_value = [0.0] * 16_000
+
+        selected, audio = acquire_first_accessible_source([source], "job", "en")
+
+        self.assertIs(selected, source)
+        self.assertEqual(len(audio), 16_000)
+        decode_png_wrapped_hls_mock.assert_called_once_with(
+            source,
+            inspection,
+            "job",
+            "en",
+            1,
+            1,
+        )
 
     @patch("batch_transcribe.read_playlist_text")
     def test_dash_content_protection_is_rejected(self, read_playlist_text):

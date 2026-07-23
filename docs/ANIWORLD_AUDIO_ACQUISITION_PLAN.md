@@ -109,6 +109,40 @@ rendition before PyAV decoding, refuses an explicit language mismatch, filters
 JW Player telemetry, and reports playlist type/rendition/variant counts. The
 AnimeKai result remains **Needs development** until this candidate is retested.
 
+### AnimeKai wrapper evidence and version 0.10.3
+
+The 0.10.2 Episode 5 retest still fell back to live transcription. Its first
+CDN candidate was a media playlist with 290 entries, but native FFmpeg reported
+invalid input. The second was a three-variant master that exposed no audio to
+the default decoder. The export also proved that the older content-script
+Performance collector still admitted two JW Player telemetry URLs even though
+the main-world and network observers had already rejected them.
+
+A bounded inspection of the same CDN family found the missing transport
+contract:
+
+- the playlist is ordinary, clear `#EXTM3U`;
+- a media segment responds as a 1×1 `image/png`;
+- the valid PNG ends near the beginning of the response;
+- ordinary MPEG-TS packets are appended after that envelope; and
+- after packet alignment, PyAV exposes AAC-LC stereo audio at 48 kHz.
+
+Version 0.10.3 handles only this verified clear-media form. It streams one
+segment at a time, validates the PNG chunk boundary and MPEG-TS sync packets,
+decodes only the audio frames, and discards the segment bytes. It does not save
+the playlist, segment URLs, video, compressed audio, or PCM. It still refuses
+HLS encryption declarations and never obtains keys, cookies, authorization
+headers, or DRM material.
+
+The bounded real-media probe decoded two consecutive wrapped segments into
+12.779 seconds of audio. This proves the decoder boundary, not complete
+AnimeKai support. A full Episode 5 browser run, transcript duration comparison,
+cache replay, and export privacy check remain mandatory.
+
+The legacy Performance collector now uses the same pathname-only principle as
+the newer observers. A telemetry URL cannot become media merely because a
+query-string value contains `playlist`.
+
 The main limitation for this experiment is that the offscreen document currently discards PCM unless WhisperLiveKit has completed its WebSocket configuration. The first implementation task is therefore an isolated audio-probe mode that never opens the recognizer socket.
 
 ## Target decision flow

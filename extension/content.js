@@ -1,11 +1,13 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 15) return;
-  globalThis.__dubTranscriptLabVersion = 15;
+  if (globalThis.__dubTranscriptLabVersion === 16) return;
+  globalThis.__dubTranscriptLabVersion = 16;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
+  const mediaCandidate = globalThis.DubTranscriptMediaCandidate;
   if (!transcriptGroups) throw new Error("Transcript grouping helpers were not loaded.");
   if (!learning) throw new Error("Learning feature helpers were not loaded.");
+  if (!mediaCandidate) throw new Error("Media candidate helpers were not loaded.");
 
   let video = null;
   let session = null;
@@ -1418,25 +1420,29 @@
     const sourceUrls = [...element.querySelectorAll("source[src]")]
       .map((source) => ({
         url: source.src,
-        kind: mediaCandidateKind(source.src, source.type),
+        kind: mediaCandidateKind(source.src, source.type) || "unknown-media",
         source: "source-element",
         contentType: source.type || ""
       }));
     const resourceUrls = performance.getEntriesByType("resource")
       .map((entry) => entry.name)
-      .filter((url) => /(?:\.m3u8|\.mpd|\.mp4|\.m4a|\.webm|videoplayback|manifest|playlist)/i.test(url))
       .slice(-20)
       .reverse()
-      .map((url) => ({
-        url,
-        kind: mediaCandidateKind(url),
-        source: "performance",
-        contentType: ""
-      }));
+      .map((url) => {
+        const kind = mediaCandidateKind(url);
+        return kind ? {
+          url,
+          kind,
+          source: "performance",
+          contentType: ""
+        } : null;
+      })
+      .filter(Boolean);
     const rawCandidates = [
       {
         url: currentSrc,
-        kind: mediaCandidateKind(currentSrc, element.type),
+        kind: mediaCandidateKind(currentSrc, element.type)
+          || (/^https?:/i.test(currentSrc) ? "unknown-media" : null),
         source: "current-src",
         contentType: element.type || ""
       },
@@ -1446,6 +1452,7 @@
     ];
     const unique = new Map();
     for (const candidate of rawCandidates) {
+      if (!candidate?.kind) continue;
       try {
         const parsed = new URL(String(candidate?.url || ""));
         if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password) continue;
@@ -1460,11 +1467,6 @@
   }
 
   function mediaCandidateKind(url, contentType = "") {
-    const value = `${url || ""} ${contentType || ""}`.toLowerCase();
-    if (/\.m3u8(?:$|[\s?#])|mpegurl/.test(value)) return "hls";
-    if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(value)) return "dash";
-    if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
-    if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
-    return "unknown-media";
+    return mediaCandidate.classify(url, contentType, location.href);
   }
 })();

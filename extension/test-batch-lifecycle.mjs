@@ -107,7 +107,7 @@ assert.equal(scriptInjections[1].world, "ISOLATED");
 assert.deepEqual(scriptInjections[1].files, ["media-observer-bridge.js"]);
 assert.deepEqual(
   scriptInjections[2].files,
-  ["learning-features.js", "transcript-groups.js", "content.js"]
+  ["learning-features.js", "transcript-groups.js", "media-candidate.js", "content.js"]
 );
 assert.ok(scriptInjections.every(({ target }) => target.allFrames));
 assert.ok(scriptInjections.every(({ injectImmediately }) => injectImmediately));
@@ -129,8 +129,8 @@ context.genericMediaContext = {
   }],
   discoveryDiagnostics: {
     observer: {
-      bridgeVersion: 7,
-      mainWorldVersion: 7,
+      bridgeVersion: 8,
+      mainWorldVersion: 8,
       ready: true
     }
   }
@@ -321,6 +321,16 @@ vm.runInContext(`
     selectedChildHost: "audio.nflxvideo.net"
   });
   handleNativeHostMessage({
+    state: "batch_candidate_wrapper",
+    jobId: "batch-job",
+    attempt: 2,
+    candidateCount: 2,
+    sourceHost: "second.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    wrapperKind: "png-appended-mpegts",
+    segmentCount: 290
+  });
+  handleNativeHostMessage({
     state: "batch_candidate_probe",
     jobId: "batch-job",
     attempt: 2,
@@ -409,6 +419,14 @@ assert.equal(
 assert.equal(
   local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].audioRenditionCount,
   2
+);
+assert.equal(
+  local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].wrapperKind,
+  "png-appended-mpegts"
+);
+assert.equal(
+  local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].wrappedSegmentCount,
+  290
 );
 assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.selectedAttempt, 2);
 assert.equal(local["experiment:batch-experiment"].asrSegments.length, 250);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [

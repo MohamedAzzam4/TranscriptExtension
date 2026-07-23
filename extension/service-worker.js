@@ -1043,6 +1043,7 @@ async function persistBatchDiagnostic(active, message) {
     "batch_worker_info",
     "batch_candidate_attempt",
     "batch_candidate_playlist",
+    "batch_candidate_wrapper",
     "batch_candidate_probe",
     "batch_candidate_failed",
     "batch_status",
@@ -1111,6 +1112,12 @@ async function persistBatchDiagnostic(active, message) {
         mediaSegmentCount: Math.max(0, Number(message.mediaSegmentCount) || 0),
         selectedAudioRendition: message.selectedAudioRendition === true,
         selectedChildHost: diagnosticText(message.selectedChildHost, 255)
+      });
+    } else if (message.state === "batch_candidate_wrapper") {
+      Object.assign(attempt, {
+        phase: "unwrapping",
+        wrapperKind: diagnosticText(message.wrapperKind, 64),
+        wrappedSegmentCount: Math.max(0, Number(message.segmentCount) || 0)
       });
     } else if (message.state === "batch_candidate_probe") {
       Object.assign(attempt, {
@@ -1974,6 +1981,17 @@ async function getVisibleDiagnostics() {
           + `${playlistAttempt.variantCount === 1 ? "" : "s"}`
       });
     }
+    const wrappedAttempt = [...diagnostics.attempts].reverse().find((attempt) => (
+      attempt.wrapperKind
+    ));
+    if (wrappedAttempt) {
+      details.push({
+        label: "HLS segment transport",
+        value: `${wrappedAttempt.wrapperKind}`
+          + ` Â· ${wrappedAttempt.wrappedSegmentCount || 0} segment`
+          + `${wrappedAttempt.wrappedSegmentCount === 1 ? "" : "s"}`
+      });
+    }
   }
   if (browser.state) {
     const candidate = browser.candidateCount
@@ -2007,6 +2025,8 @@ async function getVisibleDiagnostics() {
     action = "The detected playlist did not expose an audio stream. The extension will use live transcription unless another audio rendition is observed.";
   } else if (category === "language-mismatch") {
     action = "The playlist's declared audio languages do not include the language selected in the extension. Select the language that is actually playing, then analyze again.";
+  } else if (category === "segment-wrapper-error") {
+    action = "The player changed its clear HLS segment wrapper during analysis. Reload the player to obtain one consistent source, then try again.";
   } else if (/no accessible http media source/i.test(finalError || "")) {
     const discovery = diagnostics.discovery || {};
     const pageReady = discovery.pageObserver?.ready === true;
@@ -2960,7 +2980,12 @@ async function ensureContentScripts(tabId) {
     },
     {
       key: "application",
-      files: ["learning-features.js", "transcript-groups.js", "content.js"],
+      files: [
+        "learning-features.js",
+        "transcript-groups.js",
+        "media-candidate.js",
+        "content.js"
+      ],
       world: "ISOLATED"
     }
   ];

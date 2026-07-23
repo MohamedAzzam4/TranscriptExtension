@@ -128,7 +128,7 @@ vm.runInContext(`JSON.parse(${JSON.stringify(metadata)})`, context);
 const candidates = messages.flatMap((message) => message.candidates || []);
 assert.equal(
   messages.filter((message) => message.observerVersion).at(-1)?.observerVersion,
-  7
+  8
 );
 assert.equal(
   candidates.some((candidate) => candidate.url.includes("ping.gif")),

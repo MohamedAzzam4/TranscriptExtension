@@ -28,6 +28,7 @@ Write-Host "Project: $projectRoot"
 $syntaxFiles = @(
     "content.js",
     "learning-features.js",
+    "media-candidate.js",
     "media-observer-bridge.js",
     "media-observer-main.js",
     "network-media-observer.js",

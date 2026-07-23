@@ -63,7 +63,7 @@
     if (/\.(?:m4s|cmfa|cmfv)(?:$|[\s?#])/.test(value)) return "dash-segment";
     if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
     if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
-    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&.-]|$)/.test(value)) return "unknown-media";
+    if (/(?:videoplayback|manifest|playlist)(?:[\s/?#=&.-]|$)/.test(value)) return "unknown-media";
     if (requestType === "media") return "media";
     return null;
   }

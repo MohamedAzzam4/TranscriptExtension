@@ -1,5 +1,5 @@
 (() => {
-  const BRIDGE_VERSION = 7;
+  const BRIDGE_VERSION = 8;
   if (globalThis.__dubTranscriptMediaObserverBridgeVersion === BRIDGE_VERSION) return;
   globalThis.__dubTranscriptMediaObserverBridgeVersion = BRIDGE_VERSION;
 

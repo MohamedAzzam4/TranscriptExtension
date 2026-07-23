@@ -1,5 +1,5 @@
 (() => {
-  const OBSERVER_VERSION = 7;
+  const OBSERVER_VERSION = 8;
   if (globalThis.__dubTranscriptMediaObserverMainVersion === OBSERVER_VERSION) return;
   globalThis.__dubTranscriptMediaObserverMainVersion = OBSERVER_VERSION;
 
@@ -24,7 +24,7 @@
     if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(value)) return "dash";
     if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
     if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
-    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&.-]|$)/.test(value)) return "unknown-media";
+    if (/(?:videoplayback|manifest|playlist)(?:[\s/?#=&.-]|$)/.test(value)) return "unknown-media";
     return null;
   }
 
