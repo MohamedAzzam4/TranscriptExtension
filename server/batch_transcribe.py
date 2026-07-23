@@ -17,7 +17,7 @@ import statistics
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from difflib import SequenceMatcher
 from typing import Iterable
 from urllib.parse import urljoin, urlsplit
@@ -49,7 +49,7 @@ HTTP_AUDIO_CHUNK_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_BYTES = 1024 * 1024 * 1024
 MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.10.1"
+WORKER_VERSION = "0.10.2"
 
 
 @dataclass(frozen=True)
@@ -483,6 +483,30 @@ def validate_browser_pcm_path(value, job_id: str) -> str:
     return candidate
 
 
+def ffmpeg_http_options(headers: dict[str, str]) -> dict[str, str]:
+    protocol_headers = {
+        name: value
+        for name, value in headers.items()
+        if name not in {"user-agent", "referer"}
+    }
+    options = {
+        "rw_timeout": "30000000",
+        "reconnect": "1",
+        "reconnect_streamed": "1",
+        "reconnect_delay_max": "5",
+    }
+    if protocol_headers:
+        options["headers"] = "".join(
+            f"{name}: {value}\r\n"
+            for name, value in protocol_headers.items()
+        )
+    if headers.get("user-agent"):
+        options["user_agent"] = headers["user-agent"]
+    if headers.get("referer"):
+        options["referer"] = headers["referer"]
+    return options
+
+
 def decode_source(
     source: ResolvedSource,
     job_id: str,
@@ -551,15 +575,7 @@ def decode_source(
     import av
     import numpy as np
 
-    header_block = "".join(f"{name}: {value}\r\n" for name, value in source.headers.items())
-    options = {
-        "rw_timeout": "30000000",
-        "reconnect": "1",
-        "reconnect_streamed": "1",
-        "reconnect_delay_max": "5",
-    }
-    if header_block:
-        options["headers"] = header_block
+    options = ffmpeg_http_options(source.headers)
     resampler = av.audio.resampler.AudioResampler(format="s16", layout="mono", rate=16_000)
     chunks: list = []
     decoded_sample_count = 0
@@ -768,10 +784,10 @@ def hls_child_playlists(text: str, base_url: str) -> list[str]:
     return result[:12]
 
 
-def hls_relevant_playlists(text: str, base_url: str, requested_language: str) -> list[str]:
+def hls_audio_playlists(text: str, base_url: str, requested_language: str) -> list[str]:
     requested = normalize_media_language(requested_language)
-    audio_entries: list[tuple[int, str]] = []
-    for line in text.splitlines():
+    audio_entries: list[tuple[int, int, str]] = []
+    for index, line in enumerate(text.splitlines()):
         if not line.strip().casefold().startswith("#ext-x-media:") or "type=audio" not in line.casefold():
             continue
         attributes = {
@@ -788,10 +804,157 @@ def hls_relevant_playlists(text: str, base_url: str, requested_language: str) ->
             score = max(score, 80)
         if attributes.get("default", "").casefold() == "yes":
             score += 10
-        audio_entries.append((score, urljoin(base_url, uri)))
-    if audio_entries:
-        return [max(audio_entries, key=lambda entry: entry[0])[1]]
+        audio_entries.append((score, index, urljoin(base_url, uri)))
+    ordered: list[str] = []
+    for _score, _index, url in sorted(
+        audio_entries,
+        key=lambda entry: (-entry[0], entry[1]),
+    ):
+        if url not in ordered:
+            ordered.append(url)
+    return ordered[:12]
+
+
+def hls_audio_languages(text: str) -> list[str]:
+    languages: list[str] = []
+    for line in text.splitlines():
+        if not line.strip().casefold().startswith("#ext-x-media:") or "type=audio" not in line.casefold():
+            continue
+        attributes = {
+            key.casefold(): (quoted or plain or "")
+            for key, quoted, plain in re.findall(
+                r'([A-Z0-9-]+)=(?:"([^"]*)"|([^,]*))',
+                line,
+                re.IGNORECASE,
+            )
+        }
+        language = normalize_media_language(attributes.get("language"))
+        if language and language not in languages:
+            languages.append(language)
+    return languages
+
+
+def hls_relevant_playlists(text: str, base_url: str, requested_language: str) -> list[str]:
+    audio_playlists = hls_audio_playlists(text, base_url, requested_language)
+    if audio_playlists:
+        return audio_playlists[:1]
     return hls_child_playlists(text, base_url)[:1]
+
+
+def require_hls_playlist(text: str) -> None:
+    normalized = str(text or "").lstrip("\ufeff \t\r\n").casefold()
+    if not normalized.startswith("#extm3u"):
+        raise RuntimeError(
+            "The detected HLS endpoint did not return an HLS playlist. "
+            "It may be an expired source or an access-control response."
+        )
+
+
+def hls_encryption_reason(text: str, *, child: bool = False) -> str | None:
+    lowered = text.casefold()
+    if not re.search(
+        r"#ext-x-(?:session-)?key:[^\r\n]*method=(?!none(?:[,\s]|$))",
+        lowered,
+    ):
+        return None
+    return (
+        "a selected HLS media playlist declares encrypted media keys"
+        if child
+        else "the HLS playlist declares encrypted media keys"
+    )
+
+
+def resolve_hls_audio_source(
+    source: ResolvedSource,
+    requested_language: str,
+    job_id: str | None = None,
+    attempt: int | None = None,
+    candidate_count: int | None = None,
+) -> ResolvedSource:
+    kind = str(source.media_kind or "").casefold()
+    if kind not in {"hls", "hls-audio"} and ".m3u8" not in source.url.casefold():
+        return source
+
+    text = read_playlist_text(source.url, source.headers)
+    require_hls_playlist(text)
+    root_protection = hls_encryption_reason(text)
+    if root_protection:
+        raise RuntimeError(
+            f"Protected media is not eligible for full-audio acquisition: {root_protection}."
+        )
+    audio_playlists = hls_audio_playlists(text, source.url, requested_language)
+    available_languages = hls_audio_languages(text)
+    requested = normalize_media_language(requested_language)
+    variant_count = sum(
+        1
+        for line in text.splitlines()
+        if line.strip().casefold().startswith("#ext-x-stream-inf")
+    )
+    media_segment_count = (
+        0
+        if variant_count or audio_playlists
+        else sum(
+            1
+            for line in text.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        )
+    )
+    selected = source
+    selected_child_host = None
+    if requested and available_languages and requested not in available_languages:
+        if job_id:
+            emit(
+                "batch_candidate_playlist",
+                job_id,
+                attempt=attempt,
+                candidateCount=candidate_count,
+                sourceHost=urlsplit(source.url).hostname,
+                sourceKind=source.media_kind,
+                playlistType="master",
+                audioRenditionCount=len(audio_playlists),
+                availableAudioLanguages=available_languages,
+                variantCount=variant_count,
+                mediaSegmentCount=0,
+                selectedAudioRendition=False,
+                selectedChildHost=None,
+            )
+        raise RuntimeError(
+            f"No HLS audio rendition matched requested language {requested}. "
+            f"Available languages: {', '.join(available_languages)}."
+        )
+    if audio_playlists:
+        selected_url = validate_public_http_url(audio_playlists[0])
+        selected_text = read_playlist_text(selected_url, source.headers)
+        require_hls_playlist(selected_text)
+        child_protection = hls_encryption_reason(selected_text, child=True)
+        if child_protection:
+            raise RuntimeError(
+                f"Protected media is not eligible for full-audio acquisition: {child_protection}."
+            )
+        selected = replace(source, url=selected_url, media_kind="hls-audio")
+        selected_child_host = urlsplit(selected_url).hostname
+
+    if job_id:
+        emit(
+            "batch_candidate_playlist",
+            job_id,
+            attempt=attempt,
+            candidateCount=candidate_count,
+            sourceHost=urlsplit(source.url).hostname,
+            sourceKind=source.media_kind,
+            playlistType=(
+                "master"
+                if variant_count or audio_playlists
+                else "media"
+            ),
+            audioRenditionCount=len(audio_playlists),
+            availableAudioLanguages=available_languages,
+            variantCount=variant_count,
+            mediaSegmentCount=media_segment_count,
+            selectedAudioRendition=bool(audio_playlists),
+            selectedChildHost=selected_child_host,
+        )
+    return selected
 
 
 def playlist_protection_reason(source: ResolvedSource, requested_language: str = "") -> str | None:
@@ -811,15 +974,19 @@ def playlist_protection_reason(source: ResolvedSource, requested_language: str =
             return "the DASH manifest declares DRM ContentProtection"
         return None
 
-    if re.search(r"#ext-x-(?:session-)?key:[^\r\n]*method=(?!none(?:[,\s]|$))", lowered):
-        return "the HLS playlist declares encrypted media keys"
+    require_hls_playlist(text)
+    protection = hls_encryption_reason(text)
+    if protection:
+        return protection
     if "#ext-x-stream-inf" not in lowered and "#ext-x-media" not in lowered:
         return None
     for child_url in hls_relevant_playlists(text, source.url, requested_language):
         validate_public_http_url(child_url)
-        child = read_playlist_text(child_url, source.headers).casefold()
-        if re.search(r"#ext-x-(?:session-)?key:[^\r\n]*method=(?!none(?:[,\s]|$))", child):
-            return "a selected HLS media playlist declares encrypted media keys"
+        child_text = read_playlist_text(child_url, source.headers)
+        require_hls_playlist(child_text)
+        protection = hls_encryption_reason(child_text, child=True)
+        if protection:
+            return protection
     return None
 
 
@@ -852,19 +1019,42 @@ def acquire_first_accessible_source(
             message=f"Checking media source {index} of {len(sources)} ({source.media_kind or 'direct'}).",
         )
         try:
-            protection = playlist_protection_reason(source, language)
-            if protection:
-                raise RuntimeError(f"Protected media is not eligible for full-audio acquisition: {protection}.")
-            audio = decode_source(source, job_id, language, index, len(sources))
+            is_hls = (
+                str(source.media_kind or "").casefold() in {"hls", "hls-audio"}
+                or ".m3u8" in source.url.casefold()
+            )
+            if is_hls:
+                decode_source_candidate = resolve_hls_audio_source(
+                    source,
+                    language,
+                    job_id,
+                    index,
+                    len(sources),
+                )
+            else:
+                protection = playlist_protection_reason(source, language)
+                if protection:
+                    raise RuntimeError(
+                        "Protected media is not eligible for full-audio acquisition: "
+                        f"{protection}."
+                    )
+                decode_source_candidate = source
+            audio = decode_source(
+                decode_source_candidate,
+                job_id,
+                language,
+                index,
+                len(sources),
+            )
             decoded_duration = len(audio) / 16_000
-            if source.duration and source.duration >= 60:
-                ratio = decoded_duration / source.duration
+            if decode_source_candidate.duration and decode_source_candidate.duration >= 60:
+                ratio = decoded_duration / decode_source_candidate.duration
                 if ratio < 0.70 or ratio > 1.30:
                     raise RuntimeError(
                         "decoded duration does not match the active video "
-                        f"({decoded_duration:.1f}s versus {source.duration:.1f}s)"
+                        f"({decoded_duration:.1f}s versus {decode_source_candidate.duration:.1f}s)"
                     )
-            return source, audio
+            return decode_source_candidate, audio
         except Exception as error:
             failure_message = str(error)[:500]
             failures.append(f"candidate {index}: {failure_message[:220]}")
@@ -900,6 +1090,10 @@ def media_failure_category(error: Exception) -> str:
         return "duration-mismatch"
     if "http " in text or "timed out" in text or "network" in text:
         return "network"
+    if "did not return an hls playlist" in text:
+        return "invalid-playlist"
+    if "no hls audio rendition matched requested language" in text:
+        return "language-mismatch"
     if "no audio" in text or "no audio samples" in text:
         return "no-audio"
     return "decode-or-access-error"

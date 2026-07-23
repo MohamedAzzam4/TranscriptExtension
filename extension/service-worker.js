@@ -360,6 +360,7 @@ async function startBatchExperiment(settings, prepared, candidate) {
 
 async function startLiveExperiment(settings, prepared, fallbackReason = null, candidate = null) {
   const { tab, mediaTarget } = prepared;
+  const safeFallbackReason = diagnosticMessage(fallbackReason);
   await ensureRecognizerRunning(settings.serverUrl);
   await ensureOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
@@ -368,7 +369,7 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null, ca
   const epoch = createEpoch(context.currentTime, context.playbackRate, "start");
   const experiment = createExperimentRecord(id, tab, context, settings, {
     requested: "auto",
-    mode: fallbackReason ? "live-fallback" : "live",
+    mode: safeFallbackReason ? "live-fallback" : "live",
     status: "running",
     sourceKind: null,
     sourceHost: null,
@@ -381,7 +382,7 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null, ca
       statusHistory: [],
       discovery: candidate?.discoveryDiagnostics || null
     },
-    fallbackReason
+    fallbackReason: safeFallbackReason
   });
   experiment.epochs = [epoch];
   const active = {
@@ -426,10 +427,10 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null, ca
     await stopExperiment();
     throw new Error(captureResponse?.error || "Tab capture failed.");
   }
-  await broadcastStatus(fallbackReason
-    ? `Full-video analysis is unavailable (${fallbackReason}). Preparing live transcription automatically.`
+  await broadcastStatus(safeFallbackReason
+    ? `Full-video analysis is unavailable (${safeFallbackReason}). Preparing live transcription automatically.`
     : "Preparing recognizer. The video will start automatically when ready.");
-  return { experimentId: id, mode: fallbackReason ? "live-fallback" : "live" };
+  return { experimentId: id, mode: safeFallbackReason ? "live-fallback" : "live" };
 }
 
 function createExperimentRecord(id, tab, context, settings, pipeline) {
@@ -632,6 +633,13 @@ function rankBatchCandidates(rawCandidates, audioLanguage = "") {
         source: String(candidate.source || "page").slice(0, 64),
         score
       };
+      if (candidate.contentType) {
+        ranked.contentType = String(candidate.contentType).slice(0, 160);
+      }
+      const responseStatus = Math.max(0, Number(candidate.statusCode) || 0);
+      if (responseStatus >= 100 && responseStatus <= 599) {
+        ranked.responseStatus = responseStatus;
+      }
       const replayHeaders = networkMedia.cleanReplayHeaders(candidate.headers);
       if (Object.keys(replayHeaders).length) ranked.headers = replayHeaders;
       if (candidate.language) ranked.language = String(candidate.language).slice(0, 64);
@@ -672,6 +680,12 @@ function summarizeCandidateValues(values) {
     discoverySource: String(value.source || "").slice(0, 64) || null,
     requestType: String(value.requestType || "").slice(0, 32) || null,
     observedFrameId: Number.isInteger(value.frameId) ? value.frameId : null,
+    ...(value.contentType ? {
+      contentType: String(value.contentType).slice(0, 160)
+    } : {}),
+    ...(Math.max(0, Number(value.responseStatus) || 0) ? {
+      responseStatus: Math.max(0, Number(value.responseStatus) || 0)
+    } : {}),
     replayHeaderNames: Object.keys(networkMedia.cleanReplayHeaders(value.headers)).sort()
   }));
 }
@@ -745,6 +759,12 @@ function summarizeBatchCandidates(candidate) {
     profileHint: String(value.profile || "").slice(0, 96) || null,
     requestType: String(value.requestType || "").slice(0, 32) || null,
     observedFrameId: Number.isInteger(value.frameId) ? value.frameId : null,
+    ...(value.contentType ? {
+      contentType: String(value.contentType).slice(0, 160)
+    } : {}),
+    ...(Math.max(0, Number(value.responseStatus) || 0) ? {
+      responseStatus: Math.max(0, Number(value.responseStatus) || 0)
+    } : {}),
     replayHeaderNames: Object.keys(networkMedia.cleanReplayHeaders(value.headers)).sort(),
     bitrate: Math.max(0, Number(value.bitrate) || 0) || null,
     channels: Math.max(0, Number(value.channels) || 0) || null,
@@ -1022,6 +1042,7 @@ async function persistBatchDiagnostic(active, message) {
   const trackedStates = new Set([
     "batch_worker_info",
     "batch_candidate_attempt",
+    "batch_candidate_playlist",
     "batch_candidate_probe",
     "batch_candidate_failed",
     "batch_status",
@@ -1077,6 +1098,20 @@ async function persistBatchDiagnostic(active, message) {
         channels: Math.max(0, Number(message.channels) || 0) || null,
         representationIndex: Math.max(0, Number(message.representationIndex) || 0)
       });
+    } else if (message.state === "batch_candidate_playlist") {
+      Object.assign(attempt, {
+        phase: "playlist-inspected",
+        playlistType: diagnosticText(message.playlistType, 32),
+        audioRenditionCount: Math.max(0, Number(message.audioRenditionCount) || 0),
+        availableAudioLanguages: (message.availableAudioLanguages || [])
+          .map((value) => diagnosticText(value, 16))
+          .filter(Boolean)
+          .slice(0, 12),
+        variantCount: Math.max(0, Number(message.variantCount) || 0),
+        mediaSegmentCount: Math.max(0, Number(message.mediaSegmentCount) || 0),
+        selectedAudioRendition: message.selectedAudioRendition === true,
+        selectedChildHost: diagnosticText(message.selectedChildHost, 255)
+      });
     } else if (message.state === "batch_candidate_probe") {
       Object.assign(attempt, {
         phase: "decoding",
@@ -1130,6 +1165,19 @@ function diagnosticMessage(value) {
     .replace(/[\r\n\t]+/g, " ")
     .trim()
     .slice(0, 800) || null;
+}
+
+function sanitizeTechnicalDiagnosticValue(value, depth = 0) {
+  if (depth > 12 || value == null) return value;
+  if (typeof value === "string") return diagnosticMessage(value);
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeTechnicalDiagnosticValue(item, depth + 1));
+  }
+  if (typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+    key,
+    sanitizeTechnicalDiagnosticValue(item, depth + 1)
+  ]));
 }
 
 async function startBrowserAudioFallback(active, nativeError) {
@@ -1425,9 +1473,14 @@ async function fallbackActiveBatch(error) {
 async function fallbackBatchToLive(active, reason) {
   const latest = await getActive();
   if (!latest || latest.mode !== "batch-analyzing" || latest.batchJobId !== active.batchJobId) return;
+  const safeReason = diagnosticMessage(reason)
+    || "The full-video media source could not be analyzed.";
   const contextResponse = await sendToActiveFrame(latest, { type: "GET_MEDIA_CONTEXT" });
   if (!contextResponse?.ok || !contextResponse.context) {
-    await broadcastStatus(null, `Full-video analysis failed and live fallback could not inspect the player: ${reason}`);
+    await broadcastStatus(
+      null,
+      `Full-video analysis failed and live fallback could not inspect the player: ${safeReason}`
+    );
     return;
   }
 
@@ -1442,7 +1495,7 @@ async function fallbackBatchToLive(active, reason) {
     ...experiment.pipeline,
     mode: "live-fallback",
     status: "preparing-live",
-    fallbackReason: reason,
+    fallbackReason: safeReason,
     progress: null
   };
   latest.mode = "live";
@@ -1464,7 +1517,9 @@ async function fallbackBatchToLive(active, reason) {
     enabled: latest.settings.collectCaptions
   });
   await sendToActiveFrame(latest, { type: "SET_REPLAY_MODE", enabled: false });
-  await broadcastStatus(`Full-video analysis was unavailable (${reason}). Starting live transcription automatically…`);
+  await broadcastStatus(
+    `Full-video analysis was unavailable (${safeReason}). Starting live transcription automatically…`
+  );
 
   try {
     await ensureRecognizerRunning(latest.settings.serverUrl);
@@ -1814,6 +1869,9 @@ async function exportLastExperiment() {
       technicalExperiment.page.playerFrameUrl
     );
   }
+  technicalExperiment.pipeline = sanitizeTechnicalDiagnosticValue(
+    technicalExperiment.pipeline
+  );
   return {
     experiment: technicalExperiment,
     filename: `dub-transcript-lab/${title}-${id}.json`
@@ -1903,6 +1961,19 @@ async function getVisibleDiagnostics() {
       label: "Local decoder",
       value: `${diagnostics.attempts.length} representation attempt${diagnostics.attempts.length === 1 ? "" : "s"}`
     });
+    const playlistAttempt = [...diagnostics.attempts].reverse().find((attempt) => (
+      attempt.playlistType
+    ));
+    if (playlistAttempt) {
+      details.push({
+        label: "HLS inspection",
+        value: `${playlistAttempt.playlistType}`
+          + ` · ${playlistAttempt.audioRenditionCount || 0} audio rendition`
+          + `${playlistAttempt.audioRenditionCount === 1 ? "" : "s"}`
+          + ` · ${playlistAttempt.variantCount || 0} variant`
+          + `${playlistAttempt.variantCount === 1 ? "" : "s"}`
+      });
+    }
   }
   if (browser.state) {
     const candidate = browser.candidateCount
@@ -1930,6 +2001,12 @@ async function getVisibleDiagnostics() {
     action = "Try another Netflix audio track if one exists. Otherwise the extension will use live transcription for this title.";
   } else if (diagnostics.finalError && !diagnostics.worker) {
     action = "The native worker did not report its version. Run CHECK-SETUP.cmd and repair native-host registration if it is marked FAIL.";
+  } else if (category === "invalid-playlist") {
+    action = "The media endpoint returned something other than an HLS playlist. Reload the player to obtain a fresh source, then try again.";
+  } else if (category === "no-audio") {
+    action = "The detected playlist did not expose an audio stream. The extension will use live transcription unless another audio rendition is observed.";
+  } else if (category === "language-mismatch") {
+    action = "The playlist's declared audio languages do not include the language selected in the extension. Select the language that is actually playing, then analyze again.";
   } else if (/no accessible http media source/i.test(finalError || "")) {
     const discovery = diagnostics.discovery || {};
     const pageReady = discovery.pageObserver?.ready === true;
@@ -3049,6 +3126,16 @@ async function saveExperiment(experiment) {
   const liveCoverage = audioCoverageRanges.get(experiment.id);
   if (liveCoverage) {
     experiment.audioCoverage = liveCoverage.map((range) => ({ ...range }));
+  }
+  if (experiment.pipeline?.fallbackReason) {
+    experiment.pipeline.fallbackReason = diagnosticMessage(
+      experiment.pipeline.fallbackReason
+    );
+  }
+  if (experiment.pipeline?.fallbackError) {
+    experiment.pipeline.fallbackError = diagnosticMessage(
+      experiment.pipeline.fallbackError
+    );
   }
   await chrome.storage.local.set({
     [`${EXPERIMENT_PREFIX}${experiment.id}`]: experiment,

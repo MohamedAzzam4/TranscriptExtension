@@ -17,12 +17,16 @@ from batch_transcribe import (
     create_cues,
     decode_source,
     download_and_decode_youtube,
+    ffmpeg_http_options,
     group_words_by_silence,
     hls_child_playlists,
+    hls_audio_playlists,
+    hls_audio_languages,
     hls_relevant_playlists,
     media_failure_category,
     parse_youtube_json3,
     playlist_protection_reason,
+    resolve_hls_audio_source,
     resolve_sources,
     select_audio_stream,
     select_youtube_caption_track,
@@ -67,6 +71,20 @@ class BatchTranscribeTests(unittest.TestCase):
             },
         )
 
+    def test_ffmpeg_http_options_use_dedicated_user_agent_and_referer(self):
+        options = ffmpeg_http_options({
+            "user-agent": "Test Browser",
+            "referer": "https://player.example/watch",
+            "origin": "https://player.example",
+            "accept-language": "de-DE",
+        })
+        self.assertEqual(options["user_agent"], "Test Browser")
+        self.assertEqual(options["referer"], "https://player.example/watch")
+        self.assertIn("origin: https://player.example\r\n", options["headers"])
+        self.assertIn("accept-language: de-DE\r\n", options["headers"])
+        self.assertNotIn("user-agent", options["headers"])
+        self.assertNotIn("referer", options["headers"])
+
     @patch("batch_transcribe.socket.getaddrinfo")
     def test_direct_sources_keep_ranked_candidates(self, getaddrinfo):
         getaddrinfo.return_value = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))]
@@ -110,7 +128,7 @@ class BatchTranscribeTests(unittest.TestCase):
 
     def test_worker_diagnostics_include_decoder_versions(self):
         diagnostics = batch_worker_diagnostics()
-        self.assertEqual(diagnostics["workerVersion"], "0.10.1")
+        self.assertEqual(diagnostics["workerVersion"], "0.10.2")
         self.assertIn("pyavVersion", diagnostics)
         self.assertIn("libavcodecVersion", diagnostics)
 
@@ -185,6 +203,114 @@ video/main.m3u8
         )
         self.assertEqual(selected, ["https://media.example/path/audio/de.m3u8"])
 
+    def test_hls_audio_playlists_rank_requested_language_before_default(self):
+        selected = hls_audio_playlists(
+            """#EXTM3U
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",LANGUAGE="en",DEFAULT=YES,URI="audio/en.m3u8"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",LANGUAGE="deu",URI="audio/de.m3u8"
+#EXT-X-STREAM-INF:BANDWIDTH=1000000,AUDIO="a"
+video/main.m3u8
+""",
+            "https://media.example/path/master.m3u8",
+            "de",
+        )
+        self.assertEqual(selected, [
+            "https://media.example/path/audio/de.m3u8",
+            "https://media.example/path/audio/en.m3u8",
+        ])
+        self.assertEqual(
+            hls_audio_languages(
+                '#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,LANGUAGE="eng",URI="en.m3u8"\n'
+                '#EXT-X-MEDIA:TYPE=AUDIO,LANGUAGE="deu",URI="de.m3u8"\n'
+            ),
+            ["en", "de"],
+        )
+
+    @patch("batch_transcribe.read_playlist_text")
+    def test_hls_explicit_language_mismatch_is_not_silently_selected(
+        self,
+        read_playlist_text,
+    ):
+        read_playlist_text.return_value = (
+            '#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",'
+            'LANGUAGE="eng",DEFAULT=YES,URI="audio/en.m3u8"\n'
+            '#EXT-X-STREAM-INF:BANDWIDTH=1000000,AUDIO="a"\nvideo/main.m3u8\n'
+        )
+        with self.assertRaisesRegex(RuntimeError, "Available languages: en"):
+            resolve_hls_audio_source(
+                ResolvedSource(
+                    url="https://media.example/path/master.m3u8",
+                    headers={},
+                    media_kind="hls",
+                ),
+                "de",
+            )
+
+    @patch("batch_transcribe.validate_public_http_url", side_effect=lambda value: value)
+    @patch("batch_transcribe.emit")
+    @patch("batch_transcribe.read_playlist_text")
+    def test_hls_master_resolves_to_requested_audio_child(
+        self,
+        read_playlist_text,
+        emit_mock,
+        _validate,
+    ):
+        read_playlist_text.side_effect = [
+            """#EXTM3U
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",LANGUAGE="en",URI="audio/en.m3u8"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",LANGUAGE="deu",URI="audio/de.m3u8"
+#EXT-X-STREAM-INF:BANDWIDTH=1000000,AUDIO="a"
+video/main.m3u8
+""",
+            "#EXTM3U\n#EXTINF:4,\nsegment-1.aac\n",
+        ]
+        source = ResolvedSource(
+            url="https://media.example/path/master.m3u8",
+            headers={"referer": "https://player.example/watch"},
+            media_kind="hls",
+            duration=120,
+        )
+        resolved = resolve_hls_audio_source(source, "de", "job", 1, 2)
+        self.assertEqual(resolved.url, "https://media.example/path/audio/de.m3u8")
+        self.assertEqual(resolved.media_kind, "hls-audio")
+        self.assertEqual(resolved.headers, source.headers)
+        emit_mock.assert_called_once()
+        event = emit_mock.call_args
+        self.assertEqual(event.args[:2], ("batch_candidate_playlist", "job"))
+        self.assertEqual(event.kwargs["playlistType"], "master")
+        self.assertEqual(event.kwargs["audioRenditionCount"], 2)
+        self.assertTrue(event.kwargs["selectedAudioRendition"])
+
+    @patch("batch_transcribe.read_playlist_text", return_value="<html>Access denied</html>")
+    def test_hls_non_playlist_response_is_rejected_explicitly(self, _read_playlist):
+        with self.assertRaisesRegex(RuntimeError, "did not return an HLS playlist"):
+            resolve_hls_audio_source(
+                ResolvedSource(
+                    url="https://media.example/path/master.m3u8",
+                    headers={},
+                    media_kind="hls",
+                ),
+                "de",
+            )
+
+    @patch(
+        "batch_transcribe.read_playlist_text",
+        return_value=(
+            "#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI=\"key.bin\"\n"
+            "#EXTINF:4,\nsegment-1.ts\n"
+        ),
+    )
+    def test_hls_resolver_rejects_encrypted_playlist(self, _read_playlist):
+        with self.assertRaisesRegex(RuntimeError, "Protected media"):
+            resolve_hls_audio_source(
+                ResolvedSource(
+                    url="https://media.example/path/audio.m3u8",
+                    headers={},
+                    media_kind="hls",
+                ),
+                "de",
+            )
+
     @patch("batch_transcribe.read_playlist_text")
     def test_encrypted_hls_is_rejected_before_decode(self, read_playlist_text):
         read_playlist_text.return_value = (
@@ -238,11 +364,19 @@ video/main.m3u8
         self.assertIs(select_audio_stream([english, german], "de"), german)
 
     @patch("batch_transcribe.decode_source")
+    @patch("batch_transcribe.resolve_hls_audio_source")
     @patch("batch_transcribe.playlist_protection_reason", return_value=None)
     @patch("batch_transcribe.emit")
-    def test_acquisition_tries_the_next_ranked_candidate(self, _emit, _protection, decode_source_mock):
+    def test_acquisition_tries_the_next_ranked_candidate(
+        self,
+        _emit,
+        _protection,
+        resolve_hls_audio_source_mock,
+        decode_source_mock,
+    ):
         first = ResolvedSource(url="https://media.example/first.m3u8", headers={}, media_kind="hls")
         second = ResolvedSource(url="https://media.example/second.m3u8", headers={}, media_kind="hls")
+        resolve_hls_audio_source_mock.side_effect = [first, second]
         decode_source_mock.side_effect = [RuntimeError("expired"), [0.0] * 16_000]
         selected, audio = acquire_first_accessible_source([first, second], "job", "de")
         self.assertIs(selected, second)

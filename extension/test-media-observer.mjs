@@ -20,7 +20,9 @@ class FakePerformanceObserver {
     this.callback = callback;
   }
 
-  observe() {}
+  observe() {
+    throw new Error("buffered resource observation is unavailable in this fixture");
+  }
 }
 
 class FakeMutationObserver {
@@ -45,7 +47,11 @@ const sandbox = {
     querySelectorAll() { return []; }
   },
   performance: {
-    getEntriesByType() { return []; }
+    getEntriesByType() {
+      return [{
+        name: "https://prd.jwpltx.com/v1/jwplayer6/ping.gif?event=playlist"
+      }];
+    }
   },
   PerformanceObserver: FakePerformanceObserver,
   MutationObserver: FakeMutationObserver,
@@ -122,7 +128,12 @@ vm.runInContext(`JSON.parse(${JSON.stringify(metadata)})`, context);
 const candidates = messages.flatMap((message) => message.candidates || []);
 assert.equal(
   messages.filter((message) => message.observerVersion).at(-1)?.observerVersion,
-  6
+  7
+);
+assert.equal(
+  candidates.some((candidate) => candidate.url.includes("ping.gif")),
+  false,
+  "JW Player telemetry must not become a media candidate"
 );
 const netflixCandidates = [...new Map(
   candidates

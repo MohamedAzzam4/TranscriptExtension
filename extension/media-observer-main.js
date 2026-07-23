@@ -1,5 +1,5 @@
 (() => {
-  const OBSERVER_VERSION = 6;
+  const OBSERVER_VERSION = 7;
   if (globalThis.__dubTranscriptMediaObserverMainVersion === OBSERVER_VERSION) return;
   globalThis.__dubTranscriptMediaObserverMainVersion = OBSERVER_VERSION;
 
@@ -13,12 +13,18 @@
   let drmProtected = false;
 
   function mediaKind(url, contentType = "") {
-    const value = `${url} ${contentType}`.toLowerCase();
+    let pathname = "";
+    try {
+      pathname = new URL(String(url || ""), location.href).pathname;
+    } catch {
+      pathname = String(url || "").split(/[?#]/, 1)[0];
+    }
+    const value = `${pathname} ${contentType}`.toLowerCase();
     if (/\.m3u8(?:$|[\s?#])|mpegurl/.test(value)) return "hls";
     if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(value)) return "dash";
     if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
     if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
-    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&]|$)/.test(value)) return "unknown-media";
+    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&.-]|$)/.test(value)) return "unknown-media";
     return null;
   }
 

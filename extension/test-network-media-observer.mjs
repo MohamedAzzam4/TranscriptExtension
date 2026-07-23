@@ -45,6 +45,15 @@ assert.equal(
   ),
   "hls-segment"
 );
+assert.equal(
+  observer.classifyMediaRequest(
+    "https://prd.jwpltx.com/v1/jwplayer6/ping.gif?event=playlist",
+    "",
+    "xmlhttprequest"
+  ),
+  null,
+  "JW Player telemetry must not become a decoder candidate"
+);
 
 const store = observer.createStore({ now: () => 100_000 });
 const playlistRequest = {
@@ -97,6 +106,8 @@ const snapshot = store.snapshot(7, 3, "https://playmogo.com/e/test");
 assert.equal(snapshot.candidates.length, 1);
 assert.equal(snapshot.candidates[0].kind, "hls");
 assert.equal(snapshot.candidates[0].frameId, 3);
+assert.equal(snapshot.candidates[0].statusCode, 200);
+assert.equal(snapshot.candidates[0].contentType, "application/vnd.apple.mpegurl");
 assert.equal(snapshot.candidates[0].headers.referer, "https://playmogo.com/e/test");
 assert.equal(snapshot.candidates[0].headers.origin, "https://playmogo.com");
 assert.equal(snapshot.candidates[0].headers.cookie, undefined);

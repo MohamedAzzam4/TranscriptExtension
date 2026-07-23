@@ -87,6 +87,28 @@ The result remains **Experimental**. A 403 can still be legitimate when a host
 requires cookies, authorization, CAPTCHA, anti-bot state, or another access
 control that this project will not copy or bypass.
 
+### User-run follow-up on 2026-07-23
+
+- AniWorld worked successfully with version 0.10.1. The provider label and
+  technical export were not attached, so this is one user-reported manual pass,
+  not a claim that every AniWorld mirror works.
+- AnimeKai no longer failed with HTTP 403. The observer found two related HLS
+  requests with full safe request context. The first returned data PyAV could
+  not parse; the second opened as a playlist with no audio. Two JW Player ping
+  requests were also incorrectly ranked as media.
+- Live fallback captured speech, but the exported text was English while the
+  extension setting was German. The page/player therefore appears to have been
+  playing English audio during that attempt. A future test must set the
+  extension language to the audio actually playing.
+- The 0.10.1 export exposed a full transient candidate URL in
+  `pipeline.fallbackReason`. Version 0.10.2 sanitizes fallback reasons both
+  before persistence and again during technical export.
+
+Version 0.10.2 now validates `#EXTM3U`, selects an explicitly declared HLS audio
+rendition before PyAV decoding, refuses an explicit language mismatch, filters
+JW Player telemetry, and reports playlist type/rendition/variant counts. The
+AnimeKai result remains **Needs development** until this candidate is retested.
+
 The main limitation for this experiment is that the offscreen document currently discards PCM unless WhisperLiveKit has completed its WebSocket configuration. The first implementation task is therefore an isolated audio-probe mode that never opens the recognizer socket.
 
 ## Target decision flow

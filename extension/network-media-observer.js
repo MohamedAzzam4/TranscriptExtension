@@ -48,7 +48,13 @@
   }
 
   function classifyMediaRequest(url, contentType = "", requestType = "") {
-    const value = `${url || ""} ${contentType || ""}`.toLowerCase();
+    let pathname = "";
+    try {
+      pathname = new URL(String(url || "")).pathname;
+    } catch {
+      pathname = String(url || "").split(/[?#]/, 1)[0];
+    }
+    const value = `${pathname} ${contentType || ""}`.toLowerCase();
     if (/\.m3u8(?:$|[\s?#])|(?:application\/(?:vnd\.apple\.|x-)?|audio\/(?:x-)?)mpegurl/.test(value)) {
       return "hls";
     }
@@ -57,7 +63,7 @@
     if (/\.(?:m4s|cmfa|cmfv)(?:$|[\s?#])/.test(value)) return "dash-segment";
     if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(value)) return "audio";
     if (/\.(?:mp4|webm|mov|mkv)(?:$|[\s?#])|video\//.test(value)) return "media";
-    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&]|$)/.test(value)) return "unknown-media";
+    if (/(?:videoplayback|manifest|playlist)(?:[/?#=&.-]|$)/.test(value)) return "unknown-media";
     if (requestType === "media") return "media";
     return null;
   }
@@ -213,6 +219,7 @@
           requestType: observation.requestType,
           frameId: observation.frameId,
           initiator: observation.initiator,
+          statusCode: observation.statusCode,
           headers: cleanReplayHeaders(observation.headers),
           lastSeen: observation.lastSeen
         }));

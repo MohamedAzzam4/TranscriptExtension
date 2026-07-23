@@ -129,8 +129,8 @@ context.genericMediaContext = {
   }],
   discoveryDiagnostics: {
     observer: {
-      bridgeVersion: 6,
-      mainWorldVersion: 6,
+      bridgeVersion: 7,
+      mainWorldVersion: 7,
       ready: true
     }
   }
@@ -307,6 +307,20 @@ vm.runInContext(`
     profileHint: "heaac-2-dash"
   });
   handleNativeHostMessage({
+    state: "batch_candidate_playlist",
+    jobId: "batch-job",
+    attempt: 2,
+    candidateCount: 2,
+    sourceHost: "second.nflxvideo.net",
+    sourceKind: "netflix-audio",
+    playlistType: "master",
+    audioRenditionCount: 2,
+    variantCount: 3,
+    mediaSegmentCount: 0,
+    selectedAudioRendition: true,
+    selectedChildHost: "audio.nflxvideo.net"
+  });
+  handleNativeHostMessage({
     state: "batch_candidate_probe",
     jobId: "batch-job",
     attempt: 2,
@@ -388,6 +402,14 @@ assert.doesNotMatch(
   /token=secret/
 );
 assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].phase, "succeeded");
+assert.equal(
+  local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].playlistType,
+  "master"
+);
+assert.equal(
+  local["experiment:batch-experiment"].pipeline.diagnostics.attempts[1].audioRenditionCount,
+  2
+);
 assert.equal(local["experiment:batch-experiment"].pipeline.diagnostics.selectedAttempt, 2);
 assert.equal(local["experiment:batch-experiment"].asrSegments.length, 250);
 assert.equal(local["experiment:batch-experiment"].asrSegments[0].id, "batch:0");
@@ -410,6 +432,28 @@ assert.equal(
     context
   ),
   "https://www.netflix.com/watch/81304576?query=redacted"
+);
+local["experiment:batch-experiment"].pipeline.fallbackReason =
+  "candidate failed at https://media.example/master.m3u8?token=must-not-export";
+local.lastExperimentId = "batch-experiment";
+const technicalExport = await vm.runInContext("exportLastExperiment()", context);
+assert.doesNotMatch(
+  JSON.stringify(technicalExport.experiment.pipeline),
+  /must-not-export|master\.m3u8/
+);
+assert.match(
+  technicalExport.experiment.pipeline.fallbackReason,
+  /https:\/\/media\.example\/\[redacted\]/
+);
+
+context.unsafeExperiment = structuredClone(local["experiment:batch-experiment"]);
+context.unsafeExperiment.id = "unsafe-diagnostic";
+context.unsafeExperiment.pipeline.fallbackReason =
+  "native failure https://cdn.example/audio.m3u8?signature=must-not-persist";
+await vm.runInContext("saveExperiment(unsafeExperiment)", context);
+assert.doesNotMatch(
+  local["experiment:unsafe-diagnostic"].pipeline.fallbackReason,
+  /must-not-persist|audio\.m3u8/
 );
 context.savedCompatibilityRecord = structuredClone(local[libraryKey]);
 assert.equal(
