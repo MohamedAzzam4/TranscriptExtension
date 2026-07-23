@@ -16,6 +16,11 @@ assert.match(html, /id="fontSize"/);
 assert.match(html, /id="translationFontSize"/);
 assert.match(html, /id="translationTextColor"/);
 assert.match(html, /id="transcriptBold"/);
+assert.match(html, /id="resetAppearance"/);
+assert.match(html, /id="fontSizeDecrease"/);
+assert.match(html, /id="fontSizeIncrease"/);
+assert.match(html, /id="translationFontSizeDecrease"/);
+assert.match(html, /id="translationFontSizeIncrease"/);
 assert.match(html, /id="savedWords"/);
 assert.match(html, /id="downloadTranscript"/);
 assert.match(html, /id="savedTranscripts"/);
@@ -39,5 +44,24 @@ assert.match(content, /<div class="word-label">Examples<\/div>/);
 assert.match(content, /<div class="word-label">Common combinations<\/div>/);
 assert.match(content, /<div class="word-label">Grammar<\/div>/);
 assert.match(content, /<div class="word-label">Related words<\/div>/);
+assert.match(content, /role="group" aria-label="Interactive captions"/);
+assert.match(content, /role="region" aria-label="Word details"/);
+assert.match(content, /function updatePlayerAwarePosition\(force = false\)/);
+assert.match(content, /function measureVisiblePlayerControls\(\)/);
+assert.match(content, /learning\.resolveCaptionBottom\(/);
+assert.match(content, /\.ytp-chrome-bottom/);
+assert.match(content, /\[data-uia='controls-standard'\]/);
+assert.match(content, /wordYouglishElement\.href = `https:\/\/de\.youglish\.com/);
+assert.match(content, /wordReplayElement\.addEventListener\("click", replaySelectedWord\)/);
+assert.match(content, /wordSaveElement\.addEventListener\("click", toggleSavedWord\)/);
+
+const css = fs.readFileSync(new URL("./popup.css", import.meta.url), "utf8");
+assert.match(css, /backdrop-filter: blur\(22px\)/);
+assert.match(css, /:focus-visible/);
+assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+
+assert.match(javascript, /function resetAppearance\(\)/);
+assert.match(javascript, /learning\.DEFAULT_CAPTION_PREFERENCES/);
+assert.match(javascript, /function bindRangeStep\(button, range, delta\)/);
 
 console.log("Popup binding tests passed");

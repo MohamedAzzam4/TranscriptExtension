@@ -26,6 +26,9 @@ because its functions still exist.
 | LEARN-REPLAY | Replay uses exact/estimated word timing and restores playback state | `1546662` | `test-popup-bindings.mjs`; lifecycle coverage to be expanded | M-06 | Source present; manual unverified |
 | UI-DRAG | Caption overlay can be repositioned by pointer without breaking selection | `64875b8` | `test-popup-bindings.mjs` | M-07 | Source present; manual unverified |
 | UI-STYLE | Transcript/translation have separate appearance and distinct default colors | `ea1379c`, `a2716b4` | `test-learning-features.mjs`, `test-batch-lifecycle.mjs` | M-08 | Automated settings pass; manual unverified |
+| UI-GLASS | Popup, settings, captions, word card, diagnostics, and libraries share the Phase 2 glass visual system | Phase 2 `0.10.0` | `test-popup-bindings.mjs` | U-01–U-05 | Automated structure pass; manual unverified |
+| UI-CONTROLS | Caption effective position rises above visible player controls without overwriting the saved base position | Phase 2 `0.10.0` | `test-learning-features.mjs`, `test-popup-bindings.mjs` | U-06–U-11 | Deterministic policy pass; real players unverified |
+| UI-A11Y | Keyboard focus, accessible names/live regions, reduced motion, and native selection remain available | Phase 2 `0.10.0` | `test-popup-bindings.mjs` | U-12–U-17 | Source present; manual unverified |
 
 ## Transcript and acquisition contracts
 
@@ -49,4 +52,5 @@ English word-card section titles. It remains **Experimental** until M-01 through
 M-08 and the critical transcript smoke checks pass in a real browser.
 
 Test procedures are in
-[PHASE1_MANUAL_CHECKLIST.md](../experiments/PHASE1_MANUAL_CHECKLIST.md).
+[PHASE1_MANUAL_CHECKLIST.md](../experiments/PHASE1_MANUAL_CHECKLIST.md) and
+[PHASE2_MANUAL_CHECKLIST.md](../experiments/PHASE2_MANUAL_CHECKLIST.md).

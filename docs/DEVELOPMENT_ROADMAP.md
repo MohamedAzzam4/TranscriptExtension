@@ -30,10 +30,15 @@ deferred until the core extension has been proven.
 | WP1.1 | In progress | Source/history audit completed; real browser checks M-01 through M-08 remain. |
 | WP1.2 | Experimental | Version 0.9.6 strengthens selection/click policy and tests; M-01/M-02 remain. |
 | WP1.3 | Experimental | Historical card/save paths are present and section titles are English; M-03/M-04 remain. |
+| WP2.1 | Experimental | UI event ownership is documented in `docs/UI_INTERACTION_CONTRACTS.md`; combined Phase 1/2 browser checks remain. |
+| WP2.2 | Experimental | Version 0.10.0 implements the glass visual system, independent styling, font steppers, and appearance reset. |
+| WP2.3 | Experimental | Version 0.10.0 adds temporary player-control avoidance while preserving the dragged base position. |
+| WP2.4 | Experimental | The compact English word card and sanitized diagnostic panel are integrated into the new hierarchy. |
+| WP2.5 | In progress | Focus, live-region, and reduced-motion contracts are implemented; U-01–U-17 remain manual. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
 
 The current evidence record is
-[`docs/test-results/0.9.6-phase1-restoration-candidate.md`](test-results/0.9.6-phase1-restoration-candidate.md).
+[`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md).
 
 ## Product outcome
 

@@ -1,5 +1,5 @@
 (() => {
-  if (globalThis.DubTranscriptLearning?.version === 4) return;
+  if (globalThis.DubTranscriptLearning?.version === 5) return;
 
   const DEFAULT_CAPTION_PREFERENCES = Object.freeze({
     fontSize: 31,
@@ -152,6 +152,17 @@
     if (suppressed) return "suppress";
     if (hasSelection) return "preserve-selection";
     return sanitizeWord(word) ? "lookup" : "ignore";
+  }
+
+  function resolveCaptionBottom(basePosition, controlAvoidance = 0) {
+    const base = clampNumber(
+      basePosition,
+      3,
+      70,
+      DEFAULT_CAPTION_PREFERENCES.verticalPosition
+    );
+    const avoidance = clampNumber(controlAvoidance, 0, 35, 0);
+    return Math.round(Math.max(base, avoidance) * 10) / 10;
   }
 
   function translationCacheKey(text, sourceLanguage, targetLanguage) {
@@ -552,7 +563,7 @@
   }
 
   globalThis.DubTranscriptLearning = Object.freeze({
-    version: 4,
+    version: 5,
     DEFAULT_CAPTION_PREFERENCES,
     DEFAULT_TRANSLATION_PREFERENCES,
     normalizeCaptionPreferences,
@@ -563,6 +574,7 @@
     normalizedWord,
     selectionHasText,
     wordActivationDecision,
+    resolveCaptionBottom,
     translationCacheKey,
     extractEnglishWiktionaryEntry,
     extractGermanWiktionaryEntry,

@@ -61,4 +61,6 @@ Invoke-Checked "Git whitespace check" { git diff --check }
 
 Write-Host ""
 Write-Host "Automated regression passed." -ForegroundColor Green
-Write-Host "Browser-only checks remain manual: experiments\PHASE1_MANUAL_CHECKLIST.md"
+Write-Host "Browser-only checks remain manual:"
+Write-Host "  experiments\PHASE1_MANUAL_CHECKLIST.md"
+Write-Host "  experiments\PHASE2_MANUAL_CHECKLIST.md"

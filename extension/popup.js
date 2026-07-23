@@ -31,6 +31,11 @@ const elements = {
   translationTextColor: document.querySelector("#translationTextColor"),
   translationBold: document.querySelector("#translationBold"),
   backgroundColor: document.querySelector("#backgroundColor"),
+  resetAppearance: document.querySelector("#resetAppearance"),
+  fontSizeDecrease: document.querySelector("#fontSizeDecrease"),
+  fontSizeIncrease: document.querySelector("#fontSizeIncrease"),
+  translationFontSizeDecrease: document.querySelector("#translationFontSizeDecrease"),
+  translationFontSizeIncrease: document.querySelector("#translationFontSizeIncrease"),
   syncEarlier: document.querySelector("#syncEarlier"),
   syncLater: document.querySelector("#syncLater"),
   syncOffset: document.querySelector("#syncOffset"),
@@ -71,6 +76,11 @@ window.addEventListener("unload", () => clearInterval(diagnosticRefreshTimer), {
 
 elements.syncEarlier.addEventListener("click", () => void adjustSyncOffset(-0.1));
 elements.syncLater.addEventListener("click", () => void adjustSyncOffset(0.1));
+bindRangeStep(elements.fontSizeDecrease, elements.fontSize, -1);
+bindRangeStep(elements.fontSizeIncrease, elements.fontSize, 1);
+bindRangeStep(elements.translationFontSizeDecrease, elements.translationFontSize, -1);
+bindRangeStep(elements.translationFontSizeIncrease, elements.translationFontSize, 1);
+elements.resetAppearance.addEventListener("click", () => void resetAppearance());
 
 for (const element of [
   elements.translationEnabled,
@@ -256,21 +266,7 @@ async function restoreState() {
   elements.translationLanguage.value = translation.targetLanguage;
   elements.translationProvider.value = translation.provider;
   elements.googleTranslateApiKey.value = stored[TRANSLATION_SECRETS_KEY]?.googleApiKey || "";
-  elements.fontSize.value = caption.fontSize;
-  elements.horizontalPosition.value = caption.horizontalPosition;
-  elements.verticalPosition.value = caption.verticalPosition;
-  elements.backgroundOpacity.value = caption.backgroundOpacity;
-  elements.textOpacity.value = caption.textOpacity;
-  elements.fontFamily.value = caption.fontFamily;
-  elements.transcriptBold.checked = caption.bold;
-  elements.edgeStyle.value = caption.edgeStyle;
-  elements.textColor.value = caption.textColor.toLowerCase();
-  elements.translationFontSize.value = translation.fontSize;
-  elements.translationTextOpacity.value = translation.textOpacity;
-  elements.translationFontFamily.value = translation.fontFamily;
-  elements.translationTextColor.value = translation.textColor.toLowerCase();
-  elements.translationBold.checked = translation.bold;
-  elements.backgroundColor.value = caption.backgroundColor.toLowerCase();
+  applyAppearanceToControls(caption, translation);
   currentSyncOffset = normalizeSyncOffset(settings.syncOffset);
   renderControls();
   await refreshSavedWords();
@@ -439,6 +435,55 @@ async function applyDisplaySettings() {
   } catch (error) {
     setStatus(error.message, true);
   }
+}
+
+function applyAppearanceToControls(caption, translation) {
+  elements.fontSize.value = caption.fontSize;
+  elements.horizontalPosition.value = caption.horizontalPosition;
+  elements.verticalPosition.value = caption.verticalPosition;
+  elements.backgroundOpacity.value = caption.backgroundOpacity;
+  elements.textOpacity.value = caption.textOpacity;
+  elements.fontFamily.value = caption.fontFamily;
+  elements.transcriptBold.checked = caption.bold;
+  elements.edgeStyle.value = caption.edgeStyle;
+  elements.textColor.value = caption.textColor.toLowerCase();
+  elements.translationFontSize.value = translation.fontSize;
+  elements.translationTextOpacity.value = translation.textOpacity;
+  elements.translationFontFamily.value = translation.fontFamily;
+  elements.translationTextColor.value = translation.textColor.toLowerCase();
+  elements.translationBold.checked = translation.bold;
+  elements.backgroundColor.value = caption.backgroundColor.toLowerCase();
+}
+
+async function resetAppearance() {
+  const currentTranslation = learning.normalizeTranslationPreferences({
+    enabled: elements.translationEnabled.checked,
+    targetLanguage: elements.translationLanguage.value,
+    provider: elements.translationProvider.value
+  });
+  applyAppearanceToControls(
+    learning.DEFAULT_CAPTION_PREFERENCES,
+    {
+      ...learning.DEFAULT_TRANSLATION_PREFERENCES,
+      enabled: currentTranslation.enabled,
+      targetLanguage: currentTranslation.targetLanguage,
+      provider: currentTranslation.provider
+    }
+  );
+  renderControls();
+  await applyDisplaySettings();
+  setStatus("Caption appearance reset to the Phase 2 defaults.");
+}
+
+function bindRangeStep(button, range, delta) {
+  button.addEventListener("click", () => {
+    const minimum = Number(range.min);
+    const maximum = Number(range.max);
+    const step = Number(range.step) || 1;
+    const next = Math.max(minimum, Math.min(maximum, Number(range.value) + delta * step));
+    range.value = String(next);
+    range.dispatchEvent(new Event("input", { bubbles: true }));
+  });
 }
 
 async function adjustSyncOffset(delta) {

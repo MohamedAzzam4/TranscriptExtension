@@ -90,6 +90,10 @@ assert.equal(
 );
 assert.equal(helpers.wordActivationDecision({ word: "Haus" }), "lookup");
 assert.equal(helpers.wordActivationDecision({ word: "..." }), "ignore");
+assert.equal(helpers.resolveCaptionBottom(11, 0), 11);
+assert.equal(helpers.resolveCaptionBottom(11, 14.36), 14.4);
+assert.equal(helpers.resolveCaptionBottom(24, 14), 24);
+assert.equal(helpers.resolveCaptionBottom(2, 99), 35);
 assert.equal(
   helpers.translationCacheKey("Hallo   Welt", "de", "en"),
   helpers.translationCacheKey("Hallo Welt", "de", "en")

@@ -1,6 +1,6 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 14) return;
-  globalThis.__dubTranscriptLabVersion = 14;
+  if (globalThis.__dubTranscriptLabVersion === 15) return;
+  globalThis.__dubTranscriptLabVersion = 15;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
@@ -172,7 +172,8 @@
       ),
       translationCache: new Map(),
       translationPending: new Map(),
-      displayedTranslation: ""
+      displayedTranslation: "",
+      controlAvoidance: 0
     };
 
     createOverlay();
@@ -193,6 +194,7 @@
         });
       }
       renderTranscript();
+      updatePlayerAwarePosition();
     }, 250);
 
     setCaptionCollection(Boolean(message.collectCaptions));
@@ -345,6 +347,10 @@
           pointer-events: none;
           font-family: Inter, ui-sans-serif, system-ui, sans-serif;
           text-align: center;
+          transition: bottom .18s ease;
+        }
+        .wrap.controls-visible .status {
+          border-color: rgba(167, 139, 250, .42);
         }
         .caption-box {
           position: relative;
@@ -354,6 +360,9 @@
           padding: 8px 13px;
           border-radius: 8px;
           background: var(--caption-background, rgba(5, 7, 12, .86));
+          border: 1px solid rgba(255,255,255,.14);
+          backdrop-filter: blur(14px) saturate(1.22);
+          -webkit-backdrop-filter: blur(14px) saturate(1.22);
           line-height: 1.25;
           box-shadow: 0 4px 20px rgba(0,0,0,.35);
           pointer-events: auto;
@@ -381,7 +390,7 @@
           touch-action: none;
           user-select: none;
           -webkit-user-select: none;
-          opacity: .58;
+          opacity: .74;
         }
         .caption-box:hover .caption-drag-handle,
         .caption-drag-handle:focus-visible { opacity: 1; }
@@ -477,7 +486,9 @@
           padding: 11px 13px;
           border: 1px solid rgba(255,255,255,.18);
           border-radius: 10px;
-          background: rgba(13, 16, 24, .96);
+          background: linear-gradient(145deg, rgba(20, 24, 36, .9), rgba(7, 10, 17, .84));
+          backdrop-filter: blur(22px) saturate(1.2);
+          -webkit-backdrop-filter: blur(22px) saturate(1.2);
           color: #f5f7fb;
           box-shadow: 0 8px 32px rgba(0,0,0,.48);
           text-align: left;
@@ -558,15 +569,18 @@
         .word-note { margin-top: 9px; color: #858fa1; font-size: 10px; }
         .word-sources { display: flex; gap: 12px; margin-top: 10px; }
         .word-source { color: #a998ff; font-size: 11px; }
+        @media (prefers-reduced-motion: reduce) {
+          .wrap { transition: none; }
+        }
       </style>
       <div class="wrap">
         <div class="status">Starting…</div>
-        <div class="caption-box" hidden>
+        <div class="caption-box" role="group" aria-label="Interactive captions" hidden>
           <button class="caption-drag-handle" type="button" aria-label="Drag captions" title="Drag captions">&#8942;</button>
-          <div class="transcript"></div>
-          <div class="translation" hidden></div>
+          <div class="transcript" aria-live="polite" aria-atomic="true"></div>
+          <div class="translation" aria-live="polite" aria-atomic="true" hidden></div>
         </div>
-        <div class="word-card" hidden>
+        <div class="word-card" role="region" aria-label="Word details" hidden>
           <div class="word-card-header">
             <div class="word-heading">
               <div class="word-title"></div>
@@ -664,7 +678,7 @@
     const caption = session.captionPreferences;
     const translation = session.translationPreferences;
     wrapElement.style.setProperty("--caption-left", `${caption.horizontalPosition}%`);
-    wrapElement.style.setProperty("--caption-bottom", `${caption.verticalPosition}%`);
+    updatePlayerAwarePosition(true);
     wrapElement.style.setProperty("--transcript-font-size", `${caption.fontSize}px`);
     wrapElement.style.setProperty("--transcript-font-family", learning.fontFamilyValue(caption.fontFamily));
     wrapElement.style.setProperty("--transcript-font-weight", caption.bold ? "700" : "400");
@@ -714,6 +728,7 @@
       }
     }
     if (overlayHost.parentNode !== playerContainer) playerContainer.append(overlayHost);
+    updatePlayerAwarePosition(true);
     positionWordCard();
   }
 
@@ -779,10 +794,7 @@
       "--caption-left",
       `${session.captionPreferences.horizontalPosition}%`
     );
-    wrapElement.style.setProperty(
-      "--caption-bottom",
-      `${session.captionPreferences.verticalPosition}%`
-    );
+    updatePlayerAwarePosition(true);
     positionWordCard();
   }
 
@@ -824,6 +836,67 @@
       "--word-card-offset",
       `${clampedCenter - desiredCenter}px`
     );
+  }
+
+  function updatePlayerAwarePosition(force = false) {
+    if (!session || !wrapElement || !video) return;
+    const nextAvoidance = measureVisiblePlayerControls();
+    if (force || Math.abs(nextAvoidance - session.controlAvoidance) >= 0.5) {
+      session.controlAvoidance = nextAvoidance;
+    }
+    const basePosition = session.captionPreferences.verticalPosition;
+    const effectivePosition = learning.resolveCaptionBottom(
+      basePosition,
+      session.controlAvoidance
+    );
+    wrapElement.style.setProperty("--caption-bottom", `${effectivePosition}%`);
+    wrapElement.classList.toggle(
+      "controls-visible",
+      effectivePosition > Number(basePosition) + 0.1
+    );
+  }
+
+  function measureVisiblePlayerControls() {
+    if (!playerContainer || !video) return 0;
+    const playerRect = playerContainer.getBoundingClientRect();
+    if (!playerRect.width || !playerRect.height) return 0;
+    const selectors = [
+      ".ytp-chrome-bottom",
+      ".ytp-progress-bar-container",
+      "[data-uia='controls-standard']",
+      "[data-uia='player-controls']",
+      ".watch-video--bottom-controls-container",
+      ".PlayerControlsNeo__layout",
+      "[class*='control-bar']",
+      "[class*='controls-bottom']"
+    ];
+    let minimumBottom = video.paused ? 14 : 0;
+    for (const element of playerContainer.querySelectorAll(selectors.join(","))) {
+      const style = getComputedStyle(element);
+      if (
+        style.display === "none"
+        || style.visibility === "hidden"
+        || Number(style.opacity || 1) < 0.08
+      ) {
+        continue;
+      }
+      const rect = element.getBoundingClientRect();
+      const intersectsBottom = rect.bottom > playerRect.top
+        && rect.top < playerRect.bottom
+        && rect.left < playerRect.right
+        && rect.right > playerRect.left;
+      if (
+        !intersectsBottom
+        || rect.height < 8
+        || rect.height > playerRect.height * 0.35
+        || rect.top < playerRect.top + playerRect.height * 0.5
+      ) {
+        continue;
+      }
+      const occupiedPercent = (playerRect.bottom - rect.top) / playerRect.height * 100;
+      minimumBottom = Math.max(minimumBottom, occupiedPercent + 2.5);
+    }
+    return Math.max(0, Math.min(35, Math.round(minimumBottom * 10) / 10));
   }
 
   function clamp(value, minimum, maximum) {
