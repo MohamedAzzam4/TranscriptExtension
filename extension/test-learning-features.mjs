@@ -63,6 +63,34 @@ assert.notEqual(
 assert.equal(helpers.rgbaFromHex("#05070C", 86), "rgba(5, 7, 12, 0.86)");
 assert.equal(helpers.sanitizeWord("  Häuser?! "), "Häuser");
 assert.equal(
+  helpers.selectionHasText(
+    { isCollapsed: true, toString: () => "ignored" },
+    { isCollapsed: false, toString: () => "  ein Haus  " }
+  ),
+  true
+);
+assert.equal(
+  helpers.selectionHasText({ isCollapsed: false, toString: () => "   " }),
+  false
+);
+assert.equal(
+  helpers.wordActivationDecision({
+    suppressed: true,
+    hasSelection: false,
+    word: "Haus"
+  }),
+  "suppress"
+);
+assert.equal(
+  helpers.wordActivationDecision({
+    hasSelection: true,
+    word: "Haus"
+  }),
+  "preserve-selection"
+);
+assert.equal(helpers.wordActivationDecision({ word: "Haus" }), "lookup");
+assert.equal(helpers.wordActivationDecision({ word: "..." }), "ignore");
+assert.equal(
   helpers.translationCacheKey("Hallo   Welt", "de", "en"),
   helpers.translationCacheKey("Hallo Welt", "de", "en")
 );

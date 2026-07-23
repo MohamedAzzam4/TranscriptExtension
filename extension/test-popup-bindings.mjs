@@ -29,6 +29,15 @@ assert.match(content, /class="caption-drag-handle"/);
 assert.match(content, /captionDragHandleElement\.addEventListener\("pointerdown", startCaptionDrag\)/);
 assert.doesNotMatch(content, /captionBoxElement\.addEventListener\("pointerdown", startCaptionDrag\)/);
 assert.match(content, /function hasActiveCaptionSelection\(\)/);
+assert.match(content, /learning\.selectionHasText\(rootSelection, windowSelection\)/);
+assert.match(content, /learning\.wordActivationDecision\(/);
 assert.match(content, /wordElement\.setAttribute\("role", "button"\)/);
+assert.match(content, /captionBoxElement\.addEventListener\("copy", stopPlayerClick\)/);
+assert.match(content, /captionBoxElement\.addEventListener\("dblclick", stopPlayerClick\)/);
+assert.match(content, /<div class="word-label">Meaning<\/div>/);
+assert.match(content, /<div class="word-label">Examples<\/div>/);
+assert.match(content, /<div class="word-label">Common combinations<\/div>/);
+assert.match(content, /<div class="word-label">Grammar<\/div>/);
+assert.match(content, /<div class="word-label">Related words<\/div>/);
 
 console.log("Popup binding tests passed");

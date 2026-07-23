@@ -20,6 +20,21 @@ restoration, UI/UX work, transcript lifecycle work, or generic-site testing.
 Production/SaaS refactoring, the learning website, flashcards, and Anki remain
 deferred until the core extension has been proven.
 
+## Current progress
+
+| WP | Status | Evidence |
+|---|---|---|
+| WP0.1 | Pass | `docs/FEATURE_REGISTRY.md` records protected contracts and distinguishes automated, source-present, and manual evidence. |
+| WP0.2 | In progress | Existing fixtures cover lifecycle paths; the authorized real-media corpus remains incomplete. |
+| WP0.3 | Experimental | `RUN-REGRESSION.cmd` runs syntax, extension, server, and whitespace checks; upgrade fixtures and intentional-break validation remain. |
+| WP1.1 | In progress | Source/history audit completed; real browser checks M-01 through M-08 remain. |
+| WP1.2 | Experimental | Version 0.9.6 strengthens selection/click policy and tests; M-01/M-02 remain. |
+| WP1.3 | Experimental | Historical card/save paths are present and section titles are English; M-03/M-04 remain. |
+| WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
+
+The current evidence record is
+[`docs/test-results/0.9.6-phase1-restoration-candidate.md`](test-results/0.9.6-phase1-restoration-candidate.md).
+
 ## Product outcome
 
 For a video the user is authorized to watch, the extension should:

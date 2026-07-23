@@ -1,6 +1,6 @@
 (() => {
-  if (globalThis.__dubTranscriptLabVersion === 13) return;
-  globalThis.__dubTranscriptLabVersion = 13;
+  if (globalThis.__dubTranscriptLabVersion === 14) return;
+  globalThis.__dubTranscriptLabVersion = 14;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
@@ -482,6 +482,8 @@
           box-shadow: 0 8px 32px rgba(0,0,0,.48);
           text-align: left;
           pointer-events: auto;
+          user-select: text;
+          -webkit-user-select: text;
           overflow-y: auto;
         }
         .word-card[hidden] { display: none; }
@@ -578,24 +580,24 @@
             </div>
           </div>
           <div class="word-section">
-            <div class="word-label">1. Was bedeutet das?</div>
+            <div class="word-label">Meaning</div>
             <div class="word-definition word-definition-de"></div>
             <div class="word-definition word-definition-en"></div>
           </div>
           <div class="word-section word-examples-section">
-            <div class="word-label">2. Typische Beispiele</div>
+            <div class="word-label">Examples</div>
             <div class="word-examples"></div>
           </div>
           <div class="word-section word-collocations-section" hidden>
-            <div class="word-label">3. Wichtige Kombinationen</div>
+            <div class="word-label">Common combinations</div>
             <div class="word-collocations"></div>
           </div>
           <div class="word-section word-grammar-section" hidden>
-            <div class="word-label">4. Wichtige Grammatik</div>
+            <div class="word-label">Grammar</div>
             <dl class="word-grammar"></dl>
           </div>
           <div class="word-section word-related-section" hidden>
-            <div class="word-label">5. Verwandte Wörter</div>
+            <div class="word-label">Related words</div>
             <div class="word-related"></div>
           </div>
           <div class="word-note">Source-based dictionary information; no AI-generated advice.</div>
@@ -632,6 +634,9 @@
     captionDragHandleElement.addEventListener("pointerdown", startCaptionDrag);
     transcriptElement.addEventListener("click", handleTranscriptClick);
     transcriptElement.addEventListener("keydown", handleTranscriptKeydown);
+    captionBoxElement.addEventListener("pointerdown", stopPlayerClick);
+    captionBoxElement.addEventListener("copy", stopPlayerClick);
+    captionBoxElement.addEventListener("dblclick", stopPlayerClick);
     captionBoxElement.addEventListener("click", stopPlayerClick);
     wordCardElement.addEventListener("pointerdown", stopPlayerClick);
     wordCardElement.addEventListener("click", (event) => event.stopPropagation());
@@ -963,15 +968,19 @@
 
   function handleTranscriptClick(event) {
     event.stopPropagation();
-    if (suppressTranscriptClick) {
+    const wordElement = event.target.closest(".word");
+    const decision = learning.wordActivationDecision({
+      suppressed: suppressTranscriptClick,
+      hasSelection: hasActiveCaptionSelection(),
+      word: wordElement?.dataset.word
+    });
+    if (decision === "suppress") {
       event.preventDefault();
       return;
     }
-    if (hasActiveCaptionSelection()) return;
-    const wordButton = event.target.closest(".word");
-    if (!wordButton) return;
+    if (decision !== "lookup") return;
     event.preventDefault();
-    void showWordDefinition(wordButton.dataset.word, wordButton);
+    void showWordDefinition(wordElement.dataset.word, wordElement);
   }
 
   function handleTranscriptKeydown(event) {
@@ -985,10 +994,19 @@
 
   function hasActiveCaptionSelection() {
     const root = transcriptElement?.getRootNode();
-    const selection = typeof root?.getSelection === "function"
-      ? root.getSelection()
-      : window.getSelection();
-    return Boolean(selection && !selection.isCollapsed && selection.toString().trim());
+    let rootSelection = null;
+    let windowSelection = null;
+    try {
+      if (typeof root?.getSelection === "function") rootSelection = root.getSelection();
+    } catch {
+      // Some ShadowRoot implementations expose getSelection but reject the call.
+    }
+    try {
+      if (typeof window.getSelection === "function") windowSelection = window.getSelection();
+    } catch {
+      // A missing page selection should not disable ordinary word activation.
+    }
+    return learning.selectionHasText(rootSelection, windowSelection);
   }
 
   async function showWordDefinition(word, wordButton) {

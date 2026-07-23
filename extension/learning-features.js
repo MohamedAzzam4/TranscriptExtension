@@ -1,5 +1,5 @@
 (() => {
-  if (globalThis.DubTranscriptLearning?.version === 3) return;
+  if (globalThis.DubTranscriptLearning?.version === 4) return;
 
   const DEFAULT_CAPTION_PREFERENCES = Object.freeze({
     fontSize: 31,
@@ -126,6 +126,32 @@
 
   function normalizedWord(rawWord) {
     return sanitizeWord(rawWord).toLocaleLowerCase("de-DE");
+  }
+
+  function selectionHasText(...candidates) {
+    return candidates
+      .flat()
+      .some((selection) => {
+        try {
+          return Boolean(
+            selection
+            && selection.isCollapsed === false
+            && String(selection.toString()).trim()
+          );
+        } catch {
+          return false;
+        }
+      });
+  }
+
+  function wordActivationDecision({
+    suppressed = false,
+    hasSelection = false,
+    word = ""
+  } = {}) {
+    if (suppressed) return "suppress";
+    if (hasSelection) return "preserve-selection";
+    return sanitizeWord(word) ? "lookup" : "ignore";
   }
 
   function translationCacheKey(text, sourceLanguage, targetLanguage) {
@@ -526,7 +552,7 @@
   }
 
   globalThis.DubTranscriptLearning = Object.freeze({
-    version: 3,
+    version: 4,
     DEFAULT_CAPTION_PREFERENCES,
     DEFAULT_TRANSLATION_PREFERENCES,
     normalizeCaptionPreferences,
@@ -535,6 +561,8 @@
     rgbaFromHex,
     sanitizeWord,
     normalizedWord,
+    selectionHasText,
+    wordActivationDecision,
     translationCacheKey,
     extractEnglishWiktionaryEntry,
     extractGermanWiktionaryEntry,
