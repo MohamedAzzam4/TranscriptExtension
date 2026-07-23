@@ -56,6 +56,37 @@ The repository already has useful pieces:
 - `extension/audio-worklet.js` mixes channels and emits 0.5-second, mono, 16 kHz PCM16 chunks.
 - `server/batch_transcribe.py` can open public direct media with safe headers and PyAV.
 
+### Evidence received on 2026-07-23
+
+Two user-run exports refined the generic failure boundary:
+
+- AnimeKai selected an embedded `megaplay.buzz` player and exposed two clear
+  HLS-looking candidates on a CDN. Native acquisition reached them but received
+  HTTP 403. Live tab transcription still worked.
+- AniWorld selected a `playmogo.com` frame. The page observer found no reusable
+  HTTP candidate, while live tab transcription still worked.
+
+This did not prove that the sources were absent. The prior observer covered page
+fetch/XHR/performance APIs, but could miss worker-originated requests,
+extensionless manifests classified only by response content type, and pages
+that were already open when a newly reloaded extension was injected.
+
+Version 0.10.1 adds an experimental generic layer for those gaps:
+
+- non-blocking `webRequest` observation for clear HTTP media traffic in the
+  active tab, including worker traffic and segment evidence;
+- response-content-type classification for extensionless HLS/DASH endpoints;
+- immediate all-frame reinjection of the main-world observer, isolated bridge,
+  and application content scripts when analysis starts;
+- replay of only allowlisted request context (`Accept`, language, `Origin`,
+  `Referer`, `Sec-Fetch-*`, and user agent);
+- immediate rejection of cookies, authorization, and other credentials;
+- visible observer readiness, candidate/segment counts, and safe header names.
+
+The result remains **Experimental**. A 403 can still be legitimate when a host
+requires cookies, authorization, CAPTCHA, anti-bot state, or another access
+control that this project will not copy or bypass.
+
 The main limitation for this experiment is that the offscreen document currently discards PCM unless WhisperLiveKit has completed its WebSocket configuration. The first implementation task is therefore an isolated audio-probe mode that never opens the recognizer socket.
 
 ## Target decision flow
@@ -153,6 +184,10 @@ For each provider:
 8. Run the offline candidate probe if the player reports public non-DRM candidates.
 9. Record Level 1 and Level 2 independently.
 10. Make the smallest generic fix supported by evidence, reload the extension, and repeat the same provider before moving to the next one.
+11. For version 0.10.1 or later, expand **Diagnostics** before export and record
+    `Media observer`, `HTTP discovery`, and `Safe request context`. These values
+    distinguish a missed observer from a discovered source that the decoder
+    could not acquire.
 
 Initial matrix:
 

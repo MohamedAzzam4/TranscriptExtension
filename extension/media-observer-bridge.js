@@ -1,12 +1,15 @@
 (() => {
-  if (globalThis.__dubTranscriptMediaObserverBridgeVersion === 5) return;
-  globalThis.__dubTranscriptMediaObserverBridgeVersion = 5;
+  const BRIDGE_VERSION = 6;
+  if (globalThis.__dubTranscriptMediaObserverBridgeVersion === BRIDGE_VERSION) return;
+  globalThis.__dubTranscriptMediaObserverBridgeVersion = BRIDGE_VERSION;
 
   const MESSAGE_SOURCE = "dub-transcript-media-observer";
   const candidates = new Map();
   let drmProtected = false;
   let netflixMetadata = null;
   let netflixMovieId = "";
+  let mainWorldVersion = null;
+  let lastSnapshotAt = null;
 
   function cloneMetadata(value) {
     try {
@@ -50,6 +53,8 @@
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.data?.source !== MESSAGE_SOURCE) return;
     if (event.data?.type === "request-snapshot") return;
+    mainWorldVersion = Math.max(0, Number(event.data?.observerVersion) || 0) || mainWorldVersion;
+    lastSnapshotAt = Date.now();
     drmProtected ||= Boolean(event.data?.drmProtected);
     if (event.data?.netflixMetadata && typeof event.data.netflixMetadata === "object") {
       const incoming = cloneMetadata(event.data.netflixMetadata);
@@ -73,6 +78,13 @@
       return {
         drmProtected,
         netflixMetadata: netflixMetadata ? cloneMetadata(netflixMetadata) : null,
+        observer: {
+          bridgeVersion: BRIDGE_VERSION,
+          mainWorldVersion,
+          ready: Boolean(mainWorldVersion),
+          candidateCount: candidates.size,
+          lastSnapshotAt
+        },
         candidates: [...candidates.values()]
           .sort((left, right) => right.lastSeen - left.lastSeen)
       };

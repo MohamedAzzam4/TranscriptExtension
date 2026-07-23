@@ -30,6 +30,7 @@ $syntaxFiles = @(
     "learning-features.js",
     "media-observer-bridge.js",
     "media-observer-main.js",
+    "network-media-observer.js",
     "netflix-research.js",
     "offscreen.js",
     "popup.js",

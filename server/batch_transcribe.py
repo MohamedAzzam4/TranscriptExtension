@@ -49,7 +49,7 @@ HTTP_AUDIO_CHUNK_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_BYTES = 1024 * 1024 * 1024
 MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.9.4"
+WORKER_VERSION = "0.10.1"
 
 
 @dataclass(frozen=True)
@@ -123,7 +123,16 @@ def validate_public_http_url(value: str, *, youtube_only: bool = False) -> str:
 
 
 def clean_headers(raw_headers: dict | None) -> dict[str, str]:
-    allowed = {"accept", "accept-language", "origin", "referer", "user-agent"}
+    allowed = {
+        "accept",
+        "accept-language",
+        "origin",
+        "referer",
+        "sec-fetch-dest",
+        "sec-fetch-mode",
+        "sec-fetch-site",
+        "user-agent",
+    }
     headers: dict[str, str] = {}
     for raw_name, raw_value in (raw_headers or {}).items():
         name = str(raw_name).strip().casefold()
@@ -333,6 +342,10 @@ def resolve_sources(request: dict) -> list[ResolvedSource]:
         for raw_candidate in raw_candidates[:MAX_DIRECT_CANDIDATES]:
             if isinstance(raw_candidate, dict):
                 raw_url = raw_candidate.get("url")
+                candidate_headers = {
+                    **headers,
+                    **clean_headers(raw_candidate.get("headers")),
+                }
                 media_kind = re.sub(
                     r"[^a-z-]",
                     "",
@@ -349,6 +362,7 @@ def resolve_sources(request: dict) -> list[ResolvedSource]:
                 )
             else:
                 raw_url = raw_candidate
+                candidate_headers = headers
                 media_kind = None
                 discovery_source = None
                 language_hint = None
@@ -363,7 +377,7 @@ def resolve_sources(request: dict) -> list[ResolvedSource]:
             seen.add(url)
             result.append(ResolvedSource(
                 url=url,
-                headers=headers,
+                headers=candidate_headers,
                 duration=duration,
                 answer_key_status=answer_key_status,
                 media_kind=media_kind,

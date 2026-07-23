@@ -7,6 +7,7 @@ const session = {};
 const tabMessages = [];
 const runtimeMessages = [];
 const nativeMessages = [];
+const scriptInjections = [];
 const listener = { addListener() {} };
 const storageArea = (values) => ({
   async get(key) {
@@ -66,6 +67,12 @@ context = vm.createContext({
         tabMessages.push(structuredClone({ tabId, message, options }));
         return { ok: true };
       }
+    },
+    scripting: {
+      async executeScript(injection) {
+        scriptInjections.push(structuredClone(injection));
+        return [{ frameId: 0 }, { frameId: 3 }];
+      }
     }
   },
   console,
@@ -90,6 +97,66 @@ context = vm.createContext({
 
 const source = fs.readFileSync(new URL("./service-worker.js", import.meta.url), "utf8");
 vm.runInContext(source, context, { filename: "service-worker.js" });
+
+const injectionResult = await vm.runInContext("ensureContentScripts(7)", context);
+assert.deepEqual(Array.from(injectionResult.frameIds), [0, 3]);
+assert.equal(scriptInjections.length, 3);
+assert.equal(scriptInjections[0].world, "MAIN");
+assert.deepEqual(scriptInjections[0].files, ["media-observer-main.js"]);
+assert.equal(scriptInjections[1].world, "ISOLATED");
+assert.deepEqual(scriptInjections[1].files, ["media-observer-bridge.js"]);
+assert.deepEqual(
+  scriptInjections[2].files,
+  ["learning-features.js", "transcript-groups.js", "content.js"]
+);
+assert.ok(scriptInjections.every(({ target }) => target.allFrames));
+assert.ok(scriptInjections.every(({ injectImmediately }) => injectImmediately));
+
+context.genericMediaContext = {
+  batchCandidates: [{
+    url: "https://media.example/opaque?token=temporary",
+    kind: "hls",
+    source: "webrequest-observer",
+    frameId: 3,
+    requestType: "xmlhttprequest",
+    headers: {
+      referer: "https://playmogo.com/e/test",
+      origin: "https://playmogo.com",
+      "accept-language": "de-DE,de;q=0.9",
+      cookie: "must-not-survive",
+      authorization: "must-not-survive"
+    }
+  }],
+  discoveryDiagnostics: {
+    observer: {
+      bridgeVersion: 6,
+      mainWorldVersion: 6,
+      ready: true
+    }
+  }
+};
+context.genericTab = {
+  url: "https://aniworld.to/anime/test",
+  title: "Embedded player test"
+};
+const genericCandidate = vm.runInContext(
+  "chooseBatchCandidate(genericTab, genericMediaContext, 'de')",
+  context
+);
+assert.equal(genericCandidate.supported, true, JSON.stringify(genericCandidate));
+assert.equal(genericCandidate.sourceKind, "direct");
+assert.equal(genericCandidate.sourceCandidates[0].kind, "hls");
+assert.equal(
+  genericCandidate.sourceCandidates[0].headers.referer,
+  "https://playmogo.com/e/test"
+);
+assert.equal(
+  genericCandidate.sourceCandidates[0].headers.origin,
+  "https://playmogo.com"
+);
+assert.equal(genericCandidate.sourceCandidates[0].headers.cookie, undefined);
+assert.equal(genericCandidate.sourceCandidates[0].headers.authorization, undefined);
+assert.equal(genericCandidate.discoveryDiagnostics.observer.ready, true);
 
 const active = {
   experimentId: "batch-experiment",

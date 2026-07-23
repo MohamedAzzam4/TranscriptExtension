@@ -1,4 +1,4 @@
-importScripts("learning-features.js", "netflix-research.js");
+importScripts("learning-features.js", "netflix-research.js", "network-media-observer.js");
 
 const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
@@ -16,6 +16,9 @@ const NETFLIX_RESEARCH_LIMIT = 60;
 const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
 const learning = globalThis.DubTranscriptLearning;
 const netflixResearch = globalThis.DubTranscriptNetflixResearch;
+const networkMedia = globalThis.DubTranscriptNetworkMedia;
+const networkMediaStore = networkMedia.createStore();
+const networkMediaObserverAvailable = networkMedia.attachChromeObserver(chrome, networkMediaStore);
 const mediaClocks = new Map();
 const runtimeSampleTimes = new Map();
 const audioCoverageRanges = new Map();
@@ -32,11 +35,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
+  networkMediaStore.clearTab(tabId);
   void stopIfActiveTab(tabId);
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === "loading") void stopIfActiveTab(tabId);
+  if (changeInfo.status === "loading") {
+    networkMediaStore.clearTab(tabId);
+    void stopIfActiveTab(tabId);
+  }
 });
 
 async function handleMessage(message, sender) {
@@ -160,7 +167,7 @@ async function startSmartExperiment(settings) {
   if (candidate.supported) {
     return startBatchExperiment(settings, prepared, candidate);
   }
-  return startLiveExperiment(settings, prepared, candidate.reason);
+  return startLiveExperiment(settings, prepared, candidate.reason, candidate);
 }
 
 async function startLibraryExperiment(settings, prepared, savedTranscript) {
@@ -233,8 +240,8 @@ async function prepareMediaTarget() {
   if (!tab?.id || !tab.url?.startsWith("http")) {
     throw new Error("Open a normal web video tab before starting the experiment.");
   }
-  const frameIds = await ensureContentScripts(tab.id);
-  const mediaTarget = await findMediaTarget(tab.id, frameIds);
+  const injection = await ensureContentScripts(tab.id);
+  const mediaTarget = await findMediaTarget(tab.id, injection.frameIds);
   if (!mediaTarget) {
     throw new Error(
       "No accessible HTML video was found in this tab or its player frames. "
@@ -248,6 +255,24 @@ async function prepareMediaTarget() {
   if (!pauseResponse?.ok) {
     throw new Error(pauseResponse?.error || "Could not pause the video while preparing.");
   }
+  const networkSnapshot = networkMediaStore.snapshot(
+    tab.id,
+    mediaTarget.frameId,
+    mediaTarget.context.frameUrl
+  );
+  mediaTarget.context.batchCandidates = mergeMediaCandidateLists(
+    mediaTarget.context.batchCandidates,
+    networkSnapshot.candidates
+  );
+  mediaTarget.context.discoveryDiagnostics = {
+    observerInjection: injection.diagnostics,
+    pageObserver: sanitizePageObserverDiagnostics(mediaTarget.context.observerDiagnostics),
+    networkObserver: {
+      available: networkMediaObserverAvailable,
+      ...networkSnapshot.diagnostics
+    },
+    currentSourceKind: diagnosticText(mediaTarget.context.sourceKind, 32) || "unknown"
+  };
   return { tab, mediaTarget };
 }
 
@@ -270,7 +295,8 @@ async function startBatchExperiment(settings, prepared, candidate) {
       extensionVersion: installedExtensionVersion(),
       worker: null,
       attempts: [],
-      statusHistory: []
+      statusHistory: [],
+      discovery: candidate.discoveryDiagnostics || null
     },
     fallbackReason: null
   });
@@ -332,7 +358,7 @@ async function startBatchExperiment(settings, prepared, candidate) {
   return { experimentId: id, mode: "batch" };
 }
 
-async function startLiveExperiment(settings, prepared, fallbackReason = null) {
+async function startLiveExperiment(settings, prepared, fallbackReason = null, candidate = null) {
   const { tab, mediaTarget } = prepared;
   await ensureRecognizerRunning(settings.serverUrl);
   await ensureOffscreenDocument();
@@ -346,6 +372,15 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null) {
     status: "running",
     sourceKind: null,
     sourceHost: null,
+    discoveryKind: candidate?.discoveryKind || null,
+    candidateSummary: candidate?.candidateSummary || [],
+    diagnostics: {
+      extensionVersion: installedExtensionVersion(),
+      worker: null,
+      attempts: [],
+      statusHistory: [],
+      discovery: candidate?.discoveryDiagnostics || null
+    },
     fallbackReason
   });
   experiment.epochs = [epoch];
@@ -434,12 +469,14 @@ function createExperimentRecord(id, tab, context, settings, pipeline) {
 }
 
 function chooseBatchCandidate(tab, context, audioLanguage = "") {
+  const discoveryDiagnostics = context.discoveryDiagnostics || null;
   if (identifyPlatform(tab.url) === "youtube") {
     return {
       supported: true,
       sourceKind: "youtube",
       sourceUrl: tab.url,
-      headers: {}
+      headers: {},
+      ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
     };
   }
   let sourceCandidates = rankBatchCandidates(context.batchCandidates, audioLanguage);
@@ -456,7 +493,9 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
     if (requestedLanguage && !matchingLanguage.length) {
       return {
         supported: false,
-        reason: `no clear Netflix audio track matched ${requestedLanguage}`
+        reason: `no clear Netflix audio track matched ${requestedLanguage}`,
+        candidateSummary: summarizeCandidateValues(sourceCandidates),
+        ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
       };
     }
     if (matchingLanguage.length) sourceCandidates = matchingLanguage;
@@ -467,7 +506,12 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
       ));
     }
     if (!sourceCandidates.length) {
-      return { supported: false, reason: "the player reported encrypted media" };
+      return {
+        supported: false,
+        reason: "the player reported encrypted media",
+        candidateSummary: [],
+        ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
+      };
     }
   }
   if (!sourceCandidates.length) {
@@ -475,13 +519,16 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
       supported: false,
       reason: context.sourceKind === "blob"
         ? "the player exposes only a blob stream"
-        : "no accessible HTTP media source was detected"
+        : "no accessible HTTP media source was detected",
+      candidateSummary: [],
+      ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
     };
   }
-  const headers = {
+  const headers = networkMedia.cleanReplayHeaders({
     "user-agent": context.userAgent || "",
+    "accept-language": context.browserLanguage || "",
     referer: context.frameUrl || context.frameReferrer || tab.url
-  };
+  });
   try {
     headers.origin = new URL(context.frameUrl || tab.url).origin;
   } catch {
@@ -493,7 +540,8 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
     discoveryKind: sourceCandidates[0].kind,
     sourceUrl: sourceCandidates[0].url,
     sourceCandidates,
-    headers
+    headers,
+    ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
   };
 }
 
@@ -526,8 +574,9 @@ function rankBatchCandidates(rawCandidates, audioLanguage = "") {
     const url = parsed.href;
     const text = `${url} ${candidate.contentType || ""}`.toLowerCase();
     let kind = String(candidate.kind || "").toLowerCase();
-    if (kind === "netflix-audio") {
-      // Netflix clear-audio URLs can be query-only CDN URLs with no file extension.
+    if (["netflix-audio", "hls", "dash", "audio", "media", "unknown-media"].includes(kind)) {
+      // A content-type-aware observer can classify query-only media URLs that
+      // have no useful filename extension.
     } else if (/\.m3u8(?:$|[\s?#])|mpegurl/.test(text)) kind = "hls";
     else if (/\.mpd(?:$|[\s?#])|dash\+xml/.test(text)) kind = "dash";
     else if (/\.(?:m4a|mp3|aac|oga|ogg|opus)(?:$|[\s?#])|audio\//.test(text)) kind = "audio";
@@ -583,6 +632,8 @@ function rankBatchCandidates(rawCandidates, audioLanguage = "") {
         source: String(candidate.source || "page").slice(0, 64),
         score
       };
+      const replayHeaders = networkMedia.cleanReplayHeaders(candidate.headers);
+      if (Object.keys(replayHeaders).length) ranked.headers = replayHeaders;
       if (candidate.language) ranked.language = String(candidate.language).slice(0, 64);
       if (candidate.languageDescription) {
         ranked.languageDescription = String(candidate.languageDescription).slice(0, 128);
@@ -602,6 +653,8 @@ function rankBatchCandidates(rawCandidates, audioLanguage = "") {
       const representationIndex = Math.max(0, Number(candidate.representationIndex) || 0);
       if (representationIndex) ranked.representationIndex = representationIndex;
       if (bitrate) ranked.bitrate = bitrate;
+      if (Number.isInteger(candidate.frameId)) ranked.frameId = candidate.frameId;
+      if (candidate.requestType) ranked.requestType = String(candidate.requestType).slice(0, 32);
       unique.set(url, ranked);
     }
   }
@@ -609,6 +662,18 @@ function rankBatchCandidates(rawCandidates, audioLanguage = "") {
     .sort((left, right) => right.score - left.score)
     .slice(0, 10)
     .map(({ score: _score, ...candidate }) => candidate);
+}
+
+function summarizeCandidateValues(values) {
+  return (values || []).slice(0, 10).map((value, index) => ({
+    index: index + 1,
+    sourceHost: safeHost(value.url),
+    kind: String(value.kind || "direct").slice(0, 32),
+    discoverySource: String(value.source || "").slice(0, 64) || null,
+    requestType: String(value.requestType || "").slice(0, 32) || null,
+    observedFrameId: Number.isInteger(value.frameId) ? value.frameId : null,
+    replayHeaderNames: Object.keys(networkMedia.cleanReplayHeaders(value.headers)).sort()
+  }));
 }
 
 function normalizeMediaLanguageHint(value) {
@@ -678,6 +743,9 @@ function summarizeBatchCandidates(candidate) {
     selected: value.selected === true,
     codecHint: String(value.codec || "").slice(0, 64) || null,
     profileHint: String(value.profile || "").slice(0, 96) || null,
+    requestType: String(value.requestType || "").slice(0, 32) || null,
+    observedFrameId: Number.isInteger(value.frameId) ? value.frameId : null,
+    replayHeaderNames: Object.keys(networkMedia.cleanReplayHeaders(value.headers)).sort(),
     bitrate: Math.max(0, Number(value.bitrate) || 0) || null,
     channels: Math.max(0, Number(value.channels) || 0) || null,
     representationIndex: Math.max(0, Number(value.representationIndex) || 0)
@@ -1806,6 +1874,30 @@ async function getVisibleDiagnostics() {
       value: `extension ${diagnostics.extensionVersion || "?"} · worker ${diagnostics.worker?.workerVersion || "not reported"}`
     });
   }
+  if (diagnostics.discovery) {
+    const pageObserver = diagnostics.discovery.pageObserver || {};
+    const networkObserver = diagnostics.discovery.networkObserver || {};
+    const observerVersion = pageObserver.mainWorldVersion
+      ? `main v${pageObserver.mainWorldVersion} · bridge v${pageObserver.bridgeVersion || "?"}`
+      : "main observer not ready";
+    details.push({
+      label: "Media observer",
+      value: `${observerVersion} · network ${networkObserver.available ? "ready" : "unavailable"}`
+    });
+    details.push({
+      label: "HTTP discovery",
+      value: `${Math.max(0, Number(networkObserver.candidateCount) || 0)} candidate`
+        + `${Number(networkObserver.candidateCount) === 1 ? "" : "s"}`
+        + ` · ${Math.max(0, Number(networkObserver.segmentEvidenceCount) || 0)} segment request`
+        + `${Number(networkObserver.segmentEvidenceCount) === 1 ? "" : "s"}`
+    });
+    if (networkObserver.replayHeaderNames?.length) {
+      details.push({
+        label: "Safe request context",
+        value: networkObserver.replayHeaderNames.join(", ")
+      });
+    }
+  }
   if (diagnostics.attempts?.length) {
     details.push({
       label: "Local decoder",
@@ -1838,6 +1930,15 @@ async function getVisibleDiagnostics() {
     action = "Try another Netflix audio track if one exists. Otherwise the extension will use live transcription for this title.";
   } else if (diagnostics.finalError && !diagnostics.worker) {
     action = "The native worker did not report its version. Run CHECK-SETUP.cmd and repair native-host registration if it is marked FAIL.";
+  } else if (/no accessible http media source/i.test(finalError || "")) {
+    const discovery = diagnostics.discovery || {};
+    const pageReady = discovery.pageObserver?.ready === true;
+    const networkCount = Math.max(0, Number(discovery.networkObserver?.observedRequestCount) || 0);
+    action = !pageReady
+      ? "The page media observer was not ready. Refresh the video page once after reloading the extension."
+      : networkCount
+        ? "The browser saw media traffic, but no reusable clear manifest. Live transcription is available."
+        : "No reusable media request was observed. Keep playback running briefly or use live transcription.";
   }
   return {
     diagnostics: {
@@ -1919,8 +2020,8 @@ async function inspectCurrentMediaTarget() {
   if (!tab?.id || identifyPlatform(tab.url) !== "netflix.com") {
     throw new Error("Open a Netflix movie or episode player before running research mode.");
   }
-  const frameIds = await ensureContentScripts(tab.id);
-  const mediaTarget = await findMediaTarget(tab.id, frameIds);
+  const injection = await ensureContentScripts(tab.id);
+  const mediaTarget = await findMediaTarget(tab.id, injection.frameIds);
   if (!mediaTarget) {
     throw new Error("Start Netflix playback once, then click Analyze this Netflix title again.");
   }
@@ -2763,11 +2864,96 @@ async function removeTranscriptLibraryEntry(key) {
 }
 
 async function ensureContentScripts(tabId) {
-  const results = await chrome.scripting.executeScript({
-    target: { tabId, allFrames: true },
-    files: ["learning-features.js", "transcript-groups.js", "content.js"]
-  });
-  return [...new Set(results.map((result) => result.frameId))];
+  const diagnostics = {
+    mainWorldObserver: { injected: false, frameCount: 0, error: null },
+    isolatedBridge: { injected: false, frameCount: 0, error: null },
+    application: { injected: false, frameCount: 0, error: null }
+  };
+  const frameIds = new Set();
+  const injections = [
+    {
+      key: "mainWorldObserver",
+      files: ["media-observer-main.js"],
+      world: "MAIN"
+    },
+    {
+      key: "isolatedBridge",
+      files: ["media-observer-bridge.js"],
+      world: "ISOLATED"
+    },
+    {
+      key: "application",
+      files: ["learning-features.js", "transcript-groups.js", "content.js"],
+      world: "ISOLATED"
+    }
+  ];
+  for (const injection of injections) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId, allFrames: true },
+        files: injection.files,
+        world: injection.world,
+        injectImmediately: true
+      });
+      for (const result of results) frameIds.add(result.frameId);
+      diagnostics[injection.key] = {
+        injected: true,
+        frameCount: results.length,
+        error: null
+      };
+    } catch (error) {
+      diagnostics[injection.key].error = diagnosticMessage(error?.message || error);
+    }
+  }
+  if (!frameIds.size) {
+    throw new Error(
+      diagnostics.application.error
+        || "The extension could not inspect any frame in the active video tab."
+    );
+  }
+  return { frameIds: [...frameIds], diagnostics };
+}
+
+function mergeMediaCandidateLists(...lists) {
+  const unique = new Map();
+  for (const candidate of lists.flat()) {
+    try {
+      const parsed = new URL(String(candidate?.url || ""));
+      if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password) continue;
+      parsed.hash = "";
+      const url = parsed.href;
+      const previous = unique.get(url);
+      unique.set(url, {
+        ...(previous || {}),
+        ...candidate,
+        url,
+        headers: networkMedia.cleanReplayHeaders({
+          ...(previous?.headers || {}),
+          ...(candidate?.headers || {})
+        })
+      });
+    } catch {
+      // Malformed, blob, and non-HTTP values cannot be batch candidates.
+    }
+  }
+  return [...unique.values()].slice(0, 100);
+}
+
+function sanitizePageObserverDiagnostics(value) {
+  if (!value || typeof value !== "object") return {
+    ready: false,
+    bridgeVersion: null,
+    mainWorldVersion: null,
+    candidateCount: 0,
+    lastSnapshotAt: null
+  };
+  return {
+    ready: value.ready === true,
+    bridgeVersion: Math.max(0, Number(value.bridgeVersion) || 0) || null,
+    mainWorldVersion: Math.max(0, Number(value.mainWorldVersion) || 0) || null,
+    candidateCount: Math.max(0, Number(value.candidateCount) || 0),
+    lastSnapshotAt: Math.max(0, Number(value.lastSnapshotAt) || 0) || null
+  };
 }
 
 async function findMediaTarget(tabId, frameIds) {

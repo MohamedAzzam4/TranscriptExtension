@@ -1359,6 +1359,7 @@
     const observedMedia = globalThis.__dubTranscriptMediaObserver?.snapshot?.() || {
       drmProtected: false,
       netflixMetadata: null,
+      observer: null,
       candidates: []
     };
     const mediaKeysAttached = Boolean(element.mediaKeys);
@@ -1378,8 +1379,9 @@
       documentTitle: String(document.title || "").replace(/\s+/g, " ").trim().slice(0, 300),
       visibleTitleText: netflixVisibleTitleText(),
       currentSrc,
-      sourceKind: currentSrc.startsWith("blob:") ? "blob" : "direct",
+      sourceKind: currentSrc.startsWith("blob:") ? "blob" : (currentSrc ? "direct" : "empty"),
       batchCandidates: mediaBatchCandidates(element, currentSrc, observedMedia.candidates),
+      observerDiagnostics: observedMedia.observer || null,
       netflixMetadata: observedMedia.netflixMetadata || null,
       drmProtected: Boolean(
         mediaKeysAttached

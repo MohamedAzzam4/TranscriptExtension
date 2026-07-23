@@ -120,6 +120,10 @@ const metadata = JSON.stringify({
 vm.runInContext(`JSON.parse(${JSON.stringify(metadata)})`, context);
 
 const candidates = messages.flatMap((message) => message.candidates || []);
+assert.equal(
+  messages.filter((message) => message.observerVersion).at(-1)?.observerVersion,
+  6
+);
 const netflixCandidates = [...new Map(
   candidates
     .filter((candidate) => candidate.kind === "netflix-audio")

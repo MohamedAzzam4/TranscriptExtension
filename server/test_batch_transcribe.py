@@ -54,11 +54,16 @@ class BatchTranscribeTests(unittest.TestCase):
             clean_headers({
                 "User-Agent": "Browser\r\nInjected: no",
                 "Cookie": "secret",
+                "Authorization": "Bearer secret",
                 "Referer": "https://example.com/watch",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "cross-site",
             }),
             {
                 "user-agent": "BrowserInjected: no",
                 "referer": "https://example.com/watch",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
             },
         )
 
@@ -78,6 +83,11 @@ class BatchTranscribeTests(unittest.TestCase):
                     "bitrate": 128000,
                     "channels": 2,
                     "representationIndex": 3,
+                    "headers": {
+                        "referer": "https://player.example/embed",
+                        "origin": "https://player.example",
+                        "cookie": "must-not-survive",
+                    },
                 },
                 {"url": "https://media.example/movie.mp4", "kind": "media"},
             ],
@@ -85,7 +95,10 @@ class BatchTranscribeTests(unittest.TestCase):
             "durationHint": 1200,
         })
         self.assertEqual([source.media_kind for source in sources], ["hls", "media"])
-        self.assertEqual(sources[0].headers["referer"], "https://player.example/watch")
+        self.assertEqual(sources[0].headers["referer"], "https://player.example/embed")
+        self.assertEqual(sources[0].headers["origin"], "https://player.example")
+        self.assertNotIn("cookie", sources[0].headers)
+        self.assertEqual(sources[1].headers["referer"], "https://player.example/watch")
         self.assertEqual(sources[0].duration, 1200)
         self.assertEqual(sources[0].discovery_source, "netflix-player-metadata")
         self.assertEqual(sources[0].language_hint, "deu")
@@ -97,7 +110,7 @@ class BatchTranscribeTests(unittest.TestCase):
 
     def test_worker_diagnostics_include_decoder_versions(self):
         diagnostics = batch_worker_diagnostics()
-        self.assertEqual(diagnostics["workerVersion"], "0.9.4")
+        self.assertEqual(diagnostics["workerVersion"], "0.10.1")
         self.assertIn("pyavVersion", diagnostics)
         self.assertIn("libavcodecVersion", diagnostics)
 

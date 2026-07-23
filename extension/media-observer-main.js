@@ -1,6 +1,7 @@
 (() => {
-  if (globalThis.__dubTranscriptMediaObserverMainVersion === 5) return;
-  globalThis.__dubTranscriptMediaObserverMainVersion = 5;
+  const OBSERVER_VERSION = 6;
+  if (globalThis.__dubTranscriptMediaObserverMainVersion === OBSERVER_VERSION) return;
+  globalThis.__dubTranscriptMediaObserverMainVersion = OBSERVER_VERSION;
 
   const MESSAGE_SOURCE = "dub-transcript-media-observer";
   const IS_NETFLIX = /(^|\.)netflix\.com$/i.test(location.hostname);
@@ -36,6 +37,7 @@
     window.postMessage({
       source: MESSAGE_SOURCE,
       type,
+      observerVersion: OBSERVER_VERSION,
       drmProtected,
       candidates: [...candidates.values()],
       netflixMetadata: snapshotNetflixMetadata()

@@ -161,7 +161,16 @@ assert.deepEqual(
   )`),
   {
     supported: false,
-    reason: "no clear Netflix audio track matched de"
+    reason: "no clear Netflix audio track matched de",
+    candidateSummary: [{
+      index: 1,
+      sourceHost: "cdn-english.nflxvideo.net",
+      kind: "netflix-audio",
+      discoverySource: "netflix-player-metadata",
+      requestType: null,
+      observedFrameId: null,
+      replayHeaderNames: []
+    }]
   },
   "Netflix must fall back to live capture instead of transcribing the wrong dub"
 );
