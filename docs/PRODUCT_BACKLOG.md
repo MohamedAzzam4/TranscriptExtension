@@ -1,8 +1,15 @@
 # Product backlog
 
-This file preserves requested product ideas and their current implementation status.
+This file preserves requested product ideas and their historical implementation
+status. An item listed as implemented still requires the current-version
+regression evidence defined in
+[REGRESSION_TEST_PLAN.md](REGRESSION_TEST_PLAN.md); source code or an older
+checkpoint alone is not proof that the browser interaction still works.
 
-## Implemented in extension 0.8.0
+For priority, dependencies, phases, and future work, use
+[DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md).
+
+## Historically implemented in extension 0.8.0
 
 - Reorganized the word card into meanings, paired examples, combinations, grammar, and related-word sections. Empty dictionary sections are hidden.
 - Added **Replay clip** using exact batch word timestamps or a clearly identified cue-based estimate. The original media time, pause state, and playback rate are restored.

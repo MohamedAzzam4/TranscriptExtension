@@ -176,6 +176,8 @@ Only compare ASR with captions that represent the selected audio track. A German
 
 ## Project documentation
 
+- [Prioritized development roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Regression test plan](docs/REGRESSION_TEST_PLAN.md)
 - [Experiment test matrix](experiments/TEST_MATRIX.md)
 - [AniWorld audio-acquisition plan](docs/ANIWORLD_AUDIO_ACQUISITION_PLAN.md)
 - [Prompt for the isolated GLM AniWorld branch](docs/GLM_ANIWORLD_AUDIO_PROMPT.md)
