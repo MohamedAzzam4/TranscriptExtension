@@ -35,7 +35,8 @@ deferred until the core extension has been proven.
 | WP2.3 | Experimental | Version 0.10.0 adds temporary player-control avoidance while preserving the dragged base position. |
 | WP2.4 | Experimental | The compact English word card and sanitized diagnostic panel are integrated into the new hierarchy. |
 | WP2.5 | In progress | Focus, live-region, and reduced-motion contracts are implemented; U-01–U-17 remain manual. |
-| WP4.1 | Experimental | AniWorld passed one user-run 0.10.1 experiment. Version 0.10.3 adds a verified local decoder for AnimeKai's PNG-wrapped clear MPEG-TS segments and closes the remaining legacy JW Player telemetry path; a full Episode 5 browser retest is required. |
+| WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. This promotes AnimeKai from a bounded decoder probe to a user-run browser success, but the multi-sample manual matrix is still incomplete. |
+| WP4.1a | Planned | Measure and improve clear-media preparation speed, especially segmented or muxed HLS on AniWorld, without changing language selection, cue coverage, privacy, cache behavior, or the passing YouTube/AnimeKai paths. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
 
 The current evidence records are
@@ -113,7 +114,7 @@ WP0.1 -> WP0.2/WP0.3 -> WP0.4
   -> WP1.1 -> WP1.2 -> WP1.3 -> WP1.4 -> WP1.5 -> WP1.6
   -> WP2.1 -> WP2.2/WP2.3/WP2.4 -> WP2.5
   -> WP3.1 -> WP3.2 -> WP3.3 -> WP3.4/WP3.5
-  -> WP4.1 -> WP4.5
+  -> WP4.1 -> WP4.1a -> WP4.5
   -> WP5.1 -> WP5.2 -> WP5.3
   -> Phase 6
   -> Phase 7
@@ -462,6 +463,61 @@ embedded/AniWorld-style support.
 - Clear media may use batch mode; inaccessible media uses audible live capture.
 - Authentication, CAPTCHA, paywalls, DRM, and access controls are not bypassed.
 
+**Current evidence:** Version 0.10.3 has user-reported browser successes on
+YouTube, AniWorld, and AnimeKai. This is meaningful cross-platform evidence,
+but it remains **Experimental** until the reference samples complete the
+beginning/middle/end, language, cache-replay, export, and privacy checks in the
+manual matrix. It is not a promise that every mirror or CDN representation
+works.
+
+### WP4.1a — Clear-media acquisition speed and stage observability
+
+**Depends on:** WP4.1, the WP0.2 reference corpus, and stable Phase 3
+transcript/cache contracts. Measurement-only work may begin earlier, but an
+optimization cannot ship around a failed restoration or lifecycle regression
+gate.
+
+**Outcome:** Reduce preparation time for accessible clear media, especially
+AniWorld-style HLS, while making network acquisition, demuxing, decoding, and
+transcription visibly distinct.
+
+**Required baseline measurements:**
+
+- discovery and playlist-resolution time;
+- time to first decoded PCM and time to complete acquisition;
+- transcription start and completion time;
+- media duration, segment count, transferred bytes, and effective throughput;
+- audio-only versus muxed video/audio source;
+- selected mirror/CDN, retry count, peak memory, cancellation time, and cache
+  outcome.
+
+**Optimization sequence:**
+
+1. Correct the UI stages so HLS network reads are not reported only as
+   “decoding.”
+2. Prefer a matching audio-only HLS rendition when one exists.
+3. For muxed HLS, select the lowest viable representation that preserves the
+   requested language and complete audio duration.
+4. Add bounded concurrent segment prefetch with ordered decode, retry,
+   cancellation, and memory limits.
+5. Evaluate starting ASR from ordered decoded chunks before the entire title is
+   acquired; do not promote a partial result to a complete cached transcript.
+
+**Pass criteria:**
+
+- Preparation wall time improves materially on at least two slow reference HLS
+  samples, including AniWorld, compared with a recorded same-machine baseline.
+- No reference sample becomes more than 10% slower without a documented,
+  accepted accuracy or reliability reason.
+- YouTube, AniWorld, and AnimeKai retain the same selected language, duration,
+  cue coverage, rewind/cache behavior, and exports.
+- Progress names and metrics distinguish downloading, demuxing/decoding,
+  transcribing, retrying, and fallback.
+- Concurrency remains bounded, cancellation is responsive, and signed URLs,
+  media segments, compressed audio, and PCM are not persisted.
+- A faster partial acquisition is never described or cached as a complete
+  transcript.
+
 ### WP4.2 — Netflix catalogue research dataset
 
 **Depends on:** WP0.2 and access to the friend's Netflix test computer.
@@ -625,8 +681,12 @@ deletion works, and the website is not required for core extension use.
 
 ## Rule for choosing the next WP
 
-The next implementation target is WP0.1/WP1.1, followed by restoration in the
-stated Phase 1 sequence. Phase 2 follows only after restoration passes.
+The next implementation target is the remaining WP1.1 browser audit, followed
+by WP1.2–WP1.6 restoration and its regression gate. The existing experimental
+Phase 2 UI then needs its combined manual acceptance gate. WP4.1a is preserved
+as the next acquisition improvement, but should start with baseline
+instrumentation after protected interactions and transcript lifecycle behavior
+are stable unless the user explicitly reprioritizes performance.
 
 Choose the earliest unpassed WP that blocks the requested feature. A paused
 external-research WP does not block independent earlier work. When evidence

@@ -39,3 +39,20 @@ Netflix and other DRM subscription services are not in this phase. They add prot
 - Median difference between caption and ASR segment starts.
 - Caption timeline coverage by ASR segments.
 - Observed display latency and obvious hallucinations during silence, recorded manually for now.
+- For full-audio preparation, record discovery time, time to first decoded PCM,
+  complete acquisition time, transcription time, transferred bytes, effective
+  throughput, segment count, audio-only versus muxed source, and peak memory.
+- Keep acquisition and ASR measurements separate. On HLS sites, a UI state
+  labelled “decoding” may currently include network transfer time.
+
+## Current-version user observations
+
+These observations are useful browser evidence, not a platform-wide support
+claim. A row becomes a full manual pass only after the pass/fail checks above
+and the relevant regression checklist are recorded.
+
+| Date | Platform/path | Observation | Classification |
+|---|---|---|---|
+| 2026-07-23 | Public YouTube batch analysis | The user confirmed the existing path still works after the generic HLS changes. | User-run success; detailed repeat-run matrix pending |
+| 2026-07-23 | AniWorld embedded clear media | The user confirmed full-audio analysis now works; preparation can be noticeably slow on some mirrors. | User-run success; speed baseline and full M-14 checks pending |
+| 2026-07-23 | AnimeKai PNG-wrapped clear HLS | The user confirmed the 0.10.3 browser path now works. | User-run success; multi-title coverage and full M-14 checks pending |
