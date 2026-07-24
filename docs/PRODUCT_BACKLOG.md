@@ -27,6 +27,22 @@ For priority, dependencies, phases, and future work, use
 - A larger searchable library page and an explicit **Open video** action for old transcripts.
 - User-selected filesystem folders or companion-service persistence beyond browser storage.
 - AI-generated B1 simplification or B2 tutoring. The current card deliberately uses only source-backed dictionary data.
+- Optional forced alignment for tighter word-audio boundaries beyond
+  Faster-Whisper timestamps. This would require a measured model/dependency
+  decision and is not part of the compact replay/blur change.
+
+## Next bounded interaction update
+
+- Keep the existing word replay and add replay of the current recognized
+  sentence. When only a phrase/caption boundary is known, label it honestly.
+- Tighten exact word replay by removing the current broad fixed padding and
+  clamping small playback handles against adjacent word boundaries.
+- Preserve the current smaller translation default: 21 px translation versus
+  31 px transcript.
+- Add one translation preference, **Blur until hover**, with a fixed visual blur
+  and hover/focus/touch reveal. Do not add a strength slider or another modal.
+- Preserve text selection, word click, caption dragging, playback restoration,
+  settings reset/persistence, cache replay, and generic-player support.
 
 ## Acceptance notes
 

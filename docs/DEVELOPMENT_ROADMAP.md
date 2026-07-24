@@ -242,17 +242,26 @@ save/remove behavior.
 
 **Depends on:** WP1.3 and existing cue timing.
 
-**Outcome:** Restore German YouGlish and replay the exact occurrence of the word
-in the current video.
+**Outcome:** Restore German YouGlish and replay either the selected word or its
+complete recognized sentence/caption in the current video.
 
 **Pass criteria:**
 
 - YouGlish opens the selected German word in a new tab.
-- Exact word timestamps are used when available.
+- The word card exposes compact, adjacent **Word** and **Sentence** replay
+  actions without another modal or settings page.
+- Exact word timestamps are used when available and are clamped against
+  adjacent word boundaries instead of always adding broad padding.
 - Estimated live-cue boundaries are clearly labelled as estimates.
+- Sentence replay uses the recognized sentence boundaries when available. If
+  only a phrase/caption boundary exists, the UI calls it a caption rather than
+  claiming an exact sentence.
 - Replay restores the prior media time, pause state, playback rate, and relevant
   volume state.
 - Repeated replay does not corrupt transcript synchronization.
+- This work does not claim sample-accurate word isolation. A future optional
+  forced-alignment experiment must be measured separately before adding another
+  local model dependency.
 
 ### WP1.5 — Caption dragging and existing appearance controls
 
@@ -318,7 +327,14 @@ settings, caption overlay, translation, word card, diagnostics, and library.
   emphasis settings.
 - Shared background, blur, edge, and position controls have understandable
   defaults and reset behavior.
-- Translation has a distinct default color and an obvious visibility toggle.
+- Translation has a distinct default color, defaults smaller than the source
+  transcript, and has an obvious visibility toggle.
+- A single **Blur until hover** translation option visually hides the
+  translation until hover, keyboard focus, or an equivalent non-selection touch
+  action. There is no blur-strength control.
+- Blur never removes translation text from assistive technology, does not
+  prevent native selection/copy, and does not alter translation generation or
+  cache identity.
 - Contrast remains readable over light and dark video.
 
 ### WP2.3 — Player-aware caption positioning

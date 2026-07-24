@@ -30,9 +30,12 @@ first; Netflix is not required for Phase 1.
   keeps its context. Remove it and confirm the state updates.
 - **M-05 — YouGlish:** Click YouGlish and confirm a new German YouGlish search
   opens for the selected word.
-- **M-06 — Replay:** While the video is playing, replay the word. Confirm the
-  expected short interval plays and the previous time, pause/play state, and
-  playback rate are restored. Repeat once while originally paused.
+- **M-06 — Replay:** While the video is playing, replay the word and then the
+  complete recognized sentence. Confirm each expected interval plays and the
+  previous time, pause/play state, and playback rate are restored. Repeat word
+  replay once while originally paused. Confirm an exact word interval does not
+  cross the midpoint into either adjacent timestamped word; an estimated
+  interval must be visibly identified as estimated.
 
 ## Critical transcript smoke checks
 

@@ -9,10 +9,14 @@ refresh the video page before testing. This checklist does not automate a site.
   language controls and Analyze/Stop actions visible without searching through
   advanced settings.
 - **U-02 — Translation:** Toggle translation, change target/provider, and confirm
-  the source transcript remains unchanged.
+  the source transcript remains unchanged. Enable **Blur until hover** and
+  confirm the translation is blurred until pointer hover or keyboard focus,
+  remains available to assistive technology, and can still be selected/copied
+  after reveal.
 - **U-03 — Independent appearance:** Use both font steppers and color/opacity
   controls. Transcript changes must not alter translation styling and vice
-  versa.
+  versa. After Reset, confirm the translation default is smaller than the
+  transcript default.
 - **U-04 — Reset:** Change every appearance setting, click Reset, and confirm
   visual defaults return while languages, provider, API key, sync offset,
   transcript, vocabulary, and saved transcripts remain untouched.
