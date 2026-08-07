@@ -52,7 +52,7 @@ MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_HLS_SEGMENT_BYTES = 64 * 1024 * 1024
 MAX_HLS_SEGMENTS = 5_000
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.10.3"
+WORKER_VERSION = "0.10.4"
 
 
 @dataclass(frozen=True)
@@ -103,7 +103,37 @@ def emit(state: str, job_id: str, **payload) -> None:
     )
 
 
-def validate_public_http_url(value: str, *, youtube_only: bool = False) -> str:
+LOOPBACK_MEDIA_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def normalized_loopback_origin(value: str | None) -> tuple[str, str, int] | None:
+    parsed = urlsplit(str(value or ""))
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        return None
+    hostname = parsed.hostname.rstrip(".").casefold()
+    if hostname not in LOOPBACK_MEDIA_HOSTS:
+        return None
+    try:
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    except ValueError:
+        return None
+    return parsed.scheme, hostname, port
+
+
+def validate_public_http_url(
+    value: str,
+    *,
+    youtube_only: bool = False,
+    allowed_loopback_origin: str | None = None,
+) -> str:
     parsed = urlsplit(str(value or ""))
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise ValueError("Batch analysis requires an HTTP(S) media source.")
@@ -117,6 +147,18 @@ def validate_public_http_url(value: str, *, youtube_only: bool = False) -> str:
         or hostname.endswith(".youtube.com")
     ):
         raise ValueError("The YouTube batch adapter only accepts YouTube page URLs.")
+
+    try:
+        candidate_origin = (
+            parsed.scheme,
+            hostname,
+            parsed.port or (443 if parsed.scheme == "https" else 80),
+        )
+    except ValueError as error:
+        raise ValueError("The media URL contains an invalid port.") from error
+    authorized_origin = normalized_loopback_origin(allowed_loopback_origin)
+    if hostname in LOOPBACK_MEDIA_HOSTS and candidate_origin == authorized_origin:
+        return parsed.geturl()
 
     try:
         addresses = {
@@ -348,6 +390,7 @@ def resolve_sources(request: dict) -> list[ResolvedSource]:
             if request.get("collectCaptions")
             else "not-requested"
         )
+        loopback_media_origin = request.get("loopbackMediaOrigin")
         result: list[ResolvedSource] = []
         seen: set[str] = set()
         for raw_candidate in raw_candidates[:MAX_DIRECT_CANDIDATES]:
@@ -382,7 +425,10 @@ def resolve_sources(request: dict) -> list[ResolvedSource]:
                 bitrate = None
                 channels = None
                 representation_index = None
-            url = validate_public_http_url(raw_url)
+            url = validate_public_http_url(
+                raw_url,
+                allowed_loopback_origin=loopback_media_origin,
+            )
             if url in seen:
                 continue
             seen.add(url)

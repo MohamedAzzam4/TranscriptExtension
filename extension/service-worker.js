@@ -1,4 +1,9 @@
-importScripts("learning-features.js", "netflix-research.js", "network-media-observer.js");
+importScripts(
+  "learning-features.js",
+  "netflix-research.js",
+  "network-media-observer.js",
+  "local-media.js"
+);
 
 const ACTIVE_KEY = "activeExperiment";
 const LAST_KEY = "lastExperimentId";
@@ -17,6 +22,7 @@ const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
 const learning = globalThis.DubTranscriptLearning;
 const netflixResearch = globalThis.DubTranscriptNetflixResearch;
 const networkMedia = globalThis.DubTranscriptNetworkMedia;
+const localMedia = globalThis.DubTranscriptLocalMedia;
 const networkMediaStore = networkMedia.createStore();
 const networkMediaObserverAvailable = networkMedia.attachChromeObserver(chrome, networkMediaStore);
 const mediaClocks = new Map();
@@ -340,6 +346,9 @@ async function startBatchExperiment(settings, prepared, candidate) {
       sourceUrl: candidate.sourceUrl,
       sourceCandidates: candidate.sourceCandidates,
       headers: candidate.headers,
+      ...(candidate.loopbackMediaOrigin
+        ? { loopbackMediaOrigin: candidate.loopbackMediaOrigin }
+        : {}),
       durationHint: context.duration,
       language: settings.audioLanguage,
       captionLanguage: settings.captionLanguage,
@@ -535,6 +544,7 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
   } catch {
     // Referer and user agent are sufficient when the frame URL is unusual.
   }
+  const loopbackMediaOrigin = localMedia.authorizedLoopbackOrigin(tab.url);
   return {
     supported: true,
     sourceKind: "direct",
@@ -542,6 +552,7 @@ function chooseBatchCandidate(tab, context, audioLanguage = "") {
     sourceUrl: sourceCandidates[0].url,
     sourceCandidates,
     headers,
+    ...(loopbackMediaOrigin ? { loopbackMediaOrigin } : {}),
     ...(discoveryDiagnostics ? { discoveryDiagnostics } : {})
   };
 }
@@ -2984,6 +2995,7 @@ async function ensureContentScripts(tabId) {
         "learning-features.js",
         "transcript-groups.js",
         "media-candidate.js",
+        "local-media.js",
         "content.js"
       ],
       world: "ISOLATED"

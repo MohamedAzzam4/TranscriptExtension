@@ -56,3 +56,4 @@ and the relevant regression checklist are recorded.
 | 2026-07-23 | Public YouTube batch analysis | The user confirmed the existing path still works after the generic HLS changes. | User-run success; detailed repeat-run matrix pending |
 | 2026-07-23 | AniWorld embedded clear media | The user confirmed full-audio analysis now works; preparation can be noticeably slow on some mirrors. | User-run success; speed baseline and full M-14 checks pending |
 | 2026-07-23 | AnimeKai PNG-wrapped clear HLS | The user confirmed the 0.10.3 browser path now works. | User-run success; multi-title coverage and full M-14 checks pending |
+| 2026-08-07 | Local MP4 over `http://127.0.0.1:8050` | On 0.10.3 the bare Chrome media page disappeared when analysis changed the root layout, and the worker rejected the loopback source before decode. Version 0.10.4 contains bounded fixes for both causes. | Automated candidate; user browser retest pending |

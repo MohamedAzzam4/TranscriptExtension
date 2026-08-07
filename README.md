@@ -77,6 +77,27 @@ Download important transcripts as text before an update as a precaution. Do not 
 
 For the first test, use a short public video. CPU mode works on more computers but can be much slower than an NVIDIA GPU.
 
+### Try an authorized local video
+
+Version 0.10.4 can batch-analyze a video served from the same loopback origin as
+its player page. It does not grant public websites access to local services.
+
+1. Put `player.html` and the video in the same folder. The page must contain an
+   ordinary `<video>` element whose source is in that folder.
+2. Open PowerShell in that folder and run:
+
+   ```powershell
+   python -m http.server 8050
+   ```
+
+3. Open `http://127.0.0.1:8050/player.html`, reload the extension and page after
+   updating, and choose **Analyze automatically**.
+
+The authorization is intentionally narrow: the top-level page must use
+`localhost`, `127.0.0.1`, or `[::1]`, and the media must use the exact same
+scheme, hostname, and port. Direct Chrome media pages use a viewport overlay so
+the extension does not change the browser's built-in video layout.
+
 ### If setup stops working
 
 Double-click **`CHECK-SETUP.cmd`**. It checks the local configuration, Python packages, browser registration, automatic startup, and recognizer health. Logs are stored in `.runtime\logs`.
@@ -96,6 +117,9 @@ The uninstaller removes the Startup shortcut and Chrome/Edge native-host registr
 Transcription runs locally. Audio is not uploaded to a transcription service.
 
 - Batch mode reads an authorized media source and converts its audio in local memory. YouTube uses a temporary media file that is deleted immediately after decoding. Netflix batch mode is attempted only for a clear audio-only URL already exposed to the signed-in player.
+- Loopback batch mode is accepted only for media on the exact origin of an
+  actively analyzed loopback page; a public page cannot authorize a private or
+  loopback address.
 - Live mode captures only the decoded audio played in the current tab and sends PCM chunks to `127.0.0.1` on the same computer.
 - Definitions are requested from English and German Wiktionary after a word click.
 - The learning card is deterministic and source-backed. It does not send words to an AI service and does not invent simplified explanations, B2 advice, collocations, or grammar when the dictionaries do not provide them.

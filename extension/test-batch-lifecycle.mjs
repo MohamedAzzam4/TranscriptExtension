@@ -107,7 +107,13 @@ assert.equal(scriptInjections[1].world, "ISOLATED");
 assert.deepEqual(scriptInjections[1].files, ["media-observer-bridge.js"]);
 assert.deepEqual(
   scriptInjections[2].files,
-  ["learning-features.js", "transcript-groups.js", "media-candidate.js", "content.js"]
+  [
+    "learning-features.js",
+    "transcript-groups.js",
+    "media-candidate.js",
+    "local-media.js",
+    "content.js"
+  ]
 );
 assert.ok(scriptInjections.every(({ target }) => target.allFrames));
 assert.ok(scriptInjections.every(({ injectImmediately }) => injectImmediately));
@@ -157,6 +163,64 @@ assert.equal(
 assert.equal(genericCandidate.sourceCandidates[0].headers.cookie, undefined);
 assert.equal(genericCandidate.sourceCandidates[0].headers.authorization, undefined);
 assert.equal(genericCandidate.discoveryDiagnostics.observer.ready, true);
+
+context.localMediaContext = {
+  frameUrl: "http://127.0.0.1:8050/player.html",
+  duration: 90,
+  currentTime: 0,
+  playbackRate: 1,
+  sourceKind: "http",
+  batchCandidates: [{
+    url: "http://127.0.0.1:8050/example.mp4",
+    kind: "media",
+    source: "current-src",
+    contentType: "video/mp4"
+  }]
+};
+context.localMediaTab = {
+  id: 9,
+  url: "http://127.0.0.1:8050/player.html",
+  title: "Local video"
+};
+const localCandidate = vm.runInContext(
+  "chooseBatchCandidate(localMediaTab, localMediaContext, 'de')",
+  context
+);
+assert.equal(localCandidate.supported, true, JSON.stringify(localCandidate));
+assert.equal(localCandidate.loopbackMediaOrigin, "http://127.0.0.1:8050");
+context.localCandidate = structuredClone(localCandidate);
+
+context.publicTabWithLoopbackCandidate = {
+  url: "https://media.example/player.html",
+  title: "Untrusted remote page"
+};
+const publicLoopbackCandidate = vm.runInContext(
+  "chooseBatchCandidate(publicTabWithLoopbackCandidate, localMediaContext, 'de')",
+  context
+);
+assert.equal("loopbackMediaOrigin" in publicLoopbackCandidate, false);
+
+context.localPrepared = {
+  tab: context.localMediaTab,
+  mediaTarget: { frameId: 0, context: context.localMediaContext }
+};
+context.localSettings = {
+  serverUrl: "ws://127.0.0.1:8000/asr",
+  audioLanguage: "de",
+  captionLanguage: "de",
+  collectCaptions: false,
+  syncOffset: 0,
+  captionPreferences: {},
+  translationPreferences: {},
+  batchModel: "small"
+};
+const localStart = await vm.runInContext(
+  "startBatchExperiment(localSettings, localPrepared, localCandidate)",
+  context
+);
+assert.equal(localStart.mode, "batch");
+assert.equal(nativeMessages.at(-1).loopbackMediaOrigin, "http://127.0.0.1:8050");
+nativeMessages.pop();
 
 const active = {
   experimentId: "batch-experiment",

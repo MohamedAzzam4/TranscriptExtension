@@ -5,9 +5,11 @@
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
   const mediaCandidate = globalThis.DubTranscriptMediaCandidate;
+  const localMedia = globalThis.DubTranscriptLocalMedia;
   if (!transcriptGroups) throw new Error("Transcript grouping helpers were not loaded.");
   if (!learning) throw new Error("Learning feature helpers were not loaded.");
   if (!mediaCandidate) throw new Error("Media candidate helpers were not loaded.");
+  if (!localMedia) throw new Error("Local media helpers were not loaded.");
 
   let video = null;
   let session = null;
@@ -339,6 +341,9 @@
           display: block !important;
           overflow: visible !important;
           pointer-events: none !important;
+        }
+        :host([data-viewport-fixed="true"]) {
+          position: fixed !important;
         }
         .wrap {
           position: absolute;
@@ -719,16 +724,18 @@
 
   function placeOverlay() {
     if (!overlayHost || !video) return;
-    const nextContainer = findPlayerContainer(video);
+    const placement = localMedia.overlayPlacement(video, document);
+    const nextContainer = placement.container;
     if (!nextContainer) return;
     if (playerContainer !== nextContainer) {
       restorePlayerPosition();
       playerContainer = nextContainer;
-      if (getComputedStyle(playerContainer).position === "static") {
+      if (!placement.viewportFixed && getComputedStyle(playerContainer).position === "static") {
         playerInlinePosition = playerContainer.style.position;
         playerContainer.style.position = "relative";
       }
     }
+    overlayHost.dataset.viewportFixed = String(placement.viewportFixed);
     if (overlayHost.parentNode !== playerContainer) playerContainer.append(overlayHost);
     updatePlayerAwarePosition(true);
     positionWordCard();
@@ -1332,12 +1339,6 @@
       .filter((candidate) => candidate.readyState > 0)
       .sort((a, b) => (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0]
       || document.querySelector("video");
-  }
-
-  function findPlayerContainer(element) {
-    return element.closest(
-      "#movie_player, .html5-video-player, [data-uia='video-canvas'], [class*='video-player'], [class*='videoPlayer'], [class*='player-container']"
-    ) || element.parentElement;
   }
 
   function restorePlayerPosition() {

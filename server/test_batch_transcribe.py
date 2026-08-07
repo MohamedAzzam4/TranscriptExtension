@@ -58,6 +58,37 @@ class BatchTranscribeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_public_http_url("https://localhost/video.mp4")
 
+    def test_same_origin_loopback_media_is_allowed_explicitly(self):
+        self.assertEqual(
+            validate_public_http_url(
+                "http://127.0.0.1:8050/video.mp4",
+                allowed_loopback_origin="http://127.0.0.1:8050",
+            ),
+            "http://127.0.0.1:8050/video.mp4",
+        )
+
+    @patch("batch_transcribe.socket.getaddrinfo")
+    def test_loopback_media_on_another_port_is_rejected(self, getaddrinfo):
+        getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 8051))
+        ]
+        with self.assertRaises(ValueError):
+            validate_public_http_url(
+                "http://127.0.0.1:8051/video.mp4",
+                allowed_loopback_origin="http://127.0.0.1:8050",
+            )
+
+    @patch("batch_transcribe.socket.getaddrinfo")
+    def test_public_page_cannot_authorize_loopback_media(self, getaddrinfo):
+        getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 8050))
+        ]
+        with self.assertRaises(ValueError):
+            validate_public_http_url(
+                "http://127.0.0.1:8050/video.mp4",
+                allowed_loopback_origin="https://media.example",
+            )
+
     def test_headers_are_allowlisted_and_newlines_removed(self):
         self.assertEqual(
             clean_headers({
@@ -131,9 +162,25 @@ class BatchTranscribeTests(unittest.TestCase):
         self.assertEqual(sources[0].channels, 2)
         self.assertEqual(sources[0].representation_index, 3)
 
+    def test_direct_sources_accept_authorized_loopback_origin(self):
+        sources = resolve_sources({
+            "sourceKind": "direct",
+            "sourceCandidates": [{
+                "url": "http://127.0.0.1:8050/example.mp4",
+                "kind": "media",
+                "source": "current-src",
+            }],
+            "loopbackMediaOrigin": "http://127.0.0.1:8050",
+            "durationHint": 90,
+        })
+        self.assertEqual(len(sources), 1)
+        self.assertEqual(sources[0].url, "http://127.0.0.1:8050/example.mp4")
+        self.assertEqual(sources[0].media_kind, "media")
+        self.assertEqual(sources[0].duration, 90)
+
     def test_worker_diagnostics_include_decoder_versions(self):
         diagnostics = batch_worker_diagnostics()
-        self.assertEqual(diagnostics["workerVersion"], "0.10.3")
+        self.assertEqual(diagnostics["workerVersion"], "0.10.4")
         self.assertIn("pyavVersion", diagnostics)
         self.assertIn("libavcodecVersion", diagnostics)
 

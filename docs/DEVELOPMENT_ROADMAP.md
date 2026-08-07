@@ -35,14 +35,14 @@ deferred until the core extension has been proven.
 | WP2.3 | Experimental | Version 0.10.0 adds temporary player-control avoidance while preserving the dragged base position. |
 | WP2.4 | Experimental | The compact English word card and sanitized diagnostic panel are integrated into the new hierarchy. |
 | WP2.5 | In progress | Focus, live-region, and reduced-motion contracts are implemented; U-01–U-17 remain manual. |
-| WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. This promotes AnimeKai from a bounded decoder probe to a user-run browser success, but the multi-sample manual matrix is still incomplete. |
+| WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. Version 0.10.4 adds a same-origin loopback-video candidate after the 0.10.3 worker correctly rejected `127.0.0.1`; its real-browser local MP4 check is pending. The multi-sample manual matrix remains incomplete. |
 | WP4.1a | Planned | Measure and improve clear-media preparation speed, especially segmented or muxed HLS on AniWorld, without changing language selection, cue coverage, privacy, cache behavior, or the passing YouTube/AnimeKai paths. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
 
 The current evidence records are
 [`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md)
 through
-[`docs/test-results/0.10.3-animekai-png-hls-candidate.md`](test-results/0.10.3-animekai-png-hls-candidate.md).
+[`docs/test-results/0.10.4-local-media-loopback-candidate.md`](test-results/0.10.4-local-media-loopback-candidate.md).
 
 ## Product outcome
 
@@ -480,8 +480,10 @@ embedded/AniWorld-style support.
 - Authentication, CAPTCHA, paywalls, DRM, and access controls are not bypassed.
 
 **Current evidence:** Version 0.10.3 has user-reported browser successes on
-YouTube, AniWorld, and AnimeKai. This is meaningful cross-platform evidence,
-but it remains **Experimental** until the reference samples complete the
+YouTube, AniWorld, and AnimeKai. Version 0.10.4 adds an explicitly authorized
+same-origin loopback path for user-hosted local video and avoids modifying the
+root layout of Chrome's bare media document. The local-video browser retest is
+still unverified. These paths remain **Experimental** until the reference samples complete the
 beginning/middle/end, language, cache-replay, export, and privacy checks in the
 manual matrix. It is not a promise that every mirror or CDN representation
 works.
