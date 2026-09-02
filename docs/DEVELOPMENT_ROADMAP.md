@@ -7,11 +7,17 @@ Transcript Lab is validating its core idea. It is not permission to implement
 every listed feature. A phase begins when its dependencies pass and the user
 chooses to continue.
 
-The immediate priority is now:
+The user reprioritized the immediate bounded work on 2026-09-03:
 
-1. establish regression evidence;
-2. restore historically working interactions;
-3. refactor the extension UI/UX without losing behavior.
+1. reuse an eligible original YouTube automatic transcript before local ASR;
+2. diagnose the reported YouTube batch-ASR timing problem with
+   beginning/middle/end evidence before applying a correction; and
+3. mark exact previously saved German words in later transcript cues.
+
+The implementation sequence and pass boundary are documented in
+[`YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md`](YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md).
+This priority does not waive the unfinished restoration/UI regression gates or
+authorize a production refactor.
 
 Netflix catalogue research is retained, but data collection is paused until the
 user again has access to the test computer. That pause must not block feature
@@ -38,6 +44,9 @@ deferred until the core extension has been proven.
 | WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. Version 0.10.4 adds a same-origin loopback-video candidate after the 0.10.3 worker correctly rejected `127.0.0.1`; its real-browser local MP4 check is pending. The multi-sample manual matrix remains incomplete. |
 | WP4.1a | Planned | Measure and improve clear-media preparation speed, especially segmented or muxed HLS on AniWorld, without changing language selection, cue coverage, privacy, cache behavior, or the passing YouTube/AnimeKai paths. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
+| WP3.1/3.4 YouTube caption-first | Planned | Caption tracks are currently evaluation-only. The next candidate must add source-honest selection before reusing an original automatic track. |
+| WP3.2 YouTube ASR timing | Needs evidence | The 0.10.4 change did not modify the YouTube clock/decode path. Add sanitized timing instrumentation and require beginning/middle/end evidence before correction. |
+| WP1.3 saved-word marking | Planned | Exact normalized saved forms should be marked in future source transcript cues without changing selection or word-click ownership. |
 
 The current evidence records are
 [`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md)

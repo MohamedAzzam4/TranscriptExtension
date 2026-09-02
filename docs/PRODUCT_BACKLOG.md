@@ -44,6 +44,21 @@ For priority, dependencies, phases, and future work, use
 - Preserve text selection, word click, caption dragging, playback restoration,
   settings reset/persistence, cache replay, and generic-player support.
 
+## YouTube caption-first and saved-word update
+
+- Prefer an eligible original YouTube automatic transcript before downloading
+  audio for local ASR. Never use a YouTube-translated track as the spoken
+  transcript, and keep manual subtitles evaluation-only by default.
+- Translate the selected original cue through the existing translation provider
+  and persistent cache rather than using YouTube auto-translation.
+- Keep a compact **Local audio transcription** override for comparison and
+  timing diagnosis.
+- Measure the reported YouTube ASR timing issue as constant offset, drift,
+  grouping, wrong-source, or cache mismatch before changing timestamps.
+- Mark whole-token exact forms of previously saved German words in later source
+  transcript cues. Initial scope does not infer lemmas or match inflections.
+- Full plan: [YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md](YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md).
+
 ## Acceptance notes
 
 - All export and persistence actions must be understandable as a single user action.
