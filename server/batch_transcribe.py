@@ -615,7 +615,8 @@ def decode_source(
                 ),
             )
         try:
-            return decode_audio(source.url, sampling_rate=16_000)
+            audio = decode_audio(source.url, sampling_rate=16_000)
+            return audio
         except Exception as error:
             emit(
                 "batch_status",
@@ -719,6 +720,16 @@ def decode_source(
     if not chunks:
         raise RuntimeError("No audio samples could be decoded from the selected source.")
     audio = np.concatenate(chunks).astype(np.float32) / 32768.0
+    # Store timing diagnostics on the source object for later use
+    decoded_audio_duration = len(audio) / 16_000
+    timing_diagnostics = {
+        "decodedSampleCount": decoded_sample_count,
+        "decodedAudioDuration": round(decoded_audio_duration, 3),
+        "firstDecodedAudioPts": 0.0,  # First frame starts at 0
+    }
+    # Attach to source for batch_started emission
+    if hasattr(source, "timing_diagnostics"):
+        source.timing_diagnostics = timing_diagnostics
     return audio
 
 
@@ -864,6 +875,33 @@ def audio_stream_probe(container, stream) -> dict:
     layout = getattr(codec_context, "layout", None)
     layout_name = getattr(layout, "name", None) or (str(layout) if layout else None)
     container_format = getattr(getattr(container, "format", None), "name", None)
+    
+    # Get container start time
+    container_start_time = None
+    try:
+        start_time = getattr(container, "start_time", None)
+        if start_time is not None:
+            container_start_time = float(start_time) / av.time_base
+    except Exception:
+        pass
+    
+    # Get audio stream start time and time base
+    audio_stream_start_time = None
+    stream_time_base = None
+    try:
+        stream_start_time = getattr(stream, "start_time", None)
+        if stream_start_time is not None:
+            audio_stream_start_time = float(stream_start_time) * float(getattr(stream, "time_base", 0) or 0)
+        tb = getattr(stream, "time_base", None)
+        if tb is not None:
+            stream_time_base = float(tb)
+    except Exception:
+        pass
+    
+    # Try to detect language from stream metadata
+    detected_language = audio_stream_language(stream)
+    detected_language = normalize_media_language(detected_language) or None
+    
     return {
         "containerFormat": safe_diagnostic_hint(container_format, 64),
         "codec": safe_diagnostic_hint(getattr(codec_context, "name", None), 64),
@@ -872,6 +910,10 @@ def audio_stream_probe(container, stream) -> dict:
         "sampleRate": positive_int_or_none(getattr(codec_context, "sample_rate", None)),
         "channels": positive_int_or_none(getattr(codec_context, "channels", None)),
         "layout": safe_diagnostic_hint(layout_name, 64),
+        "detectedLanguage": detected_language,
+        "containerStartTime": container_start_time,
+        "audioStreamStartTime": audio_stream_start_time,
+        "streamTimeBase": stream_time_base,
     }
 
 
@@ -1536,7 +1578,8 @@ def download_and_decode_youtube(source: ResolvedSource, job_id: str):
             job_id,
             message="Audio downloaded locally. Decoding the temporary file now.",
         )
-        return decode_audio(media_path, sampling_rate=16_000)
+        audio = decode_audio(media_path, sampling_rate=16_000)
+        return audio
     finally:
         shutil.rmtree(temp_directory, ignore_errors=True)
 
@@ -1834,6 +1877,24 @@ def run(request: dict) -> None:
     )
     source, audio = acquire_first_accessible_source(sources, job_id, language)
     duration = len(audio) / 16_000
+    # Determine format ID and media extension for diagnostics
+    format_id = None
+    media_extension = None
+    try:
+        if source.youtube_page_url:
+            format_id = "youtube-audio"
+            media_extension = "youtube"
+        elif source.url:
+            # Extract format from URL or use media kind
+            format_id = source.media_kind
+            import os
+            media_extension = os.path.splitext(urlsplit(source.url).path)[1].lstrip(".").lower() or None
+    except Exception:
+        pass
+    
+    # Get timing diagnostics from source if available
+    timing_diagnostics = getattr(source, "timing_diagnostics", None)
+    
     emit(
         "batch_started",
         job_id,
@@ -1841,6 +1902,11 @@ def run(request: dict) -> None:
         title=source.title,
         sourceKind=source.media_kind,
         sourceHost=urlsplit(source.url).hostname,
+        formatId=format_id,
+        mediaExtension=media_extension,
+        firstDecodedAudioPts=timing_diagnostics.get("firstDecodedAudioPts") if timing_diagnostics else None,
+        decodedSampleCount=timing_diagnostics.get("decodedSampleCount") if timing_diagnostics else None,
+        decodedAudioDuration=timing_diagnostics.get("decodedAudioDuration") if timing_diagnostics else None,
     )
 
     model, device = load_model(model_name, job_id)
@@ -1907,4 +1973,170 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if "--caption-discovery" in sys.argv:
+        raise SystemExit(caption_discovery_main())
     raise SystemExit(main())
+
+
+def caption_discovery_main() -> int:
+    request: dict = {}
+    try:
+        line = sys.stdin.readline()
+        if not line:
+            raise ValueError("The native host did not provide a caption discovery request.")
+        request = json.loads(line)
+        run_caption_discovery(request)
+        return 0
+    except Exception as error:
+        job_id = str(request.get("jobId") or "unknown")
+        emit(
+            "caption_discovery_error",
+            job_id,
+            message=str(error),
+            category=media_failure_category(error),
+            workerVersion=WORKER_VERSION,
+        )
+        return 1
+
+
+def run_caption_discovery(request: dict) -> None:
+    job_id = str(request.get("jobId") or "")
+    if not job_id:
+        raise ValueError("The caption discovery request is missing its job ID.")
+    page_url = str(request.get("sourceUrl") or "")
+    if not page_url:
+        raise ValueError("The caption discovery request is missing the source URL.")
+    language = str(request.get("language") or "de")[:16]
+    caption_language = str(request.get("captionLanguage") or request.get("language") or "de")[:32]
+
+    emit("caption_discovery_status", job_id, message="Discovering YouTube automatic captions via yt-dlp.")
+    
+    # Use yt-dlp to extract video info with automatic captions
+    import yt_dlp
+    options = {
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "writesubtitles": True,
+        "writeautomaticsub": True,
+        "subtitlesformat": "json3",
+    }
+    with yt_dlp.YoutubeDL(options) as downloader:
+        info = downloader.extract_info(page_url, download=False)
+    
+    # Select eligible automatic caption track
+    automatic_captions = info.get("automatic_captions") or {}
+    track = select_youtube_caption_track({"automatic_captions": automatic_captions}, caption_language)
+    if not track:
+        emit(
+            "caption_discovery_complete",
+            job_id,
+            ok=False,
+            reason="No eligible original automatic caption track found",
+            diagnostics={"availableLanguages": list(automatic_captions.keys())}
+        )
+        return
+    
+    # Download and parse the caption
+    caption_url = track["url"]
+    if not caption_url:
+        emit(
+            "caption_discovery_complete",
+            job_id,
+            ok=False,
+            reason="Selected caption track has no URL",
+            diagnostics={}
+        )
+        return
+    
+    # Ensure JSON3 format
+    if "fmt=json3" not in caption_url:
+        separator = "&" if "?" in caption_url else "?"
+        caption_url = f"{caption_url}{separator}fmt=json3"
+    
+    import urllib.request
+    req = urllib.request.Request(caption_url, headers={
+        "Accept": "application/json",
+        "Accept-Encoding": "identity",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            if response.status != 200:
+                raise RuntimeError(f"YouTube caption returned HTTP {response.status}")
+            content_length = response.headers.get("Content-Length")
+            if content_length and int(content_length) > MAX_CAPTION_BYTES:
+                raise RuntimeError("YouTube caption track is unexpectedly large")
+            payload_bytes = response.read(MAX_CAPTION_BYTES + 1)
+            if len(payload_bytes) > MAX_CAPTION_BYTES:
+                raise RuntimeError("YouTube caption track exceeded local safety limit")
+            payload_text = payload_bytes.decode("utf-8-sig")
+    except Exception as error:
+        emit(
+            "caption_discovery_complete",
+            job_id,
+            ok=False,
+            reason=f"Failed to download caption: {error}",
+            diagnostics={}
+        )
+        return
+    
+    # Parse JSON3
+    try:
+        parsed = json.loads(payload_text)
+    except json.JSONDecodeError as error:
+        emit(
+            "caption_discovery_complete",
+            job_id,
+            ok=False,
+            reason=f"Failed to parse JSON3 caption: {error}",
+            diagnostics={}
+        )
+        return
+    
+    segments = parse_youtube_json3(parsed, track["language"])
+    if not segments:
+        emit(
+            "caption_discovery_complete",
+            job_id,
+            ok=False,
+            reason="Parsed caption has no valid segments",
+            diagnostics={}
+        )
+        return
+    
+    # Validate timing compatibility with video duration
+    video_duration = number_or_none(info.get("duration"))
+    if video_duration:
+        last_cue_end = max((s["end"] for s in segments), default=0)
+        if last_cue_end < video_duration * 0.3:
+            emit(
+                "caption_discovery_complete",
+                job_id,
+                ok=False,
+                reason=f"Caption track covers only {last_cue_end:.1f}s of {video_duration:.1f}s video",
+                diagnostics={"captionDuration": last_cue_end, "videoDuration": video_duration}
+            )
+            return
+    
+    emit(
+        "caption_discovery_complete",
+        job_id,
+        ok=True,
+        segments=segments,
+        language=track["language"],
+        trackInfo={
+            "vssId": track.get("vssId"),
+            "languageCode": track["language"],
+            "name": track.get("name"),
+            "kind": track.get("kind"),
+            "isOriginal": track.get("vssId", "").endswith("-orig")
+        },
+        videoDuration=video_duration,
+        diagnostics={"source": "yt-dlp automatic_captions"}
+    )
+
+
+# Backward compatibility - keep original main

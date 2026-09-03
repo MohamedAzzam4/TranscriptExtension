@@ -259,11 +259,16 @@ async function restoreState() {
   const caption = learning.normalizeCaptionPreferences(settings.captionPreferences);
   const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
 
+  const rawSource = String(settings.youtubeTranscriptSource || "auto").toLowerCase();
+  const canonicalSource = (rawSource === "local" || rawSource === "local-asr")
+    ? "local-asr"
+    : "youtube-auto-first";
+
   elements.serverUrl.value = settings.serverUrl || elements.serverUrl.value;
   elements.audioLanguage.value = settings.audioLanguage || "de";
   elements.captionLanguage.value = settings.captionLanguage || "de";
   elements.collectCaptions.checked = settings.collectCaptions !== false;
-  elements.youtubeTranscriptSource.value = settings.youtubeTranscriptSource || "auto";
+  elements.youtubeTranscriptSource.value = canonicalSource;
   elements.translationEnabled.checked = translation.enabled;
   elements.translationLanguage.value = translation.targetLanguage;
   elements.translationProvider.value = translation.provider;

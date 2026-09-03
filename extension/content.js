@@ -45,6 +45,7 @@
   let wordReplay = null;
   let listeners = [];
   const mediaSecurityStates = new WeakMap();
+  let nativeCaptionState = null; // { trackId, wasShowing }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     try {
@@ -130,6 +131,7 @@
             } else {
               session.savedWordsSet.delete(normalized);
             }
+            session.vocabRevision = (session.vocabRevision || 0) + 1;
             renderTranscript();
           }
           sendResponse({ ok: true });
@@ -164,17 +166,7 @@
     endSession();
     video = findPrimaryVideo();
     if (!video) throw new Error("No video element is available.");
-    let savedWordsSet = new Set();
-    try {
-      const response = await chrome.runtime.sendMessage({ type: "GET_SAVED_WORDS" });
-      if (response?.ok && Array.isArray(response.entries)) {
-        for (const entry of response.entries) {
-          if (entry.normalizedWord) savedWordsSet.add(entry.normalizedWord);
-        }
-      }
-    } catch {
-      // Ignore vocabulary load errors
-    }
+    // Create session synchronously first to avoid race conditions
     session = {
       id: message.experimentId,
       collectCaptions: false,
@@ -202,7 +194,8 @@
       translationPending: new Map(),
       displayedTranslation: "",
       controlAvoidance: 0,
-      savedWordsSet
+      savedWordsSet: new Set(),
+      vocabRevision: 0
     };
 
     createOverlay();
@@ -228,6 +221,27 @@
 
     setCaptionCollection(Boolean(message.collectCaptions));
     renderStatus("Preparing the local recognizer…");
+
+    // Save and hide native YouTube captions for caption-reuse sessions
+    if (message.useYouTubeCaptions) {
+      saveAndHideNativeCaptions();
+    }
+
+    // Load vocabulary asynchronously after session is created
+    try {
+      const response = await chrome.runtime.sendMessage({ type: "GET_SAVED_WORDS" });
+      if (response?.ok && Array.isArray(response.entries) && session) {
+        const newSet = new Set();
+        for (const entry of response.entries) {
+          if (entry.normalizedWord) newSet.add(entry.normalizedWord);
+        }
+        session.savedWordsSet = newSet;
+        // Re-render to show saved words if transcript is already displayed
+        renderTranscript();
+      }
+    } catch {
+      // Ignore vocabulary load errors
+    }
   }
 
   function setCaptionCollection(enabled) {
@@ -240,6 +254,8 @@
   }
 
   function endSession() {
+    // Restore native YouTube captions if we hid them
+    restoreNativeCaptions();
     finalizeCaption();
     clearInterval(clockTimer);
     clearInterval(captionTimer);
@@ -281,6 +297,52 @@
     captionDragHandleElement = null;
     translationElement = null;
     session = null;
+  }
+
+  function saveAndHideNativeCaptions() {
+    if (!video) return;
+    try {
+      // Find YouTube caption tracks (kind === 'captions' or 'subtitles')
+      for (const track of video.textTracks || []) {
+        if (track.mode === 'showing') {
+          nativeCaptionState = { trackId: track.id || track.label, wasShowing: true };
+          track.mode = 'hidden';
+          break;
+        }
+      }
+      // Also check for YouTube's native caption button state
+      const ytCaptionButton = document.querySelector('.ytp-subtitles-button[aria-pressed="true"]');
+      if (ytCaptionButton && !nativeCaptionState) {
+        nativeCaptionState = { trackId: 'youtube-button', wasShowing: true };
+        ytCaptionButton.click();
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  function restoreNativeCaptions() {
+    if (!video || !nativeCaptionState) return;
+    try {
+      if (nativeCaptionState.trackId === 'youtube-button') {
+        const ytCaptionButton = document.querySelector('.ytp-subtitles-button[aria-pressed="false"]');
+        if (ytCaptionButton) {
+          ytCaptionButton.click();
+        }
+      } else {
+        for (const track of video.textTracks || []) {
+          if (track.id === nativeCaptionState.trackId || track.label === nativeCaptionState.trackId) {
+            if (nativeCaptionState.wasShowing) {
+              track.mode = 'showing';
+            }
+            break;
+          }
+        }
+      }
+      nativeCaptionState = null;
+    } catch {
+      nativeCaptionState = null;
+    }
   }
 
   function addVideoListener(name, handler) {
@@ -978,7 +1040,8 @@
 
   function renderClickableText(text, wordTimings = []) {
     captionBoxElement.hidden = !text;
-    const timingKey = `${text}|${wordTimings.length}|${wordTimings[0]?.start ?? ""}`;
+    const vocabRevision = session.vocabRevision || 0;
+    const timingKey = `${text}|${wordTimings.length}|${wordTimings[0]?.start ?? ""}|vocab:${vocabRevision}`;
     if (session.displayedTimingKey === timingKey) return;
     session.displayedText = text;
     session.displayedTimingKey = timingKey;

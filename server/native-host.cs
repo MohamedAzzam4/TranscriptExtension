@@ -72,6 +72,11 @@ internal static class NativeHost
             StartBatch(payload, GetString(message, "jobId"));
             return;
         }
+        if (command == "youtube_caption_discovery")
+        {
+            StartCaptionDiscovery(payload, GetString(message, "jobId"));
+            return;
+        }
         if (command == "cancel_batch")
         {
             CancelBatch(GetString(message, "jobId"), true);
@@ -169,6 +174,94 @@ internal static class NativeHost
         thread.Name = "DubTranscriptBatch";
         thread.Start();
         SendState("batch_queued", "Full-video analysis queued.", jobId);
+    }
+
+    private static void StartCaptionDiscovery(string requestJson, string jobId)
+    {
+        if (String.IsNullOrWhiteSpace(jobId)) throw new InvalidOperationException("The caption discovery request is missing its job ID.");
+        var thread = new Thread(delegate() { RunCaptionDiscovery(requestJson, jobId); });
+        thread.IsBackground = true;
+        thread.Name = "DubTranscriptCaptionDiscovery";
+        thread.Start();
+        SendState("caption_discovery_queued", "YouTube caption discovery queued.", jobId);
+    }
+
+    private static void RunCaptionDiscovery(string requestJson, string jobId)
+    {
+        bool terminalMessageSeen = false;
+        int exitCode = -1;
+        try
+        {
+            string serverDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string projectRoot = Directory.GetParent(serverDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName;
+            string python = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
+            string script = Path.Combine(serverDirectory, "batch_transcribe.py");
+            string cuda = Path.Combine(projectRoot, ".runtime", "cuda");
+            if (!File.Exists(python)) throw new FileNotFoundException("The project Python runtime was not found.", python);
+            if (!File.Exists(script)) throw new FileNotFoundException("The batch transcription worker was not found.", script);
+
+            var info = new ProcessStartInfo
+            {
+                FileName = python,
+                Arguments = "\"" + script + "\" --caption-discovery",
+                WorkingDirectory = serverDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = new UTF8Encoding(false),
+                StandardErrorEncoding = new UTF8Encoding(false)
+            };
+            if (Directory.Exists(cuda))
+                info.EnvironmentVariables["PATH"] = cuda + ";" + info.EnvironmentVariables["PATH"];
+            string localModelCache = Path.Combine(projectRoot, ".model-cache", "huggingface");
+            if (Directory.Exists(localModelCache))
+                info.EnvironmentVariables["HF_HOME"] = localModelCache;
+            info.EnvironmentVariables["PYTHONUTF8"] = "1";
+
+            using (Process process = new Process())
+            {
+                process.StartInfo = info;
+                process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs args)
+                {
+                    if (!String.IsNullOrWhiteSpace(args.Data)) Log("Caption discovery stderr: " + args.Data);
+                };
+                if (!process.Start()) throw new InvalidOperationException("Windows did not start the caption discovery worker.");
+                process.BeginErrorReadLine();
+                process.StandardInput.WriteLine(requestJson);
+                process.StandardInput.Close();
+
+                string line;
+                while ((line = process.StandardOutput.ReadLine()) != null)
+                {
+                    Dictionary<string, object> childMessage;
+                    try { childMessage = Json.Deserialize<Dictionary<string, object>>(line); }
+                    catch
+                    {
+                        Log("Ignored non-JSON caption discovery output: " + line);
+                        continue;
+                    }
+                    string state = GetString(childMessage, "state");
+                    if (state == "caption_discovery_complete" || state == "caption_discovery_error") terminalMessageSeen = true;
+                    SendRaw(line);
+                }
+                process.WaitForExit();
+                exitCode = process.ExitCode;
+            }
+        }
+        catch (Exception error)
+        {
+            Log("Caption discovery worker failed: " + error);
+            if (!terminalMessageSeen) SendState("caption_discovery_error", error.Message, jobId);
+            terminalMessageSeen = true;
+        }
+        finally
+        {
+            if (exitCode != 0 && !terminalMessageSeen)
+                SendState("caption_discovery_error", "The caption discovery worker exited with code " + exitCode + ".", jobId);
+        }
     }
 
     private static void RunBatch(string requestJson, string jobId)

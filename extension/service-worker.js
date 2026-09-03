@@ -50,57 +50,66 @@ function extractYouTubeVideoId(url) {
   }
 }
 
-async function fetchYouTubeCaptionTracks(videoId) {
-  if (YOUTUBE_CAPTION_TRACKS.has(videoId)) {
-    return YOUTUBE_CAPTION_TRACKS.get(videoId);
-  }
-  const pageUrl = `https://www.youtube.com/watch?v=${videoId}`;
-  let response;
+async function tryFetchYouTubeAutomaticCaptions(pageUrl, audioLanguage, videoDuration) {
+  const videoId = extractYouTubeVideoId(pageUrl);
+  if (!videoId) return { ok: false, reason: "Could not extract YouTube video ID" };
+  
+  const jobId = `caption-discovery-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const request = {
+    jobId,
+    sourceUrl: pageUrl,
+    language: audioLanguage,
+    captionLanguage: audioLanguage
+  };
+  
   try {
-    response = await fetch(pageUrl, {
-      method: "GET",
-      credentials: "omit",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-      headers: {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7"
-      }
+    const response = await new Promise((resolve, reject) => {
+      const port = ensureNativeHostPort();
+      const listener = (message) => {
+        if (message.jobId === jobId) {
+          port.onMessage.removeListener(listener);
+          resolve(message);
+        }
+      };
+      port.onMessage.addListener(listener);
+      port.postMessage({
+        command: "youtube_caption_discovery",
+        ...request
+      });
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        port.onMessage.removeListener(listener);
+        reject(new Error("Caption discovery timed out"));
+      }, 30000);
     });
+    
+    if (response.ok === false) {
+      return { ok: false, reason: response.reason || "Caption discovery failed", diagnostics: response.diagnostics };
+    }
+    
+    if (!response.ok || !response.segments || !response.segments.length) {
+      return { ok: false, reason: response.reason || "No valid caption segments returned", diagnostics: response.diagnostics };
+    }
+    
+    // Validate timing compatibility with video duration
+    if (videoDuration && response.videoDuration) {
+      const lastCueEnd = Math.max(...response.segments.map(s => s.end));
+      if (lastCueEnd < response.videoDuration * 0.3) {
+        return { ok: false, reason: `Caption track covers only ${lastCueEnd.toFixed(1)}s of ${response.videoDuration.toFixed(1)}s video`, diagnostics: response.diagnostics };
+      }
+    }
+    
+    return {
+      ok: true,
+      segments: response.segments,
+      language: response.language,
+      trackInfo: response.trackInfo,
+      videoDuration: response.videoDuration,
+      diagnostics: response.diagnostics
+    };
   } catch (error) {
-    throw new Error(`Failed to fetch YouTube page: ${error.message}`);
+    return { ok: false, reason: error.message, diagnostics: {} };
   }
-  if (!response.ok) {
-    throw new Error(`YouTube page returned HTTP ${response.status}`);
-  }
-  const html = await response.text();
-  const ytInitialDataMatch = html.match(/var ytInitialData\s*=\s*(\{[\s\S]*?\});/);
-  if (!ytInitialDataMatch) {
-    throw new Error("Could not find ytInitialData in YouTube page");
-  }
-  let ytInitialData;
-  try {
-    ytInitialData = JSON.parse(ytInitialDataMatch[1]);
-  } catch (error) {
-    throw new Error(`Failed to parse ytInitialData: ${error.message}`);
-  }
-  const captions = ytInitialData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-  if (!captions || !Array.isArray(captions)) {
-    return [];
-  }
-  const automaticTracks = captions
-    .filter((track) => track.kind === "asr" || track.vssId?.startsWith("a."))
-    .map((track) => ({
-      vssId: track.vssId,
-      languageCode: track.languageCode,
-      name: track.name?.simpleText || track.name,
-      baseUrl: track.baseUrl,
-      kind: track.kind,
-      isTranslatable: track.isTranslatable,
-      translationLanguages: track.translationLanguages
-    }));
-  YOUTUBE_CAPTION_TRACKS.set(videoId, automaticTracks);
-  return automaticTracks;
 }
 
 function selectEligibleYouTubeAutomaticCaption(tracks, requestedLanguage) {
@@ -109,7 +118,6 @@ function selectEligibleYouTubeAutomaticCaption(tracks, requestedLanguage) {
   const eligible = tracks.filter((track) => {
     const trackLangBase = String(track.languageCode || "").toLowerCase().split("-")[0];
     if (trackLangBase !== targetBase) return false;
-    if (track.isTranslatable === true) return false;
     const vssId = track.vssId || "";
     if (vssId.includes("tlang=")) return false;
     return true;
@@ -118,82 +126,6 @@ function selectEligibleYouTubeAutomaticCaption(tracks, requestedLanguage) {
   const origTrack = eligible.find((track) => track.vssId?.endsWith("-orig"));
   if (origTrack) return origTrack;
   return eligible[0];
-}
-
-async function fetchAndParseYouTubeCaption(track) {
-  let captionUrl = track.baseUrl;
-  if (!captionUrl) return null;
-  if (!captionUrl.includes("fmt=json3")) {
-    const separator = captionUrl.includes("?") ? "&" : "?";
-    captionUrl = `${captionUrl}${separator}fmt=json3`;
-  }
-  let response;
-  try {
-    response = await fetch(captionUrl, {
-      method: "GET",
-      credentials: "omit",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-      headers: {
-        "Accept": "application/json",
-        "Accept-Encoding": "identity"
-      }
-    });
-  } catch (error) {
-    throw new Error(`Failed to fetch YouTube caption: ${error.message}`);
-  }
-  if (!response.ok) {
-    throw new Error(`YouTube caption returned HTTP ${response.status}`);
-  }
-  const contentLength = response.headers.get("Content-Length");
-  if (contentLength && Number(contentLength) > 8 * 1024 * 1024) {
-    throw new Error("YouTube caption track is unexpectedly large");
-  }
-  const text = await response.text();
-  if (text.length > 8 * 1024 * 1024) {
-    throw new Error("YouTube caption track exceeded local safety limit");
-  }
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    throw new Error(`Failed to parse YouTube JSON3 caption: ${error.message}`);
-  }
-  return parseYouTubeJson3(parsed, track.languageCode);
-}
-
-function parseYouTubeJson3(payload, languageCode) {
-  const segments = [];
-  for (const event of payload.events || []) {
-    const rawSegments = event.segs || [];
-    let text = "";
-    for (const seg of rawSegments) {
-      text += String(seg.utf8 || "");
-    }
-    text = text.replace(/\u200b/g, " ").replace(/\s+/g, " ").trim();
-    if (!text) continue;
-    let start;
-    try {
-      start = Math.max(0, Number(event.tStartMs) / 1000);
-    } catch {
-      continue;
-    }
-    const duration = Number(event.dDurationMs) / 1000 || 0;
-    const end = start + duration;
-    segments.push({
-      id: `youtube-caption:${languageCode}:${start}:${end}`,
-      start: Math.round(start * 1000) / 1000,
-      end: Math.round(end * 1000) / 1000,
-      text,
-      complete: true,
-      boundary: "sentence",
-      timing: "platform-cue",
-      source: "youtube-auto-caption",
-      language: languageCode
-    });
-  }
-  segments.sort((a, b) => a.start - b.start || a.end - b.end);
-  return segments;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -321,13 +253,13 @@ async function startSmartExperiment(settings) {
   const prepared = await prepareMediaTarget();
   const context = prepared.mediaTarget.context;
   const isYouTube = identifyPlatform(prepared.tab.url) === "youtube";
-  const youtubeTranscriptSource = settings.youtubeTranscriptSource || "auto";
+  const youtubeTranscriptSource = settings.youtubeTranscriptSource;
 
   let candidate = chooseBatchCandidate(prepared.tab, context, settings.audioLanguage);
 
-  if (isYouTube && youtubeTranscriptSource === "auto" && candidate.supported) {
+  if (isYouTube && youtubeTranscriptSource === "youtube-auto-first" && candidate.supported) {
     const captionResult = await tryFetchYouTubeAutomaticCaptions(prepared.tab.url, settings.audioLanguage, context.duration);
-    if (captionResult) {
+    if (captionResult.ok) {
       candidate = {
         ...candidate,
         supported: true,
@@ -345,7 +277,7 @@ async function startSmartExperiment(settings) {
     settings.audioLanguage,
     candidate
   );
-  const savedTranscript = await getStoredTranscript(identity);
+  const savedTranscript = await getStoredTranscript(identity, settings.youtubeTranscriptSource);
   if (savedTranscript && isStoredTranscriptCompatible(savedTranscript, context)) {
     return startLibraryExperiment(settings, prepared, savedTranscript);
   }
@@ -356,41 +288,6 @@ async function startSmartExperiment(settings) {
     return startBatchExperiment(settings, prepared, candidate);
   }
   return startLiveExperiment(settings, prepared, candidate.reason, candidate);
-}
-
-async function tryFetchYouTubeAutomaticCaptions(pageUrl, audioLanguage, videoDuration) {
-  const videoId = extractYouTubeVideoId(pageUrl);
-  if (!videoId) return null;
-  let tracks;
-  try {
-    tracks = await fetchYouTubeCaptionTracks(videoId);
-  } catch (error) {
-    return { error: error.message };
-  }
-  if (!tracks || !tracks.length) return null;
-  const track = selectEligibleYouTubeAutomaticCaption(tracks, audioLanguage);
-  if (!track) return null;
-  let segments;
-  try {
-    segments = await fetchAndParseYouTubeCaption(track);
-  } catch (error) {
-    return { error: error.message };
-  }
-  if (!segments || !segments.length) return null;
-  const lastCueEnd = segments.reduce((max, s) => Math.max(max, s.end), 0);
-  if (videoDuration && lastCueEnd < videoDuration * 0.5) {
-    return { error: "Caption track covers less than 50% of video duration" };
-  }
-  return {
-    segments,
-    language: track.languageCode,
-    trackInfo: {
-      vssId: track.vssId,
-      languageCode: track.languageCode,
-      name: track.name,
-      kind: track.kind
-    }
-  };
 }
 
 async function startCaptionReuseExperiment(settings, prepared, candidate) {
@@ -491,8 +388,14 @@ async function startLibraryExperiment(settings, prepared, savedTranscript) {
     transcriptIdentity: savedTranscript.identity || null
   });
   const selectedSegments = sanitizeTranscriptSegments(savedTranscript.segments);
-  experiment.asrSegments = selectedSegments;
-  experiment.captionSegments = savedTranscript.captionSegments || [];
+  const sourceKind = savedTranscript.transcriptSource?.kind || "legacy-local-asr";
+  if (sourceKind === "youtube-auto-caption") {
+    experiment.captionSegments = selectedSegments;
+    experiment.asrSegments = [];
+  } else {
+    experiment.asrSegments = selectedSegments;
+    experiment.captionSegments = savedTranscript.captionSegments || [];
+  }
   experiment.transcriptSource = savedTranscript.transcriptSource || {
     kind: "legacy-local-asr",
     provider: null,
@@ -509,7 +412,7 @@ async function startLibraryExperiment(settings, prepared, savedTranscript) {
     selectedSegments.reduce((maximum, segment) => Math.max(maximum, segment.end), 0)
   );
   const range = { start: 0, end: round(duration) };
-  experiment.audioCoverage = [range];
+  experiment.audioCoverage = sourceKind === "youtube-auto-caption" ? [] : [range];
   experiment.finishedAt = new Date().toISOString();
   const active = {
     experimentId: id,
@@ -618,6 +521,16 @@ async function startBatchExperiment(settings, prepared, candidate) {
     },
     fallbackReason: null
   });
+  experiment.transcriptSource = {
+    kind: "local-whisper-batch",
+    provider: "faster-whisper",
+    language: settings.audioLanguage,
+    purpose: "recognized-audio",
+    timingProvenance: "exact",
+    track: null,
+    model: settings.batchModel || "small",
+    device: null
+  };
   const active = {
     experimentId: id,
     tabId: tab.id,
@@ -639,7 +552,7 @@ async function startBatchExperiment(settings, prepared, candidate) {
 
   await saveExperiment(experiment);
   await setActive(active);
-  await sendToFrame(tab.id, mediaTarget.frameId, {
+await sendToFrame(tab.id, mediaTarget.frameId, {
     type: "BEGIN_SESSION",
     experimentId: id,
     collectCaptions: false,
@@ -647,7 +560,8 @@ async function startBatchExperiment(settings, prepared, candidate) {
     captionPreferences: settings.captionPreferences,
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
-    segments: []
+    segments: selectedTranscriptSegments(experiment),
+    useYouTubeCaptions: true
   });
 
   try {
@@ -705,6 +619,16 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null, ca
     },
     fallbackReason: safeFallbackReason
   });
+  experiment.transcriptSource = {
+    kind: "local-whisper-live",
+    provider: "whisperlivekit",
+    language: settings.audioLanguage,
+    purpose: "recognized-audio",
+    timingProvenance: "estimated",
+    track: null,
+    model: null,
+    device: null
+  };
   experiment.epochs = [epoch];
   const active = {
     experimentId: id,
@@ -1280,6 +1204,9 @@ async function handleBatchNativeMessage(message) {
       ));
       if (selectedAttempt) {
         selectedAttempt.phase = "succeeded";
+        selectedAttempt.firstDecodedAudioPts = message.firstDecodedAudioPts ?? null;
+        selectedAttempt.decodedSampleCount = message.decodedSampleCount ?? null;
+        selectedAttempt.decodedAudioDuration = message.decodedAudioDuration ?? null;
         experiment.pipeline.diagnostics.selectedAttempt = selectedAttempt.attempt;
       }
       if (
@@ -1795,6 +1722,16 @@ async function completeBatchExperiment(active, message) {
     experiment.pipeline.diagnostics.browserDecoder.state = "complete";
   }
   experiment.evaluation = message.evaluation || null;
+  experiment.transcriptSource = {
+    kind: "local-whisper-batch",
+    provider: "faster-whisper",
+    language: message.language || experiment.audioLanguage,
+    purpose: "recognized-audio",
+    timingProvenance: "exact",
+    track: null,
+    model: experiment.settings?.batchModel || "small",
+    device: message.device || null
+  };
   if (experiment.platform === "youtube" && experiment.pipeline.sourceKind !== "youtube-caption-reuse") {
     experiment.youtubeTimingDiagnostics = buildYouTubeTimingDiagnostics(experiment, experiment.pipeline);
   }
@@ -3376,11 +3313,18 @@ function sanitizeTranscriptSegments(rawSegments) {
     .sort((a, b) => a.start - b.start || a.end - b.end);
 }
 
-async function getStoredTranscript(identity) {
+async function getStoredTranscript(identity, sourcePolicy = "youtube-auto-first") {
   const key = learning.transcriptStorageKey(identity);
   if (!key) return null;
   const record = await getTranscriptLibraryRecord(key);
-  return record?.identity === identity ? record : null;
+  if (!record || record.identity !== identity) return null;
+  const recordSourceKind = record.transcriptSource?.kind || "legacy-local-asr";
+  // Cache compatibility: local-asr must not restore youtube-auto-caption records
+  if (sourcePolicy === "local-asr" && recordSourceKind === "youtube-auto-caption") {
+    return null;
+  }
+  // youtube-auto-first can restore compatible youtube-auto-caption records
+  return record;
 }
 
 async function getTranscriptLibraryRecord(key) {
@@ -3647,6 +3591,10 @@ function createEpoch(mediaStart, playbackRate, reason) {
 }
 
 function normalizeRuntimeSettings(settings = {}) {
+  const rawSource = String(settings.youtubeTranscriptSource || "auto").toLowerCase();
+  const canonicalSource = (rawSource === "local" || rawSource === "local-asr")
+    ? "local-asr"
+    : "youtube-auto-first";
   return {
     serverUrl: String(settings.serverUrl || "").trim(),
     audioLanguage: String(settings.audioLanguage || "de").trim().slice(0, 16) || "de",
@@ -3654,6 +3602,7 @@ function normalizeRuntimeSettings(settings = {}) {
     collectCaptions: settings.collectCaptions !== false,
     batchModel: String(settings.batchModel || "small").slice(0, 64),
     syncOffset: normalizeSyncOffset(settings.syncOffset),
+    youtubeTranscriptSource: canonicalSource,
     captionPreferences: learning.normalizeCaptionPreferences(settings.captionPreferences),
     translationPreferences: learning.normalizeTranslationPreferences(
       settings.translationPreferences
