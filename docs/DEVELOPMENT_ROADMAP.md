@@ -44,14 +44,14 @@ deferred until the core extension has been proven.
 | WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. Version 0.10.4 adds a same-origin loopback-video candidate after the 0.10.3 worker correctly rejected `127.0.0.1`; its real-browser local MP4 check is pending. The multi-sample manual matrix remains incomplete. |
 | WP4.1a | Planned | Measure and improve clear-media preparation speed, especially segmented or muxed HLS on AniWorld, without changing language selection, cue coverage, privacy, cache behavior, or the passing YouTube/AnimeKai paths. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
-| WP3.1/3.4 YouTube caption-first | Planned | Caption tracks are currently evaluation-only. The next candidate must add source-honest selection before reusing an original automatic track. |
-| WP3.2 YouTube ASR timing | Needs evidence | The 0.10.4 change did not modify the YouTube clock/decode path. Add sanitized timing instrumentation and require beginning/middle/end evidence before correction. |
-| WP1.3 saved-word marking | Planned | Exact normalized saved forms should be marked in future source transcript cues without changing selection or word-click ownership. |
+| WP3.1/3.4 YouTube caption-first | Experimental | Candidate 0.10.5 implements caption-first reuse with transcriptSource provenance, YouTube automatic caption selection, translation integration, and fallback to local ASR. Manual browser checks remain. |
+| WP3.2 YouTube ASR timing | Experimental | Candidate 0.10.5 adds sanitized timing instrumentation (yt-dlp format, codec, sample rate, detected language, source/player duration, container/audio-stream start times, PTS, decoded samples/duration, raw ASR/cue/display-group timestamps, manual syncOffset). Evidence collection ready; no correction applied yet. |
+| WP1.3 saved-word marking | Experimental | Candidate 0.10.5 loads saved vocabulary at session start, marks exact normalized forms in source transcript cues (whole-token, case-insensitive, Unicode-normalized), immediate save/remove refresh, underline visual style. Manual browser checks remain. |
 
 The current evidence records are
 [`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md)
 through
-[`docs/test-results/0.10.4-local-media-loopback-candidate.md`](test-results/0.10.4-local-media-loopback-candidate.md).
+[`docs/test-results/0.10.5-youtube-caption-first-vocab-candidate.md`](test-results/0.10.5-youtube-caption-first-vocab-candidate.md).
 
 ## Product outcome
 

@@ -4,6 +4,7 @@ const elements = {
   audioLanguage: document.querySelector("#audioLanguage"),
   captionLanguage: document.querySelector("#captionLanguage"),
   collectCaptions: document.querySelector("#collectCaptions"),
+  youtubeTranscriptSource: document.querySelector("#youtubeTranscriptSource"),
   translationEnabled: document.querySelector("#translationEnabled"),
   translationLanguage: document.querySelector("#translationLanguage"),
   translationProvider: document.querySelector("#translationProvider"),
@@ -262,6 +263,7 @@ async function restoreState() {
   elements.audioLanguage.value = settings.audioLanguage || "de";
   elements.captionLanguage.value = settings.captionLanguage || "de";
   elements.collectCaptions.checked = settings.collectCaptions !== false;
+  elements.youtubeTranscriptSource.value = settings.youtubeTranscriptSource || "auto";
   elements.translationEnabled.checked = translation.enabled;
   elements.translationLanguage.value = translation.targetLanguage;
   elements.translationProvider.value = translation.provider;
@@ -369,6 +371,7 @@ function readSettings() {
     audioLanguage: elements.audioLanguage.value.trim() || "de",
     captionLanguage: elements.captionLanguage.value.trim() || "de",
     collectCaptions: elements.collectCaptions.checked,
+    youtubeTranscriptSource: elements.youtubeTranscriptSource.value,
     batchModel: "small",
     syncOffset: currentSyncOffset,
     captionPreferences: learning.normalizeCaptionPreferences({

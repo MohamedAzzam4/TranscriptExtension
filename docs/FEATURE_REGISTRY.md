@@ -46,10 +46,7 @@ because its functions still exist.
 
 ## Current restoration checkpoint
 
-Version `0.9.6` adds deterministic selection/word-activation policy tests,
-stronger selection handling across ShadowRoot and Window selection APIs, and
-English word-card section titles. It remains **Experimental** until M-01 through
-M-08 and the critical transcript smoke checks pass in a real browser.
+Version `0.10.5` (candidate) adds YouTube caption-first reuse with transcriptSource provenance, YouTube automatic caption selection, translation integration, local-ASR timing instrumentation, and saved-word marking in source transcript cues. Automated regression passes; real browser validation pending for YouTube caption-first, timing diagnostics, and saved-word marking per manual checklists.
 
 Test procedures are in
 [PHASE1_MANUAL_CHECKLIST.md](../experiments/PHASE1_MANUAL_CHECKLIST.md) and

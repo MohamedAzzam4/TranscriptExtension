@@ -122,6 +122,19 @@
           );
           sendResponse({ ok: true });
           break;
+        case "VOCABULARY_UPDATED": {
+          if (session && message.word && typeof message.saved === "boolean") {
+            const normalized = learning.normalizedWord(message.word);
+            if (message.saved) {
+              session.savedWordsSet.add(normalized);
+            } else {
+              session.savedWordsSet.delete(normalized);
+            }
+            renderTranscript();
+          }
+          sendResponse({ ok: true });
+          break;
+        }
         case "SET_CAPTION_COLLECTION":
           setCaptionCollection(Boolean(message.enabled));
           sendResponse({ ok: true });
@@ -147,10 +160,21 @@
     return false;
   });
 
-  function beginSession(message) {
+  async function beginSession(message) {
     endSession();
     video = findPrimaryVideo();
     if (!video) throw new Error("No video element is available.");
+    let savedWordsSet = new Set();
+    try {
+      const response = await chrome.runtime.sendMessage({ type: "GET_SAVED_WORDS" });
+      if (response?.ok && Array.isArray(response.entries)) {
+        for (const entry of response.entries) {
+          if (entry.normalizedWord) savedWordsSet.add(entry.normalizedWord);
+        }
+      }
+    } catch {
+      // Ignore vocabulary load errors
+    }
     session = {
       id: message.experimentId,
       collectCaptions: false,
@@ -177,7 +201,8 @@
       translationCache: new Map(),
       translationPending: new Map(),
       displayedTranslation: "",
-      controlAvoidance: 0
+      controlAvoidance: 0,
+      savedWordsSet
     };
 
     createOverlay();
@@ -466,6 +491,17 @@
           outline: none;
           background: rgba(121, 91, 255, .8);
           box-shadow: 0 0 0 2px rgba(255,255,255,.28);
+        }
+        .word.saved-word {
+          text-decoration: underline;
+          text-decoration-color: currentColor;
+          text-decoration-thickness: 2px;
+          text-underline-offset: 2px;
+        }
+        .word.saved-word:hover,
+        .word.saved-word:focus-visible,
+        .word.saved-word.selected {
+          text-decoration: none;
         }
         .status {
           display: block;
@@ -958,6 +994,11 @@
         wordElement.tabIndex = 0;
         wordElement.setAttribute("role", "button");
         wordElement.setAttribute("aria-label", `Look up ${token}`);
+        const normalizedToken = learning.normalizedWord(token);
+        if (session.savedWordsSet?.has(normalizedToken)) {
+          wordElement.classList.add("saved-word");
+          wordElement.setAttribute("aria-label", `${token} (saved)`);
+        }
         const timing = wordTimings[wordIndex++];
         if (timing && Number.isFinite(Number(timing.start)) && Number.isFinite(Number(timing.end))) {
           wordElement.dataset.start = String(timing.start);
