@@ -729,8 +729,7 @@ def decode_source(
         "firstDecodedAudioPts": 0.0,  # First frame starts at 0
     }
     # Attach to source for batch_started emission
-    if hasattr(source, "timing_diagnostics"):
-        source.timing_diagnostics = timing_diagnostics
+    # timing_diagnostics not stored on frozen source; emitted via batch_started diagnostics
     return audio
 
 
