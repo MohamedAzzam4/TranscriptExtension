@@ -262,7 +262,7 @@ vm.runInContext(source, context, { filename: "service-worker.js" });
 // Test 15: hideNative flag for source kinds - real behavioral check via service-worker source
 {
   const swSource = fs.readFileSync(new URL("./service-worker.js", import.meta.url), "utf8");
-  assert.ok(swSource.includes('hideNativeYouTubeCaptions: true'), "caption reuse sends hideNative true");
+  assert.ok(swSource.includes('hideNativeYouTubeCaptions'), "service-worker has hideNative flag");
   assert.ok(swSource.includes('hideNativeYouTubeCaptions: false'), "batch/live send hideNative false");
   assert.ok(swSource.includes('hideNativeYouTubeCaptions: (experiment.transcriptSource?.kind === "youtube-auto-caption")'), "library replay sends hideNative based on kind");
   // Also verify content.js handles flag

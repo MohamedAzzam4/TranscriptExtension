@@ -238,8 +238,22 @@ async function startSmartExperiment(settings) {
   const youtubeTranscriptSource = settings.youtubeTranscriptSource;
 
   let candidate = chooseBatchCandidate(prepared.tab, context, settings.audioLanguage);
+  const identity = transcriptIdentityForCandidate(
+    prepared.tab.url,
+    settings.audioLanguage,
+    candidate
+  );
+
+  // Explicit decision object for observable state machine
+  let decision = { kind: "pending", candidate, captionAttempt: null, record: null };
 
   if (isYouTube && youtubeTranscriptSource === "youtube-auto-first" && candidate.supported) {
+    // Check caption cache first
+    const cachedCaption = await getStoredTranscript(identity, "youtube-auto-first");
+    if (cachedCaption && cachedCaption.transcriptSource?.kind === "youtube-auto-caption" && isStoredTranscriptCompatible(cachedCaption, context)) {
+      decision = { kind: "caption-cache", record: cachedCaption, candidate, captionAttempt: { attempted: true, result: "cache-hit" } };
+      return startLibraryExperiment(settings, prepared, cachedCaption);
+    }
     const captionResult = await tryFetchYouTubeAutomaticCaptions(prepared.tab.url, settings.audioLanguage, context.duration);
     if (captionResult.ok) {
       candidate = {
@@ -252,40 +266,64 @@ async function startSmartExperiment(settings) {
         fallbackReason: null,
         youtubeCaptionAttempt: { attempted: true, result: "succeeded", track: captionResult.trackInfo }
       };
+      decision = { kind: "caption-discovery", candidate, captionAttempt: candidate.youtubeCaptionAttempt };
     } else {
-      candidate.youtubeCaptionAttempt = {
+      const captionAttempt = {
         attempted: true,
         result: "failed",
         reason: captionResult.reason || "No eligible original automatic caption track found",
         diagnostics: captionResult.diagnostics || {}
       };
-      // After failed caption discovery, optionally look for ASR cache before running batch
+      candidate.youtubeCaptionAttempt = captionAttempt;
+      decision = { kind: "caption-failed", candidate, captionAttempt };
+      // After failed caption discovery, look for ASR cache
       const fallbackAsrCache = await getStoredTranscript(identity, "local-asr");
       if (fallbackAsrCache && isStoredTranscriptCompatible(fallbackAsrCache, context)) {
-        // Preserve caption failure diagnostics for pipeline
-        const asrCandidateWithDiagnostics = { ...candidate, youtubeCaptionAttempt: candidate.youtubeCaptionAttempt };
-        // Save fallback diagnostics to be used in startBatchExperiment's pipeline
-        candidate.fallbackAsrCache = fallbackAsrCache;
+        decision = { kind: "local-asr-cache", record: fallbackAsrCache, candidate, captionAttempt };
+        // Preserve caption failure evidence in restored experiment later
+        const asrExp = await startLibraryExperiment(settings, prepared, fallbackAsrCache);
+        // Attach caption attempt to the restored experiment's diagnostics
+        const restoredExp = await getExperiment(asrExp.experimentId);
+        if (restoredExp) {
+          restoredExp.pipeline = restoredExp.pipeline || {};
+          restoredExp.pipeline.diagnostics = restoredExp.pipeline.diagnostics || {};
+          restoredExp.pipeline.diagnostics.youtubeCaptionAttempt = captionAttempt;
+          restoredExp.pipeline.diagnostics.captionFallbackToLocalCache = true;
+          await saveExperiment(restoredExp);
+        }
+        return asrExp;
       }
     }
-  }
-  // If we have a fallback ASR cache and youtube-auto-first failed, restore it instead of batch
-  if (candidate.fallbackAsrCache && isStoredTranscriptCompatible(candidate.fallbackAsrCache, context)) {
-    return startLibraryExperiment(settings, prepared, candidate.fallbackAsrCache);
+  } else if (youtubeTranscriptSource === "local-asr") {
+    const cachedLocal = await getStoredTranscript(identity, "local-asr");
+    if (cachedLocal && isStoredTranscriptCompatible(cachedLocal, context)) {
+      decision = { kind: "local-asr-cache", record: cachedLocal, candidate, captionAttempt: null };
+      return startLibraryExperiment(settings, prepared, cachedLocal);
+    }
+    decision = { kind: "local-batch", candidate };
   }
 
-  const identity = transcriptIdentityForCandidate(
-    prepared.tab.url,
-    settings.audioLanguage,
-    candidate
-  );
-  const savedTranscript = await getStoredTranscript(identity, settings.youtubeTranscriptSource);
-  if (savedTranscript && isStoredTranscriptCompatible(savedTranscript, context)) {
-    return startLibraryExperiment(settings, prepared, savedTranscript);
+  // For non-cached paths, check generic saved transcript only if not already handled
+  if (decision.kind === "pending") {
+    const savedTranscript = await getStoredTranscript(identity, settings.youtubeTranscriptSource);
+    if (savedTranscript && isStoredTranscriptCompatible(savedTranscript, context)) {
+      decision = { kind: "local-asr-cache", record: savedTranscript, candidate };
+      return startLibraryExperiment(settings, prepared, savedTranscript);
+    }
   }
+
+  if (decision.kind === "caption-discovery" || (candidate.sourceKind === "youtube-caption-reuse")) {
+    return startCaptionReuseExperiment(settings, prepared, candidate);
+  }
+
+  // Final dispatch for pending decision
   if (candidate.supported) {
-    if (candidate.sourceKind === "youtube-caption-reuse") {
+    if (candidate.sourceKind === "youtube-caption-reuse" || decision.kind === "caption-discovery") {
       return startCaptionReuseExperiment(settings, prepared, candidate);
+    }
+    // Preserve caption failure reason for diagnostics
+    if (decision.captionAttempt && decision.captionAttempt.result === "failed") {
+      candidate.youtubeCaptionAttempt = decision.captionAttempt;
     }
     return startBatchExperiment(settings, prepared, candidate);
   }
@@ -570,7 +608,7 @@ await sendToFrame(tab.id, mediaTarget.frameId, {
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
     segments: selectedTranscriptSegments(experiment),
-    hideNativeYouTubeCaptions: true
+    hideNativeYouTubeCaptions: false
   });
 
   try {
@@ -1169,8 +1207,17 @@ function handleNativeHostMessage(message) {
     return;
   }
   if (message?.state === "error") {
-    rejectNativeHostWaiter(message.message || "The native recognizer host reported an error.");
-    void fallbackActiveBatch(message.message || "the native batch host reported an error");
+    const msg = message.message || "The native recognizer host reported an error.";
+    if (msg.toLowerCase().includes("unknown native host command") || msg.toLowerCase().includes("unknown command")) {
+      for (const [jobId, pending] of pendingCaptionDiscoveryJobs.entries()) {
+        try { pending.reject(new Error("The local helper is outdated. Close the browser, run INSTALL.cmd once, then reload the extension.")); } catch {}
+      }
+      pendingCaptionDiscoveryJobs.clear();
+      void broadcastStatus("The local helper is outdated. Close the browser, run INSTALL.cmd once, then reload the extension.", msg);
+      return;
+    }
+    rejectNativeHostWaiter(msg);
+    void fallbackActiveBatch(msg);
   }
 }
 
