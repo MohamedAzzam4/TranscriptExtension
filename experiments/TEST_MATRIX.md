@@ -13,6 +13,8 @@ The transcript input is always the audio that is actually playing. Platform capt
 | 5 | Legal public HTML5 players | Same-language captions where available | Tests whether the generic tab-capture path works beyond YouTube |
 | 6 | Official, freely available anime video | Same-language captions if they represent the dub | Anime-specific vocabulary, music, effects, and overlapping voices |
 
+0.10.5 adds source-aware transcript cache (youtube-auto-caption vs local-whisper) and requires native host 0.10.5.
+
 Netflix and other DRM subscription services are not in this phase. They add protected-media behavior and contractual questions without improving the ASR experiment itself.
 
 ## Fixed conditions

@@ -32,6 +32,10 @@ audio, media URLs, cookies, account data, license traffic, or DRM keys.
 See [docs/NETFLIX_AUDIO_RESEARCH.md](docs/NETFLIX_AUDIO_RESEARCH.md) for the report schema,
 manual sampling protocol, and dataset fields.
 
+## Upgrading from 0.10.4 to 0.10.5
+
+Existing 0.10.4 users must close the browser, run `INSTALL.cmd` once, then reload the extension. Version 0.10.5 adds the `youtube_caption_discovery` native command; an outdated helper shows “The local helper is outdated. Close the browser, run INSTALL.cmd once, then reload the extension.”
+
 ## Beginner installation on Windows
 
 ### What you need

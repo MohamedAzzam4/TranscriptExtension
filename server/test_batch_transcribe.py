@@ -180,7 +180,7 @@ class BatchTranscribeTests(unittest.TestCase):
 
     def test_worker_diagnostics_include_decoder_versions(self):
         diagnostics = batch_worker_diagnostics()
-        self.assertEqual(diagnostics["workerVersion"], "0.10.4")
+        self.assertEqual(diagnostics["workerVersion"], "0.10.5")
         self.assertIn("pyavVersion", diagnostics)
         self.assertIn("libavcodecVersion", diagnostics)
 

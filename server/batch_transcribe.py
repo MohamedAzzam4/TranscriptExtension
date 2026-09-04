@@ -52,7 +52,7 @@ MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_HLS_SEGMENT_BYTES = 64 * 1024 * 1024
 MAX_HLS_SEGMENTS = 5_000
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.10.4"
+WORKER_VERSION = "0.10.5"
 
 
 @dataclass(frozen=True)
@@ -82,6 +82,7 @@ class ResolvedSource:
     channels: int | None = None
     representation_index: int | None = None
     local_pcm_path: str | None = None
+    timing_diagnostics: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -2026,8 +2027,36 @@ def run_caption_discovery(request: dict) -> None:
     with yt_dlp.YoutubeDL(options) as downloader:
         info = downloader.extract_info(page_url, download=False)
     
-    # Select eligible automatic caption track
+    # Multi-audio ambiguity: inventory distinct audio languages from formats
     automatic_captions = info.get("automatic_captions") or {}
+    # Check for multiple distinct audio languages
+    formats = info.get("formats") or []
+    audio_langs = set()
+    for fmt in formats:
+        lang = fmt.get("language")
+        acodec = fmt.get("acodec") or fmt.get("audio_ext")
+        if lang and acodec and acodec != "none":
+            audio_langs.add(normalize_language(str(lang)))
+    # Also check requested_formats
+    for fmt in info.get("requested_formats") or []:
+        lang = fmt.get("language")
+        if lang:
+            audio_langs.add(normalize_language(str(lang)))
+    if len(audio_langs) > 1:
+        # If multiple distinct audio tracks and we cannot establish ownership, fail
+        # Ownership can be established only if yt-dlp provides explicit association; otherwise ambiguous
+        # Conservative: if requested language is among multiple distinct audio langs, treat as ambiguous
+        requested_base = normalize_language(caption_language)
+        if requested_base in audio_langs:
+            emit(
+                "caption_discovery_complete",
+                job_id,
+                ok=False,
+                reason="Multiple dubbed audio tracks detected; caption ownership ambiguous",
+                diagnostics={"audioLanguages": sorted(audio_langs), "requestedLanguage": requested_base}
+            )
+            return
+
     track = select_youtube_caption_track({"automatic_captions": automatic_captions}, caption_language)
     if not track:
         emit(
@@ -2107,19 +2136,9 @@ def run_caption_discovery(request: dict) -> None:
         )
         return
     
-    # Validate timing compatibility with video duration
     video_duration = number_or_none(info.get("duration"))
-    if video_duration:
-        last_cue_end = max((s["end"] for s in segments), default=0)
-        if last_cue_end < video_duration * 0.3:
-            emit(
-                "caption_discovery_complete",
-                job_id,
-                ok=False,
-                reason=f"Caption track covers only {last_cue_end:.1f}s of {video_duration:.1f}s video",
-                diagnostics={"captionDuration": last_cue_end, "videoDuration": video_duration}
-            )
-            return
+    # No ratio-based rejection; preserve honest completeness
+    platform_track_completeness = "provider-returned-track"
     
     emit(
         "caption_discovery_complete",
@@ -2127,6 +2146,7 @@ def run_caption_discovery(request: dict) -> None:
         ok=True,
         segments=segments,
         language=track["language"],
+        platformTrackCompleteness=platform_track_completeness,
         trackInfo={
             "vssId": track.get("vssId"),
             "languageCode": track["language"],

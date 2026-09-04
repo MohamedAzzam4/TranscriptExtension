@@ -227,16 +227,18 @@
       saveAndHideNativeCaptions();
     }
 
-    // Load vocabulary asynchronously after session is created
+    // Load vocabulary asynchronously after session is created - capture session ID to avoid overwriting newer session
+    const initiatingSessionId = session.id;
     try {
       const response = await chrome.runtime.sendMessage({ type: "GET_SAVED_WORDS" });
-      if (response?.ok && Array.isArray(response.entries) && session) {
+      if (response?.ok && Array.isArray(response.entries) && session && session.id === initiatingSessionId) {
         const newSet = new Set();
         for (const entry of response.entries) {
-          if (entry.normalizedWord) newSet.add(entry.normalizedWord);
+          const norm = learning.normalizedWord(entry.word || entry.normalizedWord || "");
+          if (norm) newSet.add(norm);
         }
         session.savedWordsSet = newSet;
-        // Re-render to show saved words if transcript is already displayed
+        session.vocabRevision = (session.vocabRevision || 0) + 1;
         renderTranscript();
       }
     } catch {
@@ -1060,7 +1062,7 @@
         const normalizedToken = learning.normalizedWord(token);
         if (session.savedWordsSet?.has(normalizedToken)) {
           wordElement.classList.add("saved-word");
-          wordElement.setAttribute("aria-label", `${token} (saved)`);
+          wordElement.setAttribute("aria-label", `Look up ${token}, saved word.`);
         }
         const timing = wordTimings[wordIndex++];
         if (timing && Number.isFinite(Number(timing.start)) && Number.isFinite(Number(timing.end))) {

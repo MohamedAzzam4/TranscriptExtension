@@ -32,6 +32,7 @@ const audioCoverageSaveTimes = new Map();
 let nativeHostPort = null;
 let nativeHostWaiter = null;
 let batchNativeMessageQueue = Promise.resolve();
+const pendingCaptionDiscoveryJobs = new Map();
 
 const YOUTUBE_CAPTION_TRACKS = new Map();
 
@@ -52,64 +53,45 @@ function extractYouTubeVideoId(url) {
 
 async function tryFetchYouTubeAutomaticCaptions(pageUrl, audioLanguage, videoDuration) {
   const videoId = extractYouTubeVideoId(pageUrl);
-  if (!videoId) return { ok: false, reason: "Could not extract YouTube video ID" };
-  
+  if (!videoId) return { ok: false, reason: "Could not extract YouTube video ID", diagnostics: {} };
   const jobId = `caption-discovery-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-  const request = {
-    jobId,
-    sourceUrl: pageUrl,
-    language: audioLanguage,
-    captionLanguage: audioLanguage
-  };
-  
-  try {
-    const response = await new Promise((resolve, reject) => {
-      const port = ensureNativeHostPort();
-      const listener = (message) => {
-        if (message.jobId === jobId) {
-          port.onMessage.removeListener(listener);
-          resolve(message);
-        }
-      };
-      port.onMessage.addListener(listener);
-      port.postMessage({
-        command: "youtube_caption_discovery",
-        ...request
-      });
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        port.onMessage.removeListener(listener);
+  const request = { jobId, sourceUrl: pageUrl, language: audioLanguage, captionLanguage: audioLanguage };
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      const pending = pendingCaptionDiscoveryJobs.get(jobId);
+      if (pending) {
+        pendingCaptionDiscoveryJobs.delete(jobId);
         reject(new Error("Caption discovery timed out"));
-      }, 30000);
-    });
-    
-    if (response.ok === false) {
-      return { ok: false, reason: response.reason || "Caption discovery failed", diagnostics: response.diagnostics };
-    }
-    
-    if (!response.ok || !response.segments || !response.segments.length) {
-      return { ok: false, reason: response.reason || "No valid caption segments returned", diagnostics: response.diagnostics };
-    }
-    
-    // Validate timing compatibility with video duration
-    if (videoDuration && response.videoDuration) {
-      const lastCueEnd = Math.max(...response.segments.map(s => s.end));
-      if (lastCueEnd < response.videoDuration * 0.3) {
-        return { ok: false, reason: `Caption track covers only ${lastCueEnd.toFixed(1)}s of ${response.videoDuration.toFixed(1)}s video`, diagnostics: response.diagnostics };
       }
+    }, 30000);
+    pendingCaptionDiscoveryJobs.set(jobId, {
+      resolve: (value) => { clearTimeout(timeoutId); pendingCaptionDiscoveryJobs.delete(jobId); resolve(value); },
+      reject: (err) => { clearTimeout(timeoutId); pendingCaptionDiscoveryJobs.delete(jobId); reject(err); },
+      timeoutId
+    });
+    try {
+      const port = ensureNativeHostPort();
+      port.postMessage({ command: "youtube_caption_discovery", ...request });
+    } catch (error) {
+      const pending = pendingCaptionDiscoveryJobs.get(jobId);
+      if (pending) { clearTimeout(pending.timeoutId); pendingCaptionDiscoveryJobs.delete(jobId); }
+      reject(error);
     }
-    
-    return {
-      ok: true,
-      segments: response.segments,
-      language: response.language,
-      trackInfo: response.trackInfo,
-      videoDuration: response.videoDuration,
-      diagnostics: response.diagnostics
-    };
-  } catch (error) {
-    return { ok: false, reason: error.message, diagnostics: {} };
-  }
+  }).then(async (raw) => {
+    if (!raw || raw.ok === false) {
+      return { ok: false, reason: raw?.reason || raw?.message || "Caption discovery failed", diagnostics: raw?.diagnostics || {} };
+    }
+    if (!raw.segments || !raw.segments.length) {
+      return { ok: false, reason: raw.reason || "No valid caption segments returned", diagnostics: raw.diagnostics || {} };
+    }
+    return { ok: true, segments: raw.segments, language: raw.language, trackInfo: raw.trackInfo, videoDuration: raw.videoDuration, diagnostics: raw.diagnostics || {} };
+  }).catch((error) => {
+    const msg = String(error?.message || error || "Caption discovery failed");
+    if (msg.toLowerCase().includes("unknown native host command") || msg.toLowerCase().includes("unknown command")) {
+      return { ok: false, reason: "The local helper is outdated. Close the browser, run INSTALL.cmd once, then reload the extension.", diagnostics: { outdatedHelper: true } };
+    }
+    return { ok: false, reason: msg, diagnostics: {} };
+  });
 }
 
 function selectEligibleYouTubeAutomaticCaption(tracks, requestedLanguage) {
@@ -267,9 +249,29 @@ async function startSmartExperiment(settings) {
         captionTracks: captionResult.segments,
         captionLanguage: captionResult.language,
         captionTrackInfo: captionResult.trackInfo,
-        fallbackReason: null
+        fallbackReason: null,
+        youtubeCaptionAttempt: { attempted: true, result: "succeeded", track: captionResult.trackInfo }
       };
+    } else {
+      candidate.youtubeCaptionAttempt = {
+        attempted: true,
+        result: "failed",
+        reason: captionResult.reason || "No eligible original automatic caption track found",
+        diagnostics: captionResult.diagnostics || {}
+      };
+      // After failed caption discovery, optionally look for ASR cache before running batch
+      const fallbackAsrCache = await getStoredTranscript(identity, "local-asr");
+      if (fallbackAsrCache && isStoredTranscriptCompatible(fallbackAsrCache, context)) {
+        // Preserve caption failure diagnostics for pipeline
+        const asrCandidateWithDiagnostics = { ...candidate, youtubeCaptionAttempt: candidate.youtubeCaptionAttempt };
+        // Save fallback diagnostics to be used in startBatchExperiment's pipeline
+        candidate.fallbackAsrCache = fallbackAsrCache;
+      }
     }
+  }
+  // If we have a fallback ASR cache and youtube-auto-first failed, restore it instead of batch
+  if (candidate.fallbackAsrCache && isStoredTranscriptCompatible(candidate.fallbackAsrCache, context)) {
+    return startLibraryExperiment(settings, prepared, candidate.fallbackAsrCache);
   }
 
   const identity = transcriptIdentityForCandidate(
@@ -362,7 +364,8 @@ async function startCaptionReuseExperiment(settings, prepared, candidate) {
     captionPreferences: settings.captionPreferences,
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
-    segments: selectedTranscriptSegments(experiment)
+    segments: selectedTranscriptSegments(experiment),
+    hideNativeYouTubeCaptions: (experiment.transcriptSource?.kind === "youtube-auto-caption")
   });
   await sendToActiveFrame(active, { type: "SET_REPLAY_MODE", enabled: true, range });
   const response = await sendToActiveFrame(active, { type: "CONTROL_MEDIA", action: "play" });
@@ -436,7 +439,8 @@ async function startLibraryExperiment(settings, prepared, savedTranscript) {
     captionPreferences: settings.captionPreferences,
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
-    segments: selectedTranscriptSegments(experiment)
+    segments: selectedTranscriptSegments(experiment),
+    hideNativeYouTubeCaptions: (experiment.transcriptSource?.kind === "youtube-auto-caption")
   });
   await sendToActiveFrame(active, { type: "SET_REPLAY_MODE", enabled: true, range });
   const response = await sendToActiveFrame(active, { type: "CONTROL_MEDIA", action: "play" });
@@ -519,8 +523,13 @@ async function startBatchExperiment(settings, prepared, candidate) {
       statusHistory: [],
       discovery: candidate.discoveryDiagnostics || null
     },
-    fallbackReason: null
+    fallbackReason: null,
+    youtubeCaptionAttempt: candidate.youtubeCaptionAttempt || null
   });
+  // Also persist youtubeCaptionAttempt diagnostics
+  if (candidate.youtubeCaptionAttempt) {
+    experiment.pipeline.diagnostics.youtubeCaptionAttempt = candidate.youtubeCaptionAttempt;
+  }
   experiment.transcriptSource = {
     kind: "local-whisper-batch",
     provider: "faster-whisper",
@@ -561,7 +570,7 @@ await sendToFrame(tab.id, mediaTarget.frameId, {
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
     segments: selectedTranscriptSegments(experiment),
-    useYouTubeCaptions: true
+    hideNativeYouTubeCaptions: true
   });
 
   try {
@@ -655,7 +664,8 @@ async function startLiveExperiment(settings, prepared, fallbackReason = null, ca
     captionPreferences: settings.captionPreferences,
     translationPreferences: settings.translationPreferences,
     audioLanguage: settings.audioLanguage,
-    segments: []
+    segments: [],
+    hideNativeYouTubeCaptions: false
   });
   const captureResponse = await chrome.runtime.sendMessage({
     type: "OFFSCREEN_START",
@@ -1120,6 +1130,23 @@ function ensureNativeHostPort() {
 }
 
 function handleNativeHostMessage(message) {
+  if (message?.state?.startsWith("caption_discovery_")) {
+    const jobId = message.jobId || message.job_id;
+    const pending = jobId ? pendingCaptionDiscoveryJobs.get(jobId) : null;
+    if (!pending) return;
+    if (message.state === "caption_discovery_queued" || message.state === "caption_discovery_status") {
+      return;
+    }
+    if (message.state === "caption_discovery_complete") {
+      pending.resolve(message);
+      return;
+    }
+    if (message.state === "caption_discovery_error") {
+      pending.reject(new Error(message.message || message.reason || "Caption discovery failed"));
+      return;
+    }
+    return;
+  }
   if (message?.state?.startsWith("batch_")) {
     batchNativeMessageQueue = batchNativeMessageQueue
       .then(() => handleBatchNativeMessage(message))
@@ -1153,6 +1180,10 @@ function handleNativeHostDisconnect() {
   nativeHostPort = null;
   rejectNativeHostWaiter(error);
   void fallbackActiveBatch(error);
+  for (const [jobId, pending] of pendingCaptionDiscoveryJobs.entries()) {
+    try { pending.reject(new Error(error)); } catch {}
+  }
+  pendingCaptionDiscoveryJobs.clear();
 }
 
 function rejectNativeHostWaiter(error) {
@@ -3111,7 +3142,9 @@ async function getSavedWords() {
 }
 
 async function saveVocabularyWord(rawEntry) {
-  const active = await getActive();
+  const initiatingActive = await getActive();
+  const initiatingId = initiatingActive?.experimentId || null;
+  const active = initiatingActive;
   const experiment = active ? await getExperiment(active.experimentId) : null;
   const entry = learning.normalizeVocabularyEntry({
     ...rawEntry,
@@ -3127,26 +3160,39 @@ async function saveVocabularyWord(rawEntry) {
   const { entries } = await getSavedWords();
   const updated = [entry, ...entries.filter((item) => item.normalizedWord !== entry.normalizedWord)];
   await chrome.storage.local.set({ [VOCABULARY_KEY]: updated.slice(0, 2_000) });
-  void broadcastVocabularyUpdate(entry.normalizedWord, true);
+  const currentActive = await getActive();
+  if (currentActive?.experimentId === initiatingId) {
+    void broadcastVocabularyUpdate(entry.normalizedWord, true);
+  }
   return { entry, saved: true, count: updated.length };
 }
 
 async function removeSavedWord(rawWord) {
+  const initiatingActive = await getActive();
+  const initiatingId = initiatingActive?.experimentId || null;
   const normalized = learning.normalizedWord(rawWord);
   const { entries } = await getSavedWords();
   const updated = entries.filter((entry) => entry.normalizedWord !== normalized);
   await chrome.storage.local.set({ [VOCABULARY_KEY]: updated });
-  void broadcastVocabularyUpdate(normalized, false);
+  const currentActive = await getActive();
+  if (currentActive?.experimentId === initiatingId) {
+    void broadcastVocabularyUpdate(normalized, false);
+  }
   return { saved: false, count: updated.length };
 }
 
 async function broadcastVocabularyUpdate(normalizedWord, saved) {
   try {
-    await chrome.runtime.sendMessage({
+    const active = await getActive();
+    if (active) await sendToActiveFrame(active, {
       type: "VOCABULARY_UPDATED",
       word: normalizedWord,
       saved
     });
+    // Also notify popup via runtime if needed
+    try { await chrome.runtime.sendMessage({ type: "VOCABULARY_UPDATED", word: normalizedWord, saved }); } catch {}
+    // Also notify popup via runtime if needed
+    try { await chrome.runtime.sendMessage({ type: "VOCABULARY_UPDATED", word: normalizedWord, saved }); } catch {}
   } catch {
     // Popup may be closed
   }
@@ -3164,24 +3210,24 @@ function buildYouTubeTimingDiagnostics(experiment, pipeline) {
   const lastRawWord = asrSegments[asrSegments.length - 1]?.words?.at(-1);
   const firstCue = asrSegments[0];
   const lastCue = asrSegments[asrSegments.length - 1];
-  const displayGroups = experiment.displayGroups || [];
+  const displayGroups = (globalThis.DubTranscriptGroups ? globalThis.DubTranscriptGroups.buildDisplayGroups(experiment.asrSegments || []) : (experiment.displayGroups || []));
   const firstDisplay = displayGroups[0];
   const lastDisplay = displayGroups[displayGroups.length - 1];
   return {
-    ytDlpFormatId: attempt.formatId || null,
-    container: attempt.containerFormat || null,
-    extension: attempt.mediaExtension || null,
-    audioCodec: attempt.codec || null,
-    sampleRate: attempt.sampleRate || null,
-    detectedLanguage: attempt.detectedLanguage || null,
-    sourceReportedDuration: attempt.duration || null,
-    playerDuration: experiment.page?.duration || null,
-    containerStartTime: attempt.containerStartTime || null,
-    audioStreamStartTime: attempt.audioStreamStartTime || null,
-    streamTimeBase: attempt.streamTimeBase || null,
-    firstDecodedAudioPts: attempt.firstDecodedAudioPts || null,
-    decodedSampleCount: attempt.decodedSampleCount || null,
-    decodedAudioDuration: attempt.decodedAudioDuration || null,
+    ytDlpFormatId: attempt.formatId ?? null,
+    container: attempt.containerFormat ?? null,
+    extension: attempt.mediaExtension ?? null,
+    audioCodec: attempt.codec ?? null,
+    sampleRate: attempt.sampleRate ?? null,
+    detectedLanguage: attempt.detectedLanguage ?? null,
+    sourceReportedDuration: attempt.duration ?? null,
+    playerDuration: experiment.page?.duration ?? null,
+    containerStartTime: attempt.containerStartTime ?? null,
+    audioStreamStartTime: attempt.audioStreamStartTime ?? null,
+    streamTimeBase: attempt.streamTimeBase ?? null,
+    firstDecodedAudioPts: attempt.firstDecodedAudioPts ?? null,
+    decodedSampleCount: attempt.decodedSampleCount ?? null,
+    decodedAudioDuration: attempt.decodedAudioDuration ?? null,
     firstRawAsrWordTimestamp: firstRawWord ? { start: firstRawWord.start, end: firstRawWord.end, timing: firstRawWord.timing } : null,
     lastRawAsrWordTimestamp: lastRawWord ? { start: lastRawWord.start, end: lastRawWord.end, timing: lastRawWord.timing } : null,
     firstNormalizedCueTimestamp: firstCue ? { start: firstCue.start, end: firstCue.end } : null,
