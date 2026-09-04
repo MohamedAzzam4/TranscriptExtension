@@ -82,10 +82,17 @@ class ResolvedSource:
     channels: int | None = None
     representation_index: int | None = None
     local_pcm_path: str | None = None
-    timing_diagnostics: dict | None = None
 
 
 @dataclass(frozen=True)
+@dataclass(frozen=True)
+class DecodedAudio:
+    samples: Any
+    first_decoded_audio_pts: float | None
+    decoded_sample_count: int
+    decoded_audio_duration: float
+
+
 class HlsPngTsInspection:
     segments: list[tuple[str, float | None]]
     first_transport_stream: bytes
@@ -616,8 +623,8 @@ def decode_source(
                 ),
             )
         try:
-            audio = decode_audio(source.url, sampling_rate=16_000)
-            return audio
+            decoded = decode_audio(source.url, sampling_rate=16_000)
+            return decoded.samples
         except Exception as error:
             emit(
                 "batch_status",
@@ -667,8 +674,23 @@ def decode_source(
                     + "."
                 ),
             )
+        first_frame_pts = None
         try:
             for frame in container.decode(audio_stream):
+                if first_frame_pts is None:
+                    ft = getattr(frame, "time", None)
+                    if ft is not None and isinstance(ft, (int, float)) and __import__("math").isfinite(ft):
+                        first_frame_pts = float(ft)
+                    else:
+                        try:
+                            pts = getattr(frame, "pts", None)
+                            tb = getattr(frame, "time_base", None) or getattr(audio_stream, "time_base", None)
+                            if pts is not None and tb is not None:
+                                val = float(pts) * float(tb)
+                                if __import__("math").isfinite(val):
+                                    first_frame_pts = val
+                        except Exception:
+                            pass
                 converted = resampler.resample(frame)
                 if converted is None:
                     continue
@@ -1578,8 +1600,9 @@ def download_and_decode_youtube(source: ResolvedSource, job_id: str):
             job_id,
             message="Audio downloaded locally. Decoding the temporary file now.",
         )
-        audio = decode_audio(media_path, sampling_rate=16_000)
-        return audio
+        decoded = decode_audio(media_path, sampling_rate=16_000)
+        # decode_audio returns DecodedAudio
+        return decoded.samples
     finally:
         shutil.rmtree(temp_directory, ignore_errors=True)
 
@@ -1875,8 +1898,11 @@ def run(request: dict) -> None:
         ),
         title=source.title,
     )
-    source, audio = acquire_first_accessible_source(sources, job_id, language)
+    source, decoded = acquire_first_accessible_source(sources, job_id, language)
+    audio = decoded.samples if hasattr(decoded, "samples") else decoded
     duration = len(audio) / 16_000
+    # Use diagnostics from decoded result
+    decoded_diagnostics = decoded if hasattr(decoded, "decoded_sample_count") else None
     # Determine format ID and media extension for diagnostics
     format_id = None
     media_extension = None
@@ -1892,8 +1918,10 @@ def run(request: dict) -> None:
     except Exception:
         pass
     
-    # Get timing diagnostics from source if available
-    timing_diagnostics = getattr(source, "timing_diagnostics", None)
+    timing_diagnostics = decoded_diagnostics.diagnostics if hasattr(decoded_diagnostics, "decoded_sample_count") else getattr(decoded_diagnostics, "__dict__", None) if decoded_diagnostics else None
+    # Also try DecodedAudio fields
+    if hasattr(decoded, "first_decoded_audio_pts"):
+        timing_diagnostics = {"firstDecodedAudioPts": decoded.first_decoded_audio_pts, "decodedSampleCount": decoded.decoded_sample_count, "decodedAudioDuration": decoded.decoded_audio_duration}
     
     emit(
         "batch_started",

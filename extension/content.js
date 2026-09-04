@@ -223,7 +223,7 @@
     renderStatus("Preparing the local recognizer…");
 
     // Save and hide native YouTube captions for caption-reuse sessions
-    if (message.useYouTubeCaptions) {
+    if (message.hideNativeYouTubeCaptions === true) {
       saveAndHideNativeCaptions();
     }
 

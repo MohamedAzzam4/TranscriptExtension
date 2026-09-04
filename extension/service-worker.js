@@ -2,7 +2,8 @@ importScripts(
   "learning-features.js",
   "netflix-research.js",
   "network-media-observer.js",
-  "local-media.js"
+  "local-media.js",
+  "transcript-groups.js"
 );
 
 const ACTIVE_KEY = "activeExperiment";
@@ -3236,9 +3237,6 @@ async function broadcastVocabularyUpdate(normalizedWord, saved) {
       word: normalizedWord,
       saved
     });
-    // Also notify popup via runtime if needed
-    try { await chrome.runtime.sendMessage({ type: "VOCABULARY_UPDATED", word: normalizedWord, saved }); } catch {}
-    // Also notify popup via runtime if needed
     try { await chrome.runtime.sendMessage({ type: "VOCABULARY_UPDATED", word: normalizedWord, saved }); } catch {}
   } catch {
     // Popup may be closed
