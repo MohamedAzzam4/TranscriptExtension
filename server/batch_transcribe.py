@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 import ipaddress
 import json
+import math
 import os
 import re
 import shutil
@@ -20,7 +21,7 @@ import tempfile
 import time
 from dataclasses import dataclass, replace
 from difflib import SequenceMatcher
-from typing import Iterable
+from typing import Any, Iterable
 from urllib.parse import urljoin, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
@@ -85,14 +86,27 @@ class ResolvedSource:
 
 
 @dataclass(frozen=True)
-@dataclass(frozen=True)
 class DecodedAudio:
+    """Immutable result of one decode pass.
+
+    ``first_decoded_audio_pts`` is the measured timestamp of the FIRST
+    successfully decoded audio frame (``frame.time``, else
+    ``frame.pts * frame.time_base``), or ``None`` when no frame timing
+    was measurable (raw PCM input, file container decodes, timestamp-free
+    streams). Unknown timing is never silently converted to 0.0, and
+    non-zero (including negative) timestamps are preserved as measured.
+    """
+
     samples: Any
     first_decoded_audio_pts: float | None
     decoded_sample_count: int
     decoded_audio_duration: float
 
+    def __len__(self) -> int:
+        return len(self.samples)
 
+
+@dataclass(frozen=True)
 class HlsPngTsInspection:
     segments: list[tuple[str, float | None]]
     first_transport_stream: bytes
@@ -572,6 +586,33 @@ def ffmpeg_http_options(headers: dict[str, str]) -> dict[str, str]:
     return options
 
 
+def first_frame_timestamp(frame, stream=None) -> float | None:
+    """Measure one decoded audio frame's presentation timestamp.
+
+    Prefers ``frame.time`` when present and finite, else falls back to
+    ``frame.pts * frame.time_base`` (frame or stream time base) when both
+    exist and yield a finite value. Returns ``None`` when nothing is
+    measurable. Measured values — including legitimate non-zero and
+    negative timestamps — are preserved as-is; unknown timing is never
+    converted to 0.0.
+    """
+    frame_time = getattr(frame, "time", None)
+    if isinstance(frame_time, (int, float)) and math.isfinite(frame_time):
+        return float(frame_time)
+    try:
+        pts = getattr(frame, "pts", None)
+        time_base = getattr(frame, "time_base", None) or (
+            getattr(stream, "time_base", None) if stream is not None else None
+        )
+        if pts is not None and time_base is not None:
+            value = float(pts) * float(time_base)
+            if math.isfinite(value):
+                return value
+    except (TypeError, ValueError, OverflowError):
+        pass
+    return None
+
+
 def decode_source(
     source: ResolvedSource,
     job_id: str,
@@ -608,7 +649,14 @@ def decode_source(
             channels=1,
             layout="mono",
         )
-        return audio.astype(np.float32) / 32768.0
+        pcm_samples = audio.astype(np.float32) / 32768.0
+        # Raw PCM carries no frame timing: unknown stays None.
+        return DecodedAudio(
+            samples=pcm_samples,
+            first_decoded_audio_pts=None,
+            decoded_sample_count=int(audio.size),
+            decoded_audio_duration=len(pcm_samples) / 16_000,
+        )
 
     if source.youtube_page_url:
         try:
@@ -623,8 +671,15 @@ def decode_source(
                 ),
             )
         try:
-            decoded = decode_audio(source.url, sampling_rate=16_000)
-            return decoded.samples
+            # faster-whisper decode_audio returns a float32 ndarray (file
+            # decodes carry no measured frame timing: unknown stays None).
+            file_samples = decode_audio(source.url, sampling_rate=16_000)
+            return DecodedAudio(
+                samples=file_samples,
+                first_decoded_audio_pts=None,
+                decoded_sample_count=len(file_samples),
+                decoded_audio_duration=len(file_samples) / 16_000,
+            )
         except Exception as error:
             emit(
                 "batch_status",
@@ -678,19 +733,7 @@ def decode_source(
         try:
             for frame in container.decode(audio_stream):
                 if first_frame_pts is None:
-                    ft = getattr(frame, "time", None)
-                    if ft is not None and isinstance(ft, (int, float)) and __import__("math").isfinite(ft):
-                        first_frame_pts = float(ft)
-                    else:
-                        try:
-                            pts = getattr(frame, "pts", None)
-                            tb = getattr(frame, "time_base", None) or getattr(audio_stream, "time_base", None)
-                            if pts is not None and tb is not None:
-                                val = float(pts) * float(tb)
-                                if __import__("math").isfinite(val):
-                                    first_frame_pts = val
-                        except Exception:
-                            pass
+                    first_frame_pts = first_frame_timestamp(frame, audio_stream)
                 converted = resampler.resample(frame)
                 if converted is None:
                     continue
@@ -743,16 +786,14 @@ def decode_source(
     if not chunks:
         raise RuntimeError("No audio samples could be decoded from the selected source.")
     audio = np.concatenate(chunks).astype(np.float32) / 32768.0
-    # Store timing diagnostics on the source object for later use
-    decoded_audio_duration = len(audio) / 16_000
-    timing_diagnostics = {
-        "decodedSampleCount": decoded_sample_count,
-        "decodedAudioDuration": round(decoded_audio_duration, 3),
-        "firstDecodedAudioPts": 0.0,  # First frame starts at 0
-    }
-    # Attach to source for batch_started emission
-    # timing_diagnostics not stored on frozen source; emitted via batch_started diagnostics
-    return audio
+    # Timing diagnostics travel on the immutable decode result (never on the
+    # frozen ResolvedSource). Unknown first-frame timing stays None.
+    return DecodedAudio(
+        samples=audio,
+        first_decoded_audio_pts=first_frame_pts,
+        decoded_sample_count=decoded_sample_count,
+        decoded_audio_duration=len(audio) / 16_000,
+    )
 
 
 def decode_png_wrapped_hls(
@@ -887,7 +928,15 @@ def decode_png_wrapped_hls(
 
     if not chunks:
         raise RuntimeError("No audio samples were decoded from the PNG-wrapped HLS source.")
-    return np.concatenate(chunks).astype(np.float32) / 32768.0
+    segment_samples = np.concatenate(chunks).astype(np.float32) / 32768.0
+    # Segment containers restart timestamps by design (frame.pts is nulled
+    # during decode), so no meaningful first-frame timestamp exists here.
+    return DecodedAudio(
+        samples=segment_samples,
+        first_decoded_audio_pts=None,
+        decoded_sample_count=decoded_sample_count,
+        decoded_audio_duration=len(segment_samples) / 16_000,
+    )
 
 
 def audio_stream_probe(container, stream) -> dict:
@@ -1439,7 +1488,8 @@ def acquire_first_accessible_source(
                     index,
                     len(sources),
                 )
-            decoded_duration = len(audio) / 16_000
+            samples = audio.samples if isinstance(audio, DecodedAudio) else audio
+            decoded_duration = len(samples) / 16_000
             if decode_source_candidate.duration and decode_source_candidate.duration >= 60:
                 ratio = decoded_duration / decode_source_candidate.duration
                 if ratio < 0.70 or ratio > 1.30:
@@ -1600,9 +1650,15 @@ def download_and_decode_youtube(source: ResolvedSource, job_id: str):
             job_id,
             message="Audio downloaded locally. Decoding the temporary file now.",
         )
-        decoded = decode_audio(media_path, sampling_rate=16_000)
-        # decode_audio returns DecodedAudio
-        return decoded.samples
+        file_samples = decode_audio(media_path, sampling_rate=16_000)
+        # faster-whisper decode_audio returns a float32 ndarray; a file
+        # decode measures no frame timing, so unknown stays None.
+        return DecodedAudio(
+            samples=file_samples,
+            first_decoded_audio_pts=None,
+            decoded_sample_count=len(file_samples),
+            decoded_audio_duration=len(file_samples) / 16_000,
+        )
     finally:
         shutil.rmtree(temp_directory, ignore_errors=True)
 
@@ -1899,10 +1955,11 @@ def run(request: dict) -> None:
         title=source.title,
     )
     source, decoded = acquire_first_accessible_source(sources, job_id, language)
-    audio = decoded.samples if hasattr(decoded, "samples") else decoded
+    audio = decoded.samples if isinstance(decoded, DecodedAudio) else decoded
     duration = len(audio) / 16_000
-    # Use diagnostics from decoded result
-    decoded_diagnostics = decoded if hasattr(decoded, "decoded_sample_count") else None
+    # Timing diagnostics come from the immutable decode result. Unknown
+    # first-frame timing stays None (rendered as "unknown" downstream).
+    decoded_diagnostics = decoded if isinstance(decoded, DecodedAudio) else None
     # Determine format ID and media extension for diagnostics
     format_id = None
     media_extension = None
@@ -1918,11 +1975,15 @@ def run(request: dict) -> None:
     except Exception:
         pass
     
-    timing_diagnostics = decoded_diagnostics.diagnostics if hasattr(decoded_diagnostics, "decoded_sample_count") else getattr(decoded_diagnostics, "__dict__", None) if decoded_diagnostics else None
-    # Also try DecodedAudio fields
-    if hasattr(decoded, "first_decoded_audio_pts"):
-        timing_diagnostics = {"firstDecodedAudioPts": decoded.first_decoded_audio_pts, "decodedSampleCount": decoded.decoded_sample_count, "decodedAudioDuration": decoded.decoded_audio_duration}
-    
+    if decoded_diagnostics is not None:
+        timing_diagnostics = {
+            "firstDecodedAudioPts": decoded_diagnostics.first_decoded_audio_pts,
+            "decodedSampleCount": decoded_diagnostics.decoded_sample_count,
+            "decodedAudioDuration": decoded_diagnostics.decoded_audio_duration,
+        }
+    else:
+        timing_diagnostics = None
+
     emit(
         "batch_started",
         job_id,
@@ -1998,12 +2059,6 @@ def main() -> int:
             workerVersion=WORKER_VERSION,
         )
         return 1
-
-
-if __name__ == "__main__":
-    if "--caption-discovery" in sys.argv:
-        raise SystemExit(caption_discovery_main())
-    raise SystemExit(main())
 
 
 def caption_discovery_main() -> int:
@@ -2130,11 +2185,14 @@ def run_caption_discovery(request: dict) -> None:
                 raise RuntimeError("YouTube caption track exceeded local safety limit")
             payload_text = payload_bytes.decode("utf-8-sig")
     except Exception as error:
+        # Never persist signed caption URLs that may surface in transport
+        # exception text; the diagnostics stay inventory-style only.
+        sanitized = re.sub(r"https?://\S+", "[caption-url]", str(error))
         emit(
             "caption_discovery_complete",
             job_id,
             ok=False,
-            reason=f"Failed to download caption: {error}",
+            reason=f"Failed to download caption: {sanitized}"[:500],
             diagnostics={}
         )
         return
@@ -2187,3 +2245,7 @@ def run_caption_discovery(request: dict) -> None:
 
 
 # Backward compatibility - keep original main
+if __name__ == "__main__":
+    if "--caption-discovery" in sys.argv:
+        raise SystemExit(caption_discovery_main())
+    raise SystemExit(main())

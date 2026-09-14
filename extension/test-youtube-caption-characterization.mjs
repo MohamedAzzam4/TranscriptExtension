@@ -217,6 +217,29 @@ vm.runInContext(source, context, { filename: "service-worker.js" });
   assert.equal(vm.runInContext(`pendingCaptionDiscoveryJobs.size`, context), 0, "disconnect clears all");
 }
 
+// Test 8b: outdated-helper error rejects all pending and clears
+{
+  vm.runInContext(`pendingCaptionDiscoveryJobs.clear()`, context);
+  vm.runInContext(`
+    pendingCaptionDiscoveryJobs.set("job-old-1", { resolve: ()=>{}, reject: (e) => { globalThis.__oldErr1 = e.message; }, timeoutId: setTimeout(()=>{}, 5000) });
+    pendingCaptionDiscoveryJobs.set("job-old-2", { resolve: ()=>{}, reject: (e) => { globalThis.__oldErr2 = e.message; }, timeoutId: setTimeout(()=>{}, 5000) });
+  `, context);
+  vm.runInContext(`handleNativeHostMessage({ state: "error", message: "unknown native host command: youtube_caption_discovery" })`, context);
+  assert.equal(vm.runInContext(`pendingCaptionDiscoveryJobs.size`, context), 0, "outdated helper clears all");
+  assert.match(vm.runInContext(`globalThis.__oldErr1`, context), /outdated/i, "reject explains outdated helper");
+  assert.match(vm.runInContext(`globalThis.__oldErr2`, context), /outdated/i, "all pending rejected");
+}
+
+// Test 8c: unsuccessful completion (ok:false) still clears the pending job
+{
+  vm.runInContext(`pendingCaptionDiscoveryJobs.clear()`, context);
+  vm.runInContext(`
+    pendingCaptionDiscoveryJobs.set("job-nocap", { resolve: (v) => { globalThis.__nocap = v; pendingCaptionDiscoveryJobs.delete("job-nocap"); }, reject: ()=>{}, timeoutId: setTimeout(()=>{}, 5000) });
+  `, context);
+  vm.runInContext(`handleNativeHostMessage({ state: "caption_discovery_complete", jobId: "job-nocap", ok: false, reason: "No track" })`, context);
+  assert.equal(vm.runInContext(`pendingCaptionDiscoveryJobs.has("job-nocap")`, context), false, "failed completion clears pending");
+}
+
 // Test 9: no audio coverage for caption reuse
 {
   const exp = { transcriptSource: { kind: "youtube-auto-caption" }, captionSegments: [{ start: 0, end: 10, text: "hello" }], audioCoverage: [] };
@@ -259,12 +282,14 @@ vm.runInContext(source, context, { filename: "service-worker.js" });
   assert.ok(!str.includes("token"));
 }
 
-// Test 15: hideNative flag for source kinds - real behavioral check via service-worker source
+// Test 15: hideNative flag wiring present; VALUES are covered behaviorally
+// in test-hide-native-matrix.mjs (real start*Experiment calls asserting the
+// BEGIN_SESSION hideNativeYouTubeCaptions value per source kind).
 {
   const swSource = fs.readFileSync(new URL("./service-worker.js", import.meta.url), "utf8");
   assert.ok(swSource.includes('hideNativeYouTubeCaptions'), "service-worker has hideNative flag");
-  assert.ok(swSource.includes('hideNativeYouTubeCaptions: false'), "batch/live send hideNative false");
-  assert.ok(swSource.includes('hideNativeYouTubeCaptions: (experiment.transcriptSource?.kind === "youtube-auto-caption")'), "library replay sends hideNative based on kind");
+  const matrixSource = fs.readFileSync(new URL("./test-hide-native-matrix.mjs", import.meta.url), "utf8");
+  assert.ok(matrixSource.includes('hideNativeYouTubeCaptions'), "behavioral matrix covers the flag");
   // Also verify content.js handles flag
   const contentSource = fs.readFileSync(new URL("./content.js", import.meta.url), "utf8");
   assert.ok(contentSource.includes('saveAndHideNativeCaptions'), "content saves native caption state");

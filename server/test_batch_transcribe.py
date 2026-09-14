@@ -10,6 +10,8 @@ from batch_transcribe import (
     acquire_first_accessible_source,
     batch_worker_diagnostics,
     CaptionAnswerKey,
+    DecodedAudio,
+    first_frame_timestamp,
     HlsPngTsInspection,
     ResolvedSource,
     clean_headers,
@@ -699,7 +701,10 @@ https://cdn.example/segment-two
                     )[-1],
                 ),
             ):
-                self.assertEqual(download_and_decode_youtube(source, "test-job"), [0.0])
+                decoded = download_and_decode_youtube(source, "test-job")
+                self.assertIsInstance(decoded, DecodedAudio)
+                self.assertEqual(list(decoded.samples), [0.0])
+                self.assertIsNone(decoded.first_decoded_audio_pts)
             temp_root = os.path.join(project_root, ".runtime", "batch-temp")
             self.assertEqual(os.listdir(temp_root), [])
 
@@ -721,8 +726,328 @@ https://cdn.example/segment-two
             patch("batch_transcribe.decode_audio", return_value=[0.0]) as direct_decode,
             patch("batch_transcribe.emit"),
         ):
-            self.assertEqual(decode_source(source, "test-job"), [0.0])
+            decoded = decode_source(source, "test-job")
+            self.assertIsInstance(decoded, DecodedAudio)
+            self.assertEqual(list(decoded.samples), [0.0])
+            self.assertIsNone(decoded.first_decoded_audio_pts)
         direct_decode.assert_called_once_with(source.url, sampling_rate=16_000)
+
+
+class FirstDecodedAudioPtsTests(unittest.TestCase):
+    """Hermetic tests for measured first-frame decode timing.
+
+    The first successfully decoded audio frame's timestamp must flow
+    decoder -> DecodedAudio -> batch_started diagnostics without ever
+    becoming a silent 0.0 and without mutating the frozen ResolvedSource.
+    """
+
+    def test_frame_time_is_preferred(self):
+        from types import SimpleNamespace
+
+        frame = SimpleNamespace(time=2.75, pts=999999, time_base=1 / 48000)
+        self.assertEqual(first_frame_timestamp(frame), 2.75)
+
+    def test_pts_times_time_base_fallback(self):
+        from fractions import Fraction
+        from types import SimpleNamespace
+
+        frame = SimpleNamespace(time=None, pts=132300, time_base=Fraction(1, 48000))
+        self.assertAlmostEqual(first_frame_timestamp(frame), 2.75625, places=5)
+
+    def test_stream_time_base_fallback(self):
+        from types import SimpleNamespace
+
+        frame = SimpleNamespace(time=None, pts=100, time_base=None)
+        stream = SimpleNamespace(time_base=0.02)
+        self.assertAlmostEqual(first_frame_timestamp(frame, stream), 2.0)
+
+    def test_missing_timing_is_unknown_not_zero(self):
+        from types import SimpleNamespace
+
+        frame = SimpleNamespace(time=None, pts=None, time_base=None)
+        self.assertIsNone(first_frame_timestamp(frame))
+
+    def test_nonfinite_timing_is_unknown(self):
+        from types import SimpleNamespace
+
+        self.assertIsNone(first_frame_timestamp(SimpleNamespace(time=float("nan"))))
+        self.assertIsNone(first_frame_timestamp(SimpleNamespace(time=float("inf"))))
+
+    def test_negative_timestamps_are_preserved(self):
+        from types import SimpleNamespace
+
+        frame = SimpleNamespace(time=-0.5, pts=None, time_base=None)
+        self.assertEqual(first_frame_timestamp(frame), -0.5)
+
+    def test_first_decoded_frame_wins_through_decode_source(self):
+        """Two timed frames through the real PyAV decode path: the FIRST
+        frame's timestamp must survive to the DecodedAudio result."""
+        import sys
+
+        import numpy as np
+
+        from fractions import Fraction
+
+        class FakeConvertedFrame:
+            def to_ndarray(self):
+                return np.zeros(480, dtype=np.int16)
+
+        class FakeResampler:
+            def resample(self, _frame):
+                return [FakeConvertedFrame()]
+
+        class FakeResamplerFactory:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def resample(self, frame):
+                # Real resamplers buffer: frames yield output, flush yields none.
+                if frame is None:
+                    return None
+                return [FakeConvertedFrame()]
+
+        class FakeStream:
+            time_base = Fraction(1, 48000)
+            metadata = {}
+            profile = None
+            index = 0
+
+            def __init__(self):
+                from types import SimpleNamespace
+
+                self.disposition = SimpleNamespace(default=False)
+                self.codec_context = None
+
+        class FakeContainer:
+            streams = type(
+                "Streams", (), {"audio": [FakeStream()]}
+            )()
+
+            def __init__(self, frames):
+                self._frames = frames
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def decode(self, _stream):
+                return iter(self._frames)
+
+        class FakeAvModule:
+            class audio:
+                resampler = type(
+                    "Resampler",
+                    (),
+                    {"AudioResampler": FakeResamplerFactory},
+                )
+
+            @staticmethod
+            def open(*_args, **_kwargs):
+                from types import SimpleNamespace
+
+                first = SimpleNamespace(time=2.75, pts=0, time_base=Fraction(1, 48000))
+                second = SimpleNamespace(time=9.0, pts=432000, time_base=Fraction(1, 48000))
+                return FakeContainer([first, second])
+
+        source = ResolvedSource(url="https://media.example/audio", headers={})
+        with patch.dict(sys.modules, {"av": FakeAvModule()}):
+            with patch("batch_transcribe.emit"):
+                decoded = decode_source(source, "timing-job")
+        self.assertIsInstance(decoded, DecodedAudio)
+        self.assertEqual(decoded.first_decoded_audio_pts, 2.75)
+        self.assertEqual(decoded.decoded_sample_count, 960)
+        self.assertAlmostEqual(decoded.decoded_audio_duration, 960 / 16_000)
+
+    def test_run_batch_emits_measured_timing_diagnostic(self):
+        """run() emits the exact DecodedAudio diagnostic in batch_started."""
+        import sys
+        from types import SimpleNamespace
+
+        import numpy as np
+
+        source = ResolvedSource(url="https://media.example/audio", headers={})
+        measured = DecodedAudio(
+            samples=np.zeros(16_000, dtype=np.float32),
+            first_decoded_audio_pts=2.75,
+            decoded_sample_count=16_000,
+            decoded_audio_duration=1.0,
+        )
+        emitted = []
+
+        def fake_emit(state, job_id, **payload):
+            emitted.append((state, payload))
+
+        with (
+            patch("batch_transcribe.resolve_sources", return_value=[source]),
+            patch("batch_transcribe.acquire_first_accessible_source") as acquire,
+            patch("batch_transcribe.load_model") as load_model,
+            patch("batch_transcribe.transcribe_words") as transcribe,
+            patch("batch_transcribe.emit", side_effect=fake_emit),
+        ):
+            acquire.return_value = (source, measured)
+            load_model.return_value = (object(), "cpu/int8")
+            transcribe.return_value = ([], SimpleNamespace(language="de"))
+            import batch_transcribe
+
+            batch_transcribe.run({
+                "jobId": "timing-e2e",
+                "sourceKind": "direct",
+                "sourceUrl": "https://media.example/audio",
+            })
+        started = [payload for state, payload in emitted if state == "batch_started"]
+        self.assertEqual(len(started), 1)
+        self.assertEqual(started[0]["firstDecodedAudioPts"], 2.75)
+        self.assertEqual(started[0]["decodedSampleCount"], 16_000)
+        self.assertEqual(started[0]["decodedAudioDuration"], 1.0)
+        # Frozen source untouched: timing lives on the result, not the source.
+        self.assertFalse(hasattr(source, "timing_diagnostics"))
+
+    def test_caption_discovery_entry_points_are_defined(self):
+        # Regression: the __main__ block once sat above these definitions,
+        # so `--caption-discovery` always crashed with NameError.
+        import batch_transcribe
+
+        self.assertTrue(callable(batch_transcribe.caption_discovery_main))
+        self.assertTrue(callable(batch_transcribe.run_caption_discovery))
+
+    def test_caption_discovery_reports_no_eligible_track(self):
+        import batch_transcribe
+
+        emitted = []
+
+        class FakeYoutubeDL:
+            def __init__(self, _options):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def extract_info(self, _url, download=False):
+                return {
+                    "duration": 127,
+                    "automatic_captions": {},
+                    "formats": [],
+                }
+
+        with patch("batch_transcribe.emit") as emit_mock:
+            # yt_dlp is imported lazily inside run_caption_discovery; inject
+            # a stub via sys.modules and scrub the module-global binding after.
+            import sys as _sys
+            import types as _types
+
+            stub = _types.ModuleType("yt_dlp")
+            stub.YoutubeDL = FakeYoutubeDL
+            _sys.modules["yt_dlp"] = stub
+            try:
+                batch_transcribe.run_caption_discovery({
+                    "jobId": "no-track",
+                    "sourceUrl": "https://www.youtube.com/watch?v=test",
+                    "language": "de",
+                    "captionLanguage": "de",
+                })
+            finally:
+                _sys.modules.pop("yt_dlp", None)
+                batch_transcribe.__dict__.pop("yt_dlp", None)
+        complete = [
+            call for call in emit_mock.call_args_list
+            if call.args and call.args[0] == "caption_discovery_complete"
+        ]
+        self.assertEqual(len(complete), 1)
+        payload = complete[0].kwargs
+        self.assertFalse(payload["ok"])
+        self.assertIn("No eligible", payload["reason"])
+
+    def test_caption_discovery_rejects_ambiguous_dubbed_audio(self):
+        import batch_transcribe
+
+        class FakeYoutubeDL:
+            def __init__(self, _options):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def extract_info(self, _url, download=False):
+                return {
+                    "duration": 100,
+                    "automatic_captions": {"de": [{"ext": "json3", "url": "https://example.com/cap"}]},
+                    "formats": [
+                        {"language": "de", "acodec": "mp4a"},
+                        {"language": "en", "acodec": "mp4a"},
+                    ],
+                }
+
+        with patch("batch_transcribe.emit") as emit_mock:
+            import sys as _sys
+            import types as _types
+
+            stub = _types.ModuleType("yt_dlp")
+            stub.YoutubeDL = FakeYoutubeDL
+            _sys.modules["yt_dlp"] = stub
+            try:
+                batch_transcribe.run_caption_discovery({
+                    "jobId": "ambiguous-audio",
+                    "sourceUrl": "https://www.youtube.com/watch?v=test",
+                    "language": "de",
+                    "captionLanguage": "de",
+                })
+            finally:
+                _sys.modules.pop("yt_dlp", None)
+                batch_transcribe.__dict__.pop("yt_dlp", None)
+        complete = [
+            call for call in emit_mock.call_args_list
+            if call.args and call.args[0] == "caption_discovery_complete"
+        ]
+        self.assertEqual(len(complete), 1)
+        self.assertFalse(complete[0].kwargs["ok"])
+        self.assertIn("ambiguous", complete[0].kwargs["reason"].lower())
+
+    def test_run_batch_emits_unknown_when_unmeasured(self):
+        """Unmeasurable timing stays None (rendered 'unknown'), never 0.0."""
+        import numpy as np
+
+        source = ResolvedSource(url="https://media.example/audio", headers={})
+        measured = DecodedAudio(
+            samples=np.zeros(16_000, dtype=np.float32),
+            first_decoded_audio_pts=None,
+            decoded_sample_count=16_000,
+            decoded_audio_duration=1.0,
+        )
+        emitted = []
+
+        def fake_emit(state, job_id, **payload):
+            emitted.append((state, payload))
+
+        with (
+            patch("batch_transcribe.resolve_sources", return_value=[source]),
+            patch("batch_transcribe.acquire_first_accessible_source") as acquire,
+            patch("batch_transcribe.load_model") as load_model,
+            patch("batch_transcribe.transcribe_words") as transcribe,
+            patch("batch_transcribe.emit", side_effect=fake_emit),
+        ):
+            acquire.return_value = (source, measured)
+            load_model.return_value = (object(), "cpu/int8")
+            from types import SimpleNamespace
+
+            transcribe.return_value = ([], SimpleNamespace(language="de"))
+            import batch_transcribe
+
+            batch_transcribe.run({
+                "jobId": "timing-unknown",
+                "sourceKind": "direct",
+                "sourceUrl": "https://media.example/audio",
+            })
+        started = [payload for state, payload in emitted if state == "batch_started"]
+        self.assertEqual(len(started), 1)
+        self.assertIsNone(started[0]["firstDecodedAudioPts"])
 
 
 if __name__ == "__main__":
