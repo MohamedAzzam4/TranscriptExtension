@@ -27,8 +27,9 @@ For priority, dependencies, phases, and future work, use
 - Measured 0.11.1 dictionary gaps: `noch` child senses/example links; `durch`
   maintenance cleanup; `gegen` case annotation; `werden` auxiliary/participle
   variants; ambiguous `wegen` scope. Retain features pending the user's decision.
-  Real Chrome download completion and genuinely hidden-tab behavior need more
-  evidence. See the 0.11.1 report; reserves remain unused.
+  User subsequently reports normal-browser translation setup works; exact
+  cold-download/background conditions remain unspecified. See the0.11.2 UI
+  report and0.11.1 expanded evaluation (one prior reserve consumed).
 
 - A larger searchable library page and an explicit **Open video** action for old transcripts.
 - User-selected filesystem folders or companion-service persistence beyond browser storage.

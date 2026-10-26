@@ -28,6 +28,14 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-26 WP2.4/WP2.5 UI-only candidate0.11.2 moves alternative meanings below
+the main meaning, isolates disclosure typography from caption sizing and renders
+verb overview/conjugations as full-width semantic tables. User explicitly forbids
+functionality tests for this change; syntax/whitespace/source review only, with
+browser behavior unverified. User also reports translation setup works in their
+normal browser; exact pair/cold/background conditions unspecified. See
+`test-results/0.11.2-word-card-table-ui.md`. Prior dictionary gaps remain.
+
 2026-10-26 WP1.3/WP0.3 tests-only follow-up keeps application f8e04a6 unchanged.
 Thirty additional entries score case rules7/10, explicit verb bases7/10 and
 main conjugation tables10/10; complementary primary infinitives9/10 reveal tun→

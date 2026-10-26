@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 22;
+  const CONTENT_SCRIPT_VERSION = 23;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -604,6 +604,7 @@
           -webkit-backdrop-filter: blur(22px) saturate(1.2);
           color: #f5f5f0;
           box-shadow: 0 8px 32px rgba(0,0,0,.48);
+          font: 400 13px/1.5 system-ui, sans-serif;
           text-align: left;
           pointer-events: auto;
           user-select: text;
@@ -629,6 +630,23 @@
         .word-heading { min-width: 0; }
         .word-title { font: 750 23px/1.35 system-ui, sans-serif; color: #e2c583; overflow-wrap: anywhere; }
         .word-alternatives { margin-top: 7px; color: #d7c9a5; font-size: 13px; line-height: 1.5; }
+        .word-alternatives > div + div { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(141,196,155,.15); }
+        .word-more-meanings { margin-top: 9px; padding-top: 4px; border-top: 1px solid rgba(141,196,155,.15); }
+        .word-more-examples { margin-top: 5px; }
+        .word-card details > summary {
+          width: fit-content;
+          max-width: 100%;
+          padding: 4px 0;
+          color: #b5bcb1;
+          font: 600 12px/1.5 system-ui, sans-serif;
+          text-align: start;
+          cursor: pointer;
+          border-radius: 3px;
+        }
+        .word-card details > summary::marker { color: #8dc49b; font-size: 11px; }
+        .word-card details > summary:hover { color: #e6e7df; }
+        .word-card details > summary:focus-visible,
+        .word-table-scroll:focus-visible { outline: 2px solid #8dc49b; outline-offset: 3px; }
         .word-title, .word-alternatives, .word-definition-target, .word-example-target { text-align: start; }
         .word-highlight { padding: 0 2px; border-radius: 3px; background: rgba(74,124,89,.35); color: #f0d596; font-weight: 750; text-decoration: underline; text-decoration-color: #8dc49b; text-underline-offset: 3px; }
         .word-definition-note, .word-translation-status { margin-top: 7px; color: #a4aaa3; font: 11px/1.5 system-ui, sans-serif; }
@@ -666,7 +684,7 @@
         .word-section[hidden] { display: none; }
         .word-label {
           color: #c2b48f;
-          font-size: 10px;
+          font-size: 13px;
           font-weight: 750;
           letter-spacing: .08em;
           text-transform: uppercase;
@@ -695,9 +713,25 @@
         .word-example-target { margin-top: 3px; color: #b5bcb1; font-size: 12px; }
         .word-list { margin: 4px 0 0; padding-left: 18px; }
         .word-list li + li { margin-top: 3px; }
-        .word-grammar { display: grid; grid-template-columns: auto 1fr; gap: 3px 9px; }
-        .word-grammar dt { color: #c2b48f; font-size: 11px; font-weight: 700; }
-        .word-grammar dd { margin: 0; }
+        .word-grammar { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 5px 9px; }
+        .word-grammar > dt { color: #c2b48f; font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+        .word-grammar > dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+        .word-grammar > .word-verb-block-label,
+        .word-grammar > .word-verb-block { grid-column: 1 / -1; }
+        .word-grammar > .word-verb-block-label { margin-top: 5px; }
+        .word-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid rgba(141,196,155,.2); border-radius: 7px; }
+        .word-verb-table { width: 100%; border-collapse: collapse; color: #e6e7df; font: 400 13px/1.45 system-ui, sans-serif; text-align: left; }
+        .word-verb-table th,
+        .word-verb-table td { padding: 7px 10px; border-bottom: 1px solid rgba(141,196,155,.13); vertical-align: top; overflow-wrap: anywhere; }
+        .word-verb-table th + th,
+        .word-verb-table th + td,
+        .word-verb-table td + td { border-left: 1px solid rgba(141,196,155,.1); }
+        .word-verb-table th { color: #d7c9a5; font-size: 12px; font-weight: 650; }
+        .word-verb-table thead { background: rgba(74,124,89,.17); }
+        .word-verb-table th[scope="rowgroup"] { width: 33%; background: rgba(74,124,89,.07); }
+        .word-verb-overview th { width: 28%; }
+        .word-verb-table tbody:last-child tr:last-child > * { border-bottom: 0; }
+        .word-verb-table tbody tr:hover { background: rgba(141,196,155,.05); }
         .word-note { margin-top: 9px; color: #a4aaa3; font-size: 10px; }
         .word-sources { display: flex; gap: 12px; margin-top: 10px; }
         .word-source { color: #8dc49b; font-size: 11px; }
@@ -728,12 +762,12 @@
               <button class="word-close" type="button" aria-label="Close definition">×</button>
             </div>
           </div>
-          <details class="word-more-meanings" hidden><summary>More meanings</summary><div class="word-alternatives" dir="auto"></div></details>
-          <div class="word-section">
+          <div class="word-section word-meaning-section">
             <div class="word-label">Meaning</div>
             <div class="word-definition-note" hidden></div>
             <div class="word-definition word-definition-de" lang="de"></div>
             <div class="word-definition word-definition-target" dir="auto"></div>
+            <details class="word-more-meanings" hidden><summary>Other meanings</summary><div class="word-alternatives" dir="auto"></div></details>
           </div>
           <div class="word-saved-context word-example-card" hidden></div>
           <div class="word-voice-status" role="status" hidden></div>
@@ -1714,12 +1748,11 @@
       wordGrammarElement.parentElement.hidden = true;
       return;
     }
-    const rows = [
-      ...governments.map((government) => [
+    const caseRows = governments.map((government) => [
         government.senseId ? `Government [${government.senseId}]` : "Government",
         `${government.text}${government.translation ? ` — ${government.translation}` : ""}`
-      ]),
-      ...(isVerb ? [
+      ]);
+    const verbRows = (isVerb ? [
         ["Infinitiv", grammar?.infinitive],
         ["Präsens", grammar?.present],
         ["Präteritum", grammar?.preterite],
@@ -1727,9 +1760,9 @@
         ["Perfekt", grammar?.perfect]
       ].concat((grammar?.baseForms || []).map(item => [`Grundform [${item.sectionId}]`, item.infinitive]))
         .concat((grammar?.auxiliaries || []).map(item => [`Hilfsverb / Perfekt [${item.senseId}]`, item.perfect || item.auxiliary])) : [])
-    ].filter(([, value]) => value);
+      .filter(([, value]) => value);
     const fragment = document.createDocumentFragment();
-    for (const [label, value] of rows) {
+    for (const [label, value] of caseRows) {
       const term = document.createElement("dt");
       term.textContent = label;
       const definition = document.createElement("dd");
@@ -1737,27 +1770,101 @@
       definition.textContent = value;
       fragment.append(term, definition);
     }
+    if (verbRows.length) {
+      const term = document.createElement('dt');
+      term.className = 'word-verb-block-label';
+      term.textContent = 'Verb overview';
+      const definition = document.createElement('dd');
+      definition.className = 'word-verb-block';
+      const table = document.createElement('table');
+      table.className = 'word-verb-table word-verb-overview';
+      table.setAttribute('aria-label', 'German verb overview');
+      table.lang = 'de';
+      const body = document.createElement('tbody');
+      for (const [label, value] of verbRows) {
+        const row = document.createElement('tr');
+        const heading = document.createElement('th');
+        heading.scope = 'row';
+        heading.textContent = label;
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(heading, cell);
+        body.append(row);
+      }
+      table.append(body);
+      definition.append(createWordTableScroller(table, 'Verb overview'));
+      fragment.append(term, definition);
+    }
     if (isVerb && grammar?.conjugations?.length) {
       const term = document.createElement('dt');
+      term.className = 'word-verb-block-label';
       term.textContent = 'Verb forms';
       const definition = document.createElement('dd');
+      definition.className = 'word-verb-block';
       const details = document.createElement('details');
       const summary = document.createElement('summary');
       summary.textContent = `Conjugations (${grammar.conjugations.length})`;
-      const forms = document.createElement('dl');
-      for (const form of grammar.conjugations) {
-        const label = document.createElement('dt');
-        label.textContent = [...new Set([form.tense, form.mood, form.person])].join(' · ');
-        const value = document.createElement('dd');
-        value.textContent = form.form;
-        forms.append(label, value);
+      const table = document.createElement('table');
+      table.className = 'word-verb-table word-conjugation-table';
+      table.setAttribute('aria-label', 'German verb conjugations');
+      table.lang = 'de';
+      const header = document.createElement('thead');
+      header.lang = 'en';
+      const headerRow = document.createElement('tr');
+      for (const label of ['Tense / mood', 'Person', 'Form']) {
+        const cell = document.createElement('th');
+        cell.scope = 'col';
+        cell.textContent = label;
+        headerRow.append(cell);
       }
-      details.append(summary, forms);
+      header.append(headerRow);
+      table.append(header);
+      // Group only presentation rows sharing source section and tense/mood.
+      // Every supplied form/alternative keeps its person and source relationship.
+      const groups = new Map();
+      for (const form of grammar.conjugations) {
+        const key = JSON.stringify([form.sectionId, form.tense, form.mood]);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(form);
+      }
+      for (const forms of groups.values()) {
+        const body = document.createElement('tbody');
+        forms.forEach((form, index) => {
+          const row = document.createElement('tr');
+          if (index === 0) {
+            const tense = document.createElement('th');
+            tense.scope = 'rowgroup';
+            tense.rowSpan = forms.length;
+            tense.textContent = [...new Set([form.tense, form.mood].filter(Boolean))].join(' · ');
+            row.append(tense);
+          }
+          const person = document.createElement('th');
+          person.scope = 'row';
+          person.textContent = form.person;
+          const value = document.createElement('td');
+          value.textContent = form.form;
+          row.append(person, value);
+          body.append(row);
+        });
+        table.append(body);
+      }
+      details.append(summary, createWordTableScroller(table, 'Verb conjugations'));
       definition.append(details);
       fragment.append(term, definition);
     }
     wordGrammarElement.replaceChildren(fragment);
-    wordGrammarElement.parentElement.hidden = rows.length === 0;
+    wordGrammarElement.parentElement.hidden = !caseRows.length && !verbRows.length && !(isVerb && grammar?.conjugations?.length);
+  }
+
+  function createWordTableScroller(table, label) {
+    const scroller = document.createElement('div');
+    scroller.className = 'word-table-scroll';
+    scroller.dir = 'ltr';
+    scroller.tabIndex = 0;
+    scroller.setAttribute('role', 'region');
+    scroller.setAttribute('aria-label', label);
+    scroller.append(table);
+    return scroller;
   }
 
   function pronounceSelectedWord(event) {

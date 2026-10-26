@@ -1,5 +1,11 @@
 # Experiment matrix
 
+2026-10-26 user-run normal-browser translation setup: user reports it worked well;
+pair/first-download/background conditions not supplied. New0.11.2 word-card UI
+edits have static syntax/whitespace/source review only: user requested no functional
+testing. No translation, playback, speech or analysis run. See
+`docs/test-results/0.11.2-word-card-table-ui.md`.
+
 2026-10-26 expanded grammar confirmation (application unchanged): 30 new entries,
 case rules7/10, explicit verb bases7/10, conjugation tables10/10, complementary
 primary infinitives9/10. Separate acceptance95/109 pass,14fail; old regression

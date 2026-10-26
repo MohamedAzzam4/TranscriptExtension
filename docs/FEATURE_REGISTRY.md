@@ -1,5 +1,11 @@
 # Protected feature registry
 
+0.11.2 UI candidate keeps the protected interactions and changes only word-card
+ordering, typography and verb-table presentation. Functional regression was not
+run at the user's explicit request; only static checks/source review. User reports
+normal-browser translation preparation success, with exact conditions unspecified.
+See `test-results/0.11.2-word-card-table-ui.md`; no new functional pass is implied.
+
 0.11.1 adds section-scoped deterministic dictionary parsing, verb-table/base
 contracts, explicit popup/setup-tab translation readiness and allowlisted safe
 persistence/migration. Relevant automated regression passes; the 60-entry manual
