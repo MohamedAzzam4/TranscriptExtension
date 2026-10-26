@@ -1,0 +1,506 @@
+[
+  {
+    "word": "Baum",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Baum"
+  },
+  {
+    "word": "Haus",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Haus"
+  },
+  {
+    "word": "Hund",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Hund"
+  },
+  {
+    "word": "Katze",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Katze"
+  },
+  {
+    "word": "schön",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sch%C3%B6n"
+  },
+  {
+    "word": "schnell",
+    "group": "straightforward",
+    "split": "development",
+    "file": "straightforward-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/schnell"
+  },
+  {
+    "word": "heute",
+    "group": "straightforward",
+    "split": "final",
+    "file": "straightforward-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/heute"
+  },
+  {
+    "word": "Wasser",
+    "group": "straightforward",
+    "split": "final",
+    "file": "straightforward-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Wasser"
+  },
+  {
+    "word": "Brot",
+    "group": "straightforward",
+    "split": "final",
+    "file": "straightforward-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Brot"
+  },
+  {
+    "word": "rot",
+    "group": "straightforward",
+    "split": "final",
+    "file": "straightforward-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/rot"
+  },
+  {
+    "word": "grün",
+    "group": "straightforward",
+    "split": "reserve",
+    "file": "straightforward-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gr%C3%BCn"
+  },
+  {
+    "word": "klein",
+    "group": "straightforward",
+    "split": "reserve",
+    "file": "straightforward-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/klein"
+  },
+  {
+    "word": "mit",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/mit"
+  },
+  {
+    "word": "Band",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Band"
+  },
+  {
+    "word": "Bank",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Bank"
+  },
+  {
+    "word": "See",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/See"
+  },
+  {
+    "word": "Leiter",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Leiter"
+  },
+  {
+    "word": "Steuer",
+    "group": "sections",
+    "split": "development",
+    "file": "sections-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Steuer"
+  },
+  {
+    "word": "Kiefer",
+    "group": "sections",
+    "split": "final",
+    "file": "sections-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Kiefer"
+  },
+  {
+    "word": "Tor",
+    "group": "sections",
+    "split": "final",
+    "file": "sections-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Tor"
+  },
+  {
+    "word": "der",
+    "group": "sections",
+    "split": "final",
+    "file": "sections-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/der"
+  },
+  {
+    "word": "das",
+    "group": "sections",
+    "split": "final",
+    "file": "sections-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/das"
+  },
+  {
+    "word": "um",
+    "group": "sections",
+    "split": "reserve",
+    "file": "sections-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/um"
+  },
+  {
+    "word": "zu",
+    "group": "sections",
+    "split": "reserve",
+    "file": "sections-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/zu"
+  },
+  {
+    "word": "ohne",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/ohne"
+  },
+  {
+    "word": "helfen",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/helfen"
+  },
+  {
+    "word": "wegen",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/wegen"
+  },
+  {
+    "word": "auf",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/auf"
+  },
+  {
+    "word": "trotz",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/trotz"
+  },
+  {
+    "word": "für",
+    "group": "cases",
+    "split": "development",
+    "file": "cases-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/f%C3%BCr"
+  },
+  {
+    "word": "bei",
+    "group": "cases",
+    "split": "final",
+    "file": "cases-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/bei"
+  },
+  {
+    "word": "durch",
+    "group": "cases",
+    "split": "final",
+    "file": "cases-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/durch"
+  },
+  {
+    "word": "gegen",
+    "group": "cases",
+    "split": "final",
+    "file": "cases-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gegen"
+  },
+  {
+    "word": "zwischen",
+    "group": "cases",
+    "split": "final",
+    "file": "cases-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/zwischen"
+  },
+  {
+    "word": "seit",
+    "group": "cases",
+    "split": "reserve",
+    "file": "cases-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/seit"
+  },
+  {
+    "word": "gegenüber",
+    "group": "cases",
+    "split": "reserve",
+    "file": "cases-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gegen%C3%BCber"
+  },
+  {
+    "word": "gehen",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gehen"
+  },
+  {
+    "word": "versprochen",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/versprochen"
+  },
+  {
+    "word": "sein",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sein"
+  },
+  {
+    "word": "haben",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/haben"
+  },
+  {
+    "word": "nehmen",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/nehmen"
+  },
+  {
+    "word": "aufstehen",
+    "group": "verbs",
+    "split": "development",
+    "file": "verbs-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/aufstehen"
+  },
+  {
+    "word": "geben",
+    "group": "verbs",
+    "split": "final",
+    "file": "verbs-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/geben"
+  },
+  {
+    "word": "ging",
+    "group": "verbs",
+    "split": "final",
+    "file": "verbs-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/ging"
+  },
+  {
+    "word": "geholfen",
+    "group": "verbs",
+    "split": "final",
+    "file": "verbs-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/geholfen"
+  },
+  {
+    "word": "werden",
+    "group": "verbs",
+    "split": "final",
+    "file": "verbs-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/werden"
+  },
+  {
+    "word": "sehen",
+    "group": "verbs",
+    "split": "reserve",
+    "file": "verbs-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sehen"
+  },
+  {
+    "word": "läuft",
+    "group": "verbs",
+    "split": "reserve",
+    "file": "verbs-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/l%C3%A4uft"
+  },
+  {
+    "word": "was",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/was"
+  },
+  {
+    "word": "sich",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sich"
+  },
+  {
+    "word": "als",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/als"
+  },
+  {
+    "word": "doch",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/doch"
+  },
+  {
+    "word": "ja",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/ja"
+  },
+  {
+    "word": "es",
+    "group": "formatting",
+    "split": "development",
+    "file": "formatting-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/es"
+  },
+  {
+    "word": "dass",
+    "group": "formatting",
+    "split": "final",
+    "file": "formatting-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/dass"
+  },
+  {
+    "word": "ab",
+    "group": "formatting",
+    "split": "final",
+    "file": "formatting-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/ab"
+  },
+  {
+    "word": "denn",
+    "group": "formatting",
+    "split": "final",
+    "file": "formatting-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/denn"
+  },
+  {
+    "word": "noch",
+    "group": "formatting",
+    "split": "final",
+    "file": "formatting-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/noch"
+  },
+  {
+    "word": "nur",
+    "group": "formatting",
+    "split": "reserve",
+    "file": "formatting-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/nur"
+  },
+  {
+    "word": "eben",
+    "group": "formatting",
+    "split": "reserve",
+    "file": "formatting-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/eben"
+  },
+  {
+    "word": "Akkusativ",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Akkusativ"
+  },
+  {
+    "word": "Dativ",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Dativ"
+  },
+  {
+    "word": "Genitiv",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Genitiv"
+  },
+  {
+    "word": "Kasus",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Kasus"
+  },
+  {
+    "word": "Grammatik",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Grammatik"
+  },
+  {
+    "word": "Flexion",
+    "group": "missing-and-misleading",
+    "split": "development",
+    "file": "missing-and-misleading-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Flexion"
+  },
+  {
+    "word": "Konjugation",
+    "group": "missing-and-misleading",
+    "split": "final",
+    "file": "missing-and-misleading-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Konjugation"
+  },
+  {
+    "word": "Infinitiv",
+    "group": "missing-and-misleading",
+    "split": "final",
+    "file": "missing-and-misleading-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Infinitiv"
+  },
+  {
+    "word": "Partizip",
+    "group": "missing-and-misleading",
+    "split": "final",
+    "file": "missing-and-misleading-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Partizip"
+  },
+  {
+    "word": "Präposition",
+    "group": "missing-and-misleading",
+    "split": "final",
+    "file": "missing-and-misleading-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Pr%C3%A4position"
+  },
+  {
+    "word": "Adverb",
+    "group": "missing-and-misleading",
+    "split": "reserve",
+    "file": "missing-and-misleading-11.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Adverb"
+  },
+  {
+    "word": "Pronomen",
+    "group": "missing-and-misleading",
+    "split": "reserve",
+    "file": "missing-and-misleading-12.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/Pronomen"
+  }
+]

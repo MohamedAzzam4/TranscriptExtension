@@ -1,0 +1,16 @@
+[
+  {
+    "split": "development",
+    "reviewedHash": "97600c48493b55bd7f4ce36b816336c41dfd963d852c84d475e5da192c56d42e",
+    "currentHash": "6816cf9dca71fb6f19a3c92874c57c2b7aa82a187fa21be3233c9f7601ff42f9",
+    "resultsIdentical": true,
+    "note": "Only URL sanitization helper and unused legacy function removal changed after extractor freeze; no final-set tuning."
+  },
+  {
+    "split": "final",
+    "reviewedHash": "97600c48493b55bd7f4ce36b816336c41dfd963d852c84d475e5da192c56d42e",
+    "currentHash": "6816cf9dca71fb6f19a3c92874c57c2b7aa82a187fa21be3233c9f7601ff42f9",
+    "resultsIdentical": true,
+    "note": "Only URL sanitization helper and unused legacy function removal changed after extractor freeze; no final-set tuning."
+  }
+]

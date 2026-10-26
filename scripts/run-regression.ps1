@@ -27,7 +27,11 @@ Write-Host "Project: $projectRoot"
 
 $syntaxFiles = @(
     "content.js",
+    "german-pronunciation.js",
     "learning-features.js",
+    "persistence-safety.js",
+    "translation-readiness.js",
+    "translation-setup.js",
     "local-media.js",
     "media-candidate.js",
     "media-observer-bridge.js",

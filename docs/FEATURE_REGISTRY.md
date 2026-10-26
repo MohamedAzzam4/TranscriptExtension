@@ -1,5 +1,12 @@
 # Protected feature registry
 
+0.11.1 adds section-scoped deterministic dictionary parsing, verb-table/base
+contracts, explicit popup/setup-tab translation readiness and allowlisted safe
+persistence/migration. Relevant automated regression passes; the 60-entry manual
+evaluation retains definition/grammar/conjugation gaps, and real Chrome download
+completion is unverified after timeouts. All protected features remain present.
+See `test-results/0.11.1-dictionary-readiness-persistence.md`.
+
 This registry is the Phase 0/WP0.1 baseline. It distinguishes code evidence
 from real browser evidence so an old feature cannot be called working merely
 because its functions still exist.
@@ -20,7 +27,7 @@ because its functions still exist.
 |---|---|---|---|---|---|
 | INT-SELECT | Source transcript and translation can be selected and copied naturally | `64875b8` | `test-learning-features.mjs`, `test-popup-bindings.mjs` | M-01 | Source present; manual unverified |
 | INT-WORD | A word click opens lookup, while text selection does not | `ea1379c` | `test-learning-features.mjs`, `test-popup-bindings.mjs` | M-02 | Source present; manual unverified |
-| LEARN-CARD | Word card shows source-backed German/English definitions, examples, grammar, combinations, and related words | `1546662` | `test-learning-features.mjs` | M-03 | Automated helpers pass; manual unverified |
+| LEARN-CARD | German Wiktionary-only meanings/examples translated directly to the target; source-explicit case/government and verb forms in a separate Grammar section; German marks and strict distinct-candidate target marks; browser German pronunciation using local or online voices with no other-language fallback | `1546662`; user-revised 0.11.0 candidate | `test-learning-features.mjs`, `test-word-card-localization.mjs`, `test-german-pronunciation.mjs` | M-03 | Local automated regression passes; actual German speech, voice availability and combined browser behavior remain unverified |
 | LEARN-SAVE | Save/remove vocabulary persists context and video provenance | `ea1379c`, `1546662` | `test-batch-lifecycle.mjs`, `test-learning-features.mjs` | M-04 | Automated lifecycle passes; manual unverified |
 | LEARN-YG | YouGlish opens the selected word in German | `1546662` | `test-popup-bindings.mjs` | M-05 | Source present; manual unverified |
 | LEARN-REPLAY | Replay supports the selected word and recognized sentence/caption, preserves exact/estimated provenance, clamps exact word playback against adjacent boundaries, and restores playback state | `1546662`; next bounded interaction update | `test-popup-bindings.mjs`; deterministic interval and restoration coverage required | M-06 | Existing word replay source present; sentence replay and tighter clamping requested, not implemented |
@@ -34,7 +41,7 @@ because its functions still exist.
 
 | ID | Protected contract | Historical checkpoint | Automated evidence | Manual check | Baseline at `9b74b8c` |
 |---|---|---|---|---|---|
-| TR-CACHE | Complete cached transcript replays without new recognition | `923d8c9`, `1546662` | `test-batch-lifecycle.mjs`, `test-coverage.mjs` | M-09 | Automated lifecycle passes; manual unverified |
+| TR-CACHE | Complete cached transcript replays without new recognition; playback records reference existing transcript data without duplicating cues | `923d8c9`, `1546662`; bounded 0.11.0 storage correction | `test-batch-lifecycle.mjs`, `test-coverage.mjs`; isolated Chromium storage fixture | M-09 | Local suites and real isolated storage check pass; real-player acceptance unverified; see `test-results/0.11.0-replay-transcript-references.md` |
 | TR-PARTIAL | Partial live coverage is not promoted as a complete title | `1546662` | `test-coverage.mjs` | M-10 | Automated pass; manual unverified |
 | TR-SEEK | Covered rewind reuses cues; uncovered seek creates a new anchored epoch | `923d8c9` | `test-coverage.mjs`, `test-transcript-groups.mjs` | M-11 | Automated pass; manual unverified |
 | TR-EXPORT | TXT and technical JSON exports preserve separate ASR/caption provenance | `923d8c9`, `1546662` | `test-learning-features.mjs`, lifecycle tests | M-12 | Automated helper pass; manual unverified |

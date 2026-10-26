@@ -109,6 +109,7 @@ assert.deepEqual(
   scriptInjections[2].files,
   [
     "learning-features.js",
+    "german-pronunciation.js",
     "transcript-groups.js",
     "media-candidate.js",
     "local-media.js",
@@ -117,6 +118,78 @@ assert.deepEqual(
 );
 assert.ok(scriptInjections.every(({ target }) => target.allFrames));
 assert.ok(scriptInjections.every(({ injectImmediately }) => injectImmediately));
+
+// Observer injection alone cannot establish a working player application.
+const executeScriptBeforeFailure = context.chrome.scripting.executeScript;
+context.chrome.scripting.executeScript = async (injection) => {
+  if (injection.files.includes("content.js")) throw new Error("SyntaxError: missing ) after argument list");
+  return [{ frameId: 0 }, { frameId: 3 }];
+};
+try {
+  await assert.rejects(
+    vm.runInContext("ensureContentScripts(7)", context),
+    /Player script initialization failed: SyntaxError: missing \) after argument list/,
+    "show the application injection failure instead of misreporting that no video exists"
+  );
+} finally {
+  context.chrome.scripting.executeScript = executeScriptBeforeFailure;
+}
+
+// An unsuccessful new attempt must not display the previous experiment as its result.
+local.lastExperimentId = "previous-complete";
+local["experiment:previous-complete"] = { pipeline: { status: "complete" } };
+context.chrome.tabs.query = async () => [{ id: 7, url: "https://video.example/episode-1" }];
+context.chrome.scripting.executeScript = async (injection) => {
+  if (injection.files.includes("content.js")) throw new Error("SyntaxError: missing ) after argument list");
+  return [{ frameId: 0 }, { frameId: 3 }];
+};
+try {
+  await assert.rejects(
+    vm.runInContext('startSmartExperiment({ serverUrl: "ws://127.0.0.1:8000/asr" })', context),
+    /Player script initialization failed/
+  );
+} finally {
+  context.chrome.scripting.executeScript = executeScriptBeforeFailure;
+  delete context.chrome.tabs.query;
+}
+assert.match(session.lastMediaPreparationFailure.message, /missing \)/, "persist the failed attempt separately from the previous experiment");
+const preparationDiagnostics = await vm.runInContext("getVisibleDiagnostics()", context);
+assert.equal(preparationDiagnostics.diagnostics.level, "error");
+assert.equal(preparationDiagnostics.diagnostics.stage, "Player preparation failed");
+assert.match(preparationDiagnostics.diagnostics.message, /initialization failed/);
+assert.equal(local["experiment:previous-complete"].pipeline.status, "complete", "do not rewrite the saved experiment to record a preparation failure");
+delete session.lastMediaPreparationFailure;
+delete local.lastExperimentId;
+delete local["experiment:previous-complete"];
+
+const sendMessageBeforeInspection = context.chrome.tabs.sendMessage;
+context.chrome.tabs.sendMessage = async (_tabId, _message, { frameId }) => frameId === 3
+  ? { ok: false, error: "Browser pronunciation helpers were not loaded." }
+  : { ok: false, context: null };
+try {
+  await assert.rejects(
+    vm.runInContext("findMediaTarget(7, [0, 3])", context),
+    /Player inspection failed: frame 3: Browser pronunciation helpers were not loaded/,
+    "an inspection exception must not be reported as an absent video"
+  );
+  context.chrome.tabs.sendMessage = async (_tabId, _message, { frameId }) => {
+    if (frameId === 3) return { ok: true, context: { width: 1280, height: 720, paused: true, readyState: 4 } };
+    throw new Error("The unrelated frame has no listener.");
+  };
+  const usableFrame = await vm.runInContext("findMediaTarget(7, [0, 3])", context);
+  assert.equal(usableFrame.frameId, 3, "a valid player wins over failures in unrelated frames");
+  context.chrome.tabs.sendMessage = async () => { throw new Error("Frame navigated: https://media.example/watch?token=private-test-token"); };
+  await assert.rejects(vm.runInContext("findMediaTarget(7, [3])", context), (error) => {
+    assert.match(error.message, /Player inspection failed: frame 3: Frame navigated/);
+    assert.doesNotMatch(error.message, /private-test-token/);
+    return true;
+  });
+  context.chrome.tabs.sendMessage = async () => ({ ok: false, context: null });
+  assert.equal(await vm.runInContext("findMediaTarget(7, [0, 3])", context), null,
+    "a real empty frame remains distinct from an inspection failure");
+} finally {
+  context.chrome.tabs.sendMessage = sendMessageBeforeInspection;
+}
 
 context.genericMediaContext = {
   batchCandidates: [{
@@ -607,6 +680,7 @@ assert.ok(tabMessages.some(({ message }) => (
   && message.translationPreferences.provider === "browser"
 )));
 
+local.savedVocabulary = [{ word: "Haus", englishDefinition: "house", englishSourceUrl: "https://en.wiktionary.org/wiki/Haus", context: "Historical context" }];
 context.testVocabularyEntry = {
   word: "Haus",
   englishDefinition: "house",
@@ -620,7 +694,8 @@ assert.equal(savedWord.saved, true);
 assert.equal(local.savedVocabulary.length, 1);
 assert.equal(local.savedVocabulary[0].normalizedWord, "haus");
 const savedWords = await vm.runInContext("getSavedWords()", context);
-assert.equal(savedWords.entries[0].englishDefinition, "house");
+assert.equal(savedWords.entries[0].englishDefinition, undefined, "active normalized records exclude legacy English evidence");
+assert.equal(local.savedVocabulary[0].englishDefinition, "house", "raw legacy fields remain preserved in storage");
 await vm.runInContext("removeSavedWord('Haus')", context);
 assert.equal(local.savedVocabulary.length, 0);
 
@@ -636,8 +711,8 @@ context.testTranslationMessage = {
 };
 const translated = await vm.runInContext("translateText(testTranslationMessage)", context);
 assert.equal(translated.translatedText, "Hello & welcome.");
-assert.equal(translated.provider, "google");
-assert.ok(Object.keys(local).some((key) => key.startsWith("translation:v1:de:en:")));
+assert.equal(translated.provider, "google-cloud-fallback");
+assert.ok(Object.keys(local).some((key) => key.startsWith("translation:v2:de:en:browser-then-google:")));
 context.testUnsafeSettings = {
   serverUrl: "ws://127.0.0.1:8000/asr",
   audioLanguage: "de",
@@ -651,6 +726,9 @@ const normalizedRuntimeSettings = await vm.runInContext(
 assert.equal("googleApiKey" in normalizedRuntimeSettings, false);
 
 context.savedLibraryRecord = structuredClone(local[libraryKey]);
+const canonicalBeforeReplay = JSON.stringify(local[libraryKey]);
+const originalSourceKey = `experiment:${local[libraryKey].sourceExperimentId}`;
+const originalBeforeReplay = JSON.stringify(local[originalSourceKey]);
 context.savedLibrarySettings = {
   serverUrl: "ws://127.0.0.1:8000/asr",
   audioLanguage: "de",
@@ -681,10 +759,92 @@ const restored = await vm.runInContext(
 assert.equal(restored.mode, "library");
 assert.equal(restored.restored, true);
 assert.equal(session.activeExperiment.mode, "batch-ready");
-assert.equal(local[`experiment:${restored.experimentId}`].asrSegments.length, 250);
+assert.equal(local[`experiment:${restored.experimentId}`].asrSegments.length, 0,
+  "cached replay must not persist another complete transcript");
+assert.equal(local[`experiment:${restored.experimentId}`].transcriptReference.libraryKey, libraryKey);
+context.restoredExperimentId = restored.experimentId;
+const hydratedReplay = await vm.runInContext("getExperiment(restoredExperimentId)", context);
+assert.equal(hydratedReplay.asrSegments.length, 250, "runtime reads still expose the complete cached transcript");
 assert.ok(tabMessages.some(({ tabId, message }) => (
   tabId === 8 && message.type === "BEGIN_SESSION" && message.segments.length === 250
 )));
+
+const hydratedBeforeMetadata = JSON.stringify(hydratedReplay.asrSegments);
+const replayTextExport = await vm.runInContext("exportLastTranscriptText()", context);
+assert.match(replayTextExport.text, /\[00:00\] Erster Teil 0\./);
+const replayTechnicalExport = await vm.runInContext("exportLastExperiment()", context);
+assert.equal(replayTechnicalExport.experiment.asrSegments.length, 250,
+  "technical exports hydrate referenced cues instead of exporting an empty transcript");
+await vm.runInContext("setSyncOffset(0.3)", context);
+await vm.runInContext("updateDisplaySettings({ captionPreferences: { fontSize: 32 }, translationPreferences: {} })", context);
+assert.equal(local[`experiment:${restored.experimentId}`].asrSegments.length, 0,
+  "saving playback preferences must not re-persist hydrated transcript segments");
+assert.equal(local[`experiment:${restored.experimentId}`].settings.syncOffset, 0.3);
+await vm.runInContext("stopExperiment()", context);
+assert.equal(local[`experiment:${restored.experimentId}`].asrSegments.length, 0,
+  "stopping cached replay must retain reference-only storage");
+const replayRecordIds = [restored.experimentId];
+for (let repeat = 0; repeat < 3; repeat += 1) {
+  const replay = await vm.runInContext("startLibraryExperiment(savedLibrarySettings, savedLibraryPrepared, savedLibraryRecord)", context);
+  replayRecordIds.push(replay.experimentId);
+  await vm.runInContext("stopExperiment()", context);
+}
+for (const id of replayRecordIds) {
+  const record = local[`experiment:${id}`];
+  assert.equal(record.asrSegments.length, 0);
+  assert.equal(record.transcriptReference.libraryKey, libraryKey);
+  assert.ok(JSON.stringify(record).length < canonicalBeforeReplay.length / 4,
+    "replay history growth is metadata-sized rather than transcript-sized");
+}
+assert.equal(JSON.stringify(local[libraryKey]), canonicalBeforeReplay,
+  "cached replay does not rewrite its canonical transcript");
+assert.equal(JSON.stringify(local[originalSourceKey]), originalBeforeReplay,
+  "cached replay does not mutate the original analysis record");
+
+// A fresh worker must resolve persisted references without relying on a RAM cache.
+let restartedContext;
+restartedContext = vm.createContext({
+  console, URL, URLSearchParams, crypto: globalThis.crypto, setTimeout, clearTimeout, structuredClone,
+  chrome: context.chrome,
+  importScripts(...files) {
+    for (const file of files) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), "utf8"), restartedContext, { filename: file });
+  },
+  restoredExperimentId: restored.experimentId
+});
+vm.runInContext(source, restartedContext, { filename: "service-worker.js" });
+const afterWorkerRestart = await vm.runInContext("getExperiment(restoredExperimentId)", restartedContext);
+assert.equal(JSON.stringify(afterWorkerRestart.asrSegments), hydratedBeforeMetadata);
+
+const savedIndexBeforeRemoval = structuredClone(local.transcriptLibraryIndex);
+await vm.runInContext("removeTranscriptLibraryEntry(libraryKey)", context);
+assert.equal(local[libraryKey], undefined);
+assert.equal(JSON.stringify((await vm.runInContext("getExperiment(restoredExperimentId)", context)).asrSegments), hydratedBeforeMetadata,
+  "library deletion still permits replay/export using the existing original analysis");
+local[libraryKey] = structuredClone(context.savedLibraryRecord);
+local.transcriptLibraryIndex = savedIndexBeforeRemoval;
+local[libraryKey].segments[0].text = "A replacement transcript with the same identity and source ID.";
+assert.equal(JSON.stringify((await vm.runInContext("getExperiment(restoredExperimentId)", context)).asrSegments), hydratedBeforeMetadata,
+  "changed library content must not replace the transcript of an older replay");
+const originalForMissingSource = local[originalSourceKey];
+delete local[libraryKey];
+delete local[originalSourceKey];
+await assert.rejects(vm.runInContext("getExperiment(restoredExperimentId)", context), /no longer available/);
+context.hydratedReplayForSave = hydratedReplay;
+const metadataBeforeMissingSave = JSON.stringify(local[`experiment:${restored.experimentId}`]);
+await assert.rejects(vm.runInContext("saveExperiment(hydratedReplayForSave)", context), /no longer available/);
+assert.equal(JSON.stringify(local[`experiment:${restored.experimentId}`]), metadataBeforeMissingSave,
+  "a broken reference must not erase or silently replace the stored replay");
+local["experiment:circular-replay"] = {
+  ...structuredClone(local[`experiment:${restored.experimentId}`]),
+  id: "circular-replay",
+  transcriptReference: { ...local[`experiment:${restored.experimentId}`].transcriptReference, sourceExperimentId: "circular-replay" }
+};
+await assert.rejects(vm.runInContext('getExperiment("circular-replay")', context), /circular/);
+delete local["experiment:circular-replay"];
+local[originalSourceKey] = originalForMissingSource;
+local[libraryKey] = structuredClone(context.savedLibraryRecord);
+assert.equal(JSON.stringify((await vm.runInContext('getExperiment("batch-experiment")', context)).asrSegments), JSON.stringify(originalForMissingSource.asrSegments),
+  "historical inline experiments remain readable without migration");
 
 const incompleteActive = {
   ...active,
@@ -804,5 +964,36 @@ assert.equal(visibleDiagnostics.diagnostics.level, "warning");
 assert.equal(visibleDiagnostics.diagnostics.category, "decoder-unsupported");
 assert.match(visibleDiagnostics.diagnostics.message, /audio was found/i);
 assert.ok(visibleDiagnostics.diagnostics.details.some((detail) => detail.label === "Versions"));
+
+const storageSetBeforeQuota = context.chrome.storage.local.set;
+const storageRemoveBeforeQuota = context.chrome.storage.local.remove;
+const manifestBeforeQuota = context.chrome.runtime.getManifest;
+const retainedExperiment = structuredClone(local["experiment:raw-decoder-failure"]);
+let deletedForQuota = false;
+context.chrome.storage.local.set = async () => { throw new Error("Resource::kQuotaBytes quota exceeded"); };
+context.chrome.storage.local.remove = async () => { deletedForQuota = true; };
+context.quotaExperiment = { id: "quota-test", asrSegments: [{ text: "Saved text", start: 0, end: 1 }] };
+try {
+  await assert.rejects(vm.runInContext("saveExperiment(quotaExperiment)", context), (error) => {
+    assert.equal(error.storageArea, "local");
+    assert.match(error.message, /local storage quota.*saving analysis/);
+    return true;
+  });
+  assert.equal(deletedForQuota, false, "quota handling must not delete saved records");
+  assert.deepEqual(local["experiment:raw-decoder-failure"], retainedExperiment);
+  assert.equal(local["experiment:quota-test"], undefined, "do not claim a failed analysis save succeeded");
+  const failureDiagnostics = await vm.runInContext("getVisibleDiagnostics()", context);
+  assert.equal(failureDiagnostics.diagnostics.stage, "Analysis storage failed");
+  context.chrome.storage.local.getBytesInUse = async () => 11 * 1_048_576;
+  context.chrome.runtime.getManifest = () => ({ version: "0.11.0", permissions: ["storage", "unlimitedStorage"] });
+  const capacity = await vm.runInContext("getLocalStorageDiagnostic()", context);
+  assert.match(capacity.value, /11\.00 MiB.*standard local quota lifted/);
+} finally {
+  context.chrome.storage.local.set = storageSetBeforeQuota;
+  context.chrome.storage.local.remove = storageRemoveBeforeQuota;
+  context.chrome.runtime.getManifest = manifestBeforeQuota;
+  delete context.chrome.storage.local.getBytesInUse;
+  delete session.lastMediaPreparationFailure;
+}
 
 console.log("Batch lifecycle tests passed");

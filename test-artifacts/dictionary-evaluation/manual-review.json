@@ -1,0 +1,3450 @@
+{
+  "reviewer": "gpt-6-luna (built-in subagent, read-only)",
+  "consolidatedBy": "parent agent",
+  "method": "Complete entry-level judgment for each part: correctness AND completeness required. Synthetic layout variants excluded from these scores. Extractions never translated during source scoring.",
+  "splitPolicy": "36 development / 24 held-out final / 12 unfetched reserves. No final-result-driven extraction changes.",
+  "caveats": [
+    "Finite sample; percentages are not guarantees.",
+    "ging/geholfen use base pages gehen/helfen also in development, so their evidence is correlated.",
+    "Empty example placeholders on Katze and Band are not sentences and not counted as missing.",
+    "Noun declensions are outside requested verb-base scope.",
+    "Early evaluator counting errors were corrected using all nested lists, h4 boundaries and actual resolved attachments, rather than substring matches."
+  ],
+  "explicitExampleReferenceAudit": {
+    "developmentApplicable": 550,
+    "developmentCorrect": 550,
+    "finalApplicable": 316,
+    "finalCorrect": 300,
+    "finalMissing": 16,
+    "unnumberedSectionExamplesNA": 11
+  },
+  "rows": [
+    {
+      "word": "Baum",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Baum",
+      "sourceFile": "straightforward-01.json",
+      "revision": 10781457,
+      "sourceSha256": "97c5b1db87ccded7e56b8bd5e660e13e1df74842ab24bd919f3f6bb6aef44d1c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 7 extracted meanings, 16 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:3a",
+          "sourceReference": "3a"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 7,
+        "examples": 16,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Haus",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Haus",
+      "sourceFile": "straightforward-02.json",
+      "revision": 10801898,
+      "sourceSha256": "d6bbc3de8a4de60845f4b99ebb787dd5c6ab8be37893288c13cf062f0bf1126a",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 15 extracted meanings, 48 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        },
+        {
+          "id": "de-1:10",
+          "sourceReference": "10"
+        },
+        {
+          "id": "de-1:11",
+          "sourceReference": "11"
+        },
+        {
+          "id": "de-1:12",
+          "sourceReference": "12"
+        },
+        {
+          "id": "de-1:13",
+          "sourceReference": "13"
+        },
+        {
+          "id": "de-1:14",
+          "sourceReference": "14"
+        },
+        {
+          "id": "de-1:15",
+          "sourceReference": "15"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 15,
+        "examples": 48,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Hund",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Hund",
+      "sourceFile": "straightforward-03.json",
+      "revision": 10771903,
+      "sourceSha256": "6131c27a3d5939f13fc88ba3a1b644bfa1f8596fc0d8c4c16c3c21f1a26db89b",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 8 extracted meanings, 20 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 20,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Katze",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Katze",
+      "sourceFile": "straightforward-04.json",
+      "revision": 10804892,
+      "sourceSha256": "0e0cfa8da9646431e19fe639465b96c160384ae04ce59364b880d1ef94456960",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 9 extracted meanings, 33 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 9,
+        "examples": 33,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "schön",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sch%C3%B6n",
+      "sourceFile": "straightforward-05.json",
+      "revision": 10738644,
+      "sourceSha256": "a3e991cdf31bd8ec74eb01668f0621d72790cc2f9ff0d61c58e4ae1b6b9d1e25",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 6 extracted meanings, 13 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 6,
+        "examples": 13,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "schnell",
+      "split": "development",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/schnell",
+      "sourceFile": "straightforward-06.json",
+      "revision": 10525447,
+      "sourceSha256": "f07f68940a056cb22373479adbf706e1b05b53de0af3444ea763c3357313f72e",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 3 extracted meanings, 14 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 3,
+        "examples": 14,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "mit",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/mit",
+      "sourceFile": "sections-01.json",
+      "revision": 10714764,
+      "sourceSha256": "9d0162998cbe2c87d7d47269f01cf593afd2a239e130213b4237b871ddc587e4",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 11 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 11,
+        "caseRules": 1,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Band",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Band",
+      "sourceFile": "sections-02.json",
+      "revision": 10681090,
+      "sourceSha256": "9f7e384f18d7f72aeeb1bc96596ba628faeef38f88553bdc45a6bea195b9d21a",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 28 extracted meanings, 78 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:7a",
+          "sourceReference": "7a"
+        },
+        {
+          "id": "de-1:7b",
+          "sourceReference": "7b"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        },
+        {
+          "id": "de-1:10",
+          "sourceReference": "10"
+        },
+        {
+          "id": "de-1:11",
+          "sourceReference": "11"
+        },
+        {
+          "id": "de-1:12",
+          "sourceReference": "12"
+        },
+        {
+          "id": "de-1:13",
+          "sourceReference": "13"
+        },
+        {
+          "id": "de-1:14",
+          "sourceReference": "14"
+        },
+        {
+          "id": "de-1:15",
+          "sourceReference": "15"
+        },
+        {
+          "id": "de-1:16",
+          "sourceReference": "16"
+        },
+        {
+          "id": "de-1:17",
+          "sourceReference": "17"
+        },
+        {
+          "id": "de-1:18",
+          "sourceReference": "18"
+        },
+        {
+          "id": "de-1:19",
+          "sourceReference": "19"
+        },
+        {
+          "id": "de-1:20",
+          "sourceReference": "20"
+        },
+        {
+          "id": "de-1:21",
+          "sourceReference": "21"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-4:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-5:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 28,
+        "examples": 78,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Bank",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Bank",
+      "sourceFile": "sections-03.json",
+      "revision": 10719044,
+      "sourceSha256": "66427c867dfc78d5ac24bf42031c21c5afc2187956f78f1a60078bc0e815453e",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 8 extracted meanings, 16 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 16,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "See",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/See",
+      "sourceFile": "sections-04.json",
+      "revision": 10799705,
+      "sourceSha256": "9099d28037cb5dd39649c4564c64a0ea3d8157a054ca98d1a0f5e36ec446d7b5",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 4 extracted meanings, 12 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 12,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Leiter",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Leiter",
+      "sourceFile": "sections-05.json",
+      "revision": 10708691,
+      "sourceSha256": "d3ac5117ce483dfc7278c5311fa9961656ff854e7561663755fdf46a2a421143",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 16 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 16,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Steuer",
+      "split": "development",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Steuer",
+      "sourceFile": "sections-06.json",
+      "revision": 10718849,
+      "sourceSha256": "aef0f93249426b667128fb75ea70d05a580ca38ab6683af8e594e60d32d3d300",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-4:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 15,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "ohne",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/ohne",
+      "sourceFile": "cases-01.json",
+      "revision": 10241191,
+      "sourceSha256": "61369519bdfd9be2128419fc87822e9f3d67c9348a5f6908b7102da8117007bf",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 8 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 8,
+        "caseRules": 1,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "helfen",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/helfen",
+      "sourceFile": "cases-02.json",
+      "revision": 10630148,
+      "sourceSha256": "d62e009240bfbfda257c1d6031065ba693fcc12890b12b966f29c2c95fdb1741",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 15,
+        "caseRules": 1,
+        "conjugations": 8
+      }
+    },
+    {
+      "word": "wegen",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wegen",
+      "sourceFile": "cases-03.json",
+      "revision": 10633507,
+      "sourceSha256": "c1b6b966956b01935e4a350f2675b2673157a405a084890b2c7d27f71bf5b3d2",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "ambiguous",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "Complete usage text retained. Its attachment to meaning de-1:1 is ambiguous because the usage block itself has no explicit meaning number.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 3,
+        "examples": 8,
+        "caseRules": 3,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "auf",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/auf",
+      "sourceFile": "cases-04.json",
+      "revision": 10582295,
+      "sourceSha256": "6883026e80828cf7473ac4190ba0b41fc6eb467e93f973fd07976e0ade15006a",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 13 extracted meanings, 22 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        },
+        {
+          "id": "de-1:10",
+          "sourceReference": "10"
+        },
+        {
+          "id": "de-1:11",
+          "sourceReference": "11"
+        },
+        {
+          "id": "de-1:12",
+          "sourceReference": "12"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 13,
+        "examples": 22,
+        "caseRules": 10,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "trotz",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/trotz",
+      "sourceFile": "cases-05.json",
+      "revision": 10717722,
+      "sourceSha256": "5e1805b9c2e667d96376fcd79870ed57574c8ce34d77938881f8769be5182c4f",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "correct",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 7 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 7,
+        "caseRules": 1,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "für",
+      "split": "development",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/f%C3%BCr",
+      "sourceFile": "cases-06.json",
+      "revision": 10500775,
+      "sourceSha256": "889febe672522666042e56f74c93a0ade0991edeac1b9d5c75cd7031fa1ee82f",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 9 extracted meanings, 10 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 9,
+        "examples": 10,
+        "caseRules": 1,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "gehen",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gehen",
+      "sourceFile": "verbs-01.json",
+      "revision": 10711094,
+      "sourceSha256": "31462a8ddf075a7b7b10d87604bb9547af5590edce6f29f08d289a8f30275396",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 25 extracted meanings, 35 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        },
+        {
+          "id": "de-1:10",
+          "sourceReference": "10"
+        },
+        {
+          "id": "de-1:11",
+          "sourceReference": "11"
+        },
+        {
+          "id": "de-1:12",
+          "sourceReference": "12"
+        },
+        {
+          "id": "de-1:13",
+          "sourceReference": "13"
+        },
+        {
+          "id": "de-1:14",
+          "sourceReference": "14"
+        },
+        {
+          "id": "de-1:15",
+          "sourceReference": "15"
+        },
+        {
+          "id": "de-1:16",
+          "sourceReference": "16"
+        },
+        {
+          "id": "de-1:17",
+          "sourceReference": "17"
+        },
+        {
+          "id": "de-1:18",
+          "sourceReference": "18"
+        },
+        {
+          "id": "de-1:19",
+          "sourceReference": "19"
+        },
+        {
+          "id": "de-1:20",
+          "sourceReference": "20"
+        },
+        {
+          "id": "de-1:21",
+          "sourceReference": "21"
+        },
+        {
+          "id": "de-1:22",
+          "sourceReference": "22"
+        },
+        {
+          "id": "de-1:23",
+          "sourceReference": "23"
+        },
+        {
+          "id": "de-1:24",
+          "sourceReference": "24"
+        },
+        {
+          "id": "de-1:25",
+          "sourceReference": "25"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 25,
+        "examples": 35,
+        "caseRules": 0,
+        "conjugations": 9
+      }
+    },
+    {
+      "word": "versprochen",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/versprochen",
+      "sourceFile": "verbs-02.json",
+      "revision": 10805488,
+      "sourceSha256": "2e6c904326080ded31e4ecf30b1fa594e5dea67bc98cde2fa2efe8b907765f02",
+      "baseEvidence": {
+        "file": "base-versprechen.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/versprechen"
+      },
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 4 extracted meanings, 6 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 6,
+        "caseRules": 0,
+        "conjugations": 7
+      }
+    },
+    {
+      "word": "sein",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sein",
+      "sourceFile": "verbs-03.json",
+      "revision": 10498950,
+      "sourceSha256": "039bc22c63eabf70bbaa39494fc2c92ca00f93e5aa6bf36692977a4ee6162b85",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 6 extracted meanings, 22 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 6,
+        "examples": 22,
+        "caseRules": 0,
+        "conjugations": 7
+      }
+    },
+    {
+      "word": "haben",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/haben",
+      "sourceFile": "verbs-04.json",
+      "revision": 10702789,
+      "sourceSha256": "3db509e793815be516f59890a52a0b0b39530bc3729bd35d44e6b80477f5d28c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 8 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 15,
+        "caseRules": 0,
+        "conjugations": 8
+      }
+    },
+    {
+      "word": "nehmen",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/nehmen",
+      "sourceFile": "verbs-05.json",
+      "revision": 10623967,
+      "sourceSha256": "628ec48e01fc6d912f4057a434d371afe3269add974b5e90fc0d8ed4be9ba192",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 4 extracted meanings, 5 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 5,
+        "caseRules": 0,
+        "conjugations": 7
+      }
+    },
+    {
+      "word": "aufstehen",
+      "split": "development",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/aufstehen",
+      "sourceFile": "verbs-06.json",
+      "revision": 10801989,
+      "sourceSha256": "01279ba5362445eb3ad39006717d41bf73ef922f5922c4b8e279ddb030416470",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 4 extracted meanings, 4 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 4,
+        "caseRules": 0,
+        "conjugations": 9
+      }
+    },
+    {
+      "word": "was",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/was",
+      "sourceFile": "formatting-01.json",
+      "revision": 10638437,
+      "sourceSha256": "16abe5152e6cf5736a227e971a3f0588101d4348771085966b5a494b01b13d52",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 3 extracted meanings, 12 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 3,
+        "examples": 12,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "sich",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sich",
+      "sourceFile": "formatting-02.json",
+      "revision": 9720151,
+      "sourceSha256": "a49ee725796dcd17887dae4bbdff1811ec02e4b0eca30ded684aa6b3238c6d51",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 3 extracted meanings, 4 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 3,
+        "examples": 4,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "als",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/als",
+      "sourceFile": "formatting-03.json",
+      "revision": 10338207,
+      "sourceSha256": "7ee951453a0f88cfe30c198a90eb5349197fb3dc0d7a93332aa6c847615fe724",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 8 extracted meanings, 12 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:2a",
+          "sourceReference": "2a"
+        },
+        {
+          "id": "de-1:2b",
+          "sourceReference": "2b"
+        },
+        {
+          "id": "de-1:2c",
+          "sourceReference": "2c"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 12,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "doch",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/doch",
+      "sourceFile": "formatting-04.json",
+      "revision": 10656026,
+      "sourceSha256": "66f236a9efd838d08e5b073091863d6cc9e9286f4b9fffb7c5d3d2b88e1640ff",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 7 extracted meanings, 21 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-3:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-4:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-4:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 7,
+        "examples": 21,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "ja",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/ja",
+      "sourceFile": "formatting-05.json",
+      "revision": 10710087,
+      "sourceSha256": "15c9d91bd7ee3469793ebb3487c80c92d6ac024d94f49a19646fbe73aeb40344",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 8 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 8,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "es",
+      "split": "development",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/es",
+      "sourceFile": "formatting-06.json",
+      "revision": 10664156,
+      "sourceSha256": "e37faf80066ac613faf1ff0e50a6ba6e8dce9c08ac9a5443a8571dc6c01fa169",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 7 extracted meanings, 11 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 7,
+        "examples": 11,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Akkusativ",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Akkusativ",
+      "sourceFile": "missing-and-misleading-01.json",
+      "revision": 10576087,
+      "sourceSha256": "cad25ff61ede4e5b46b4edcda0c620cb26fa5b948d83f52f97fc17d2b5895472",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 4 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 4,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Dativ",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Dativ",
+      "sourceFile": "missing-and-misleading-02.json",
+      "revision": 10740324,
+      "sourceSha256": "3ef503c354ee2b8ff17c0898cbbb5a2f3d288e39089272e73d5abe3553be088a",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 5 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 5,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Genitiv",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Genitiv",
+      "sourceFile": "missing-and-misleading-03.json",
+      "revision": 10713701,
+      "sourceSha256": "88dcf7b92b904ca0db3937ec4e4ad7d8d950feff178f5be8d97a3b3fcccfaabd",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 5 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 5,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Kasus",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Kasus",
+      "sourceFile": "missing-and-misleading-04.json",
+      "revision": 10716707,
+      "sourceSha256": "fc02fff7d1cd52bfee35f6daa82197feb1423fb091ff72b11e1550ae032df76d",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 8 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 8,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Grammatik",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Grammatik",
+      "sourceFile": "missing-and-misleading-05.json",
+      "revision": 10714441,
+      "sourceSha256": "382bacf11a952f656ac83d6d16f616252754037e8c988ea5d6ae7aa609384c6c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 16 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 16,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Flexion",
+      "split": "development",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Flexion",
+      "sourceFile": "missing-and-misleading-06.json",
+      "revision": 10577716,
+      "sourceSha256": "21e580d700b726aa21011a20fd00eaedb899fd473f0e29be8b7f3da1305cf95c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 6 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 6,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "heute",
+      "split": "final",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/heute",
+      "sourceFile": "straightforward-07.json",
+      "revision": 9975567,
+      "sourceSha256": "19ae11abf0e28fa6304a8e42b4e09ec762fb7b5754c98f4fc74099035d7b6ec4",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 14 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 14,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Wasser",
+      "split": "final",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Wasser",
+      "sourceFile": "straightforward-08.json",
+      "revision": 10774377,
+      "sourceSha256": "9702728ead54c7cc7ad146d468cd7232bfe30c831e49e6d6d9070b83a8958e0e",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 7 extracted meanings, 22 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 7,
+        "examples": 22,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Brot",
+      "split": "final",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Brot",
+      "sourceFile": "straightforward-09.json",
+      "revision": 10770330,
+      "sourceSha256": "46605403fa6529b05e7219bbbdd033e95eaa2911c54abe58e1253199f8203c89",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 13 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 13,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "rot",
+      "split": "final",
+      "group": "straightforward",
+      "sourceUrl": "https://de.wiktionary.org/wiki/rot",
+      "sourceFile": "straightforward-10.json",
+      "revision": 10608323,
+      "sourceSha256": "f3057537c6d7f7898d23dd17085bd7cc7d781c4be2eb65483746eacf260edf1c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 4 extracted meanings, 5 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 5,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Kiefer",
+      "split": "final",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Kiefer",
+      "sourceFile": "sections-07.json",
+      "revision": 10687954,
+      "sourceSha256": "ab1abe1beeb09a3cf97ce3719dce78c067ea95e010c2bf82b1ea46e1744b0b58",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 11 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 11,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Tor",
+      "split": "final",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Tor",
+      "sourceFile": "sections-08.json",
+      "revision": 10701704,
+      "sourceSha256": "bbdef3f049d122d232a4089c74b4865e5a550475250f13482b78d4c47504d12f",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 17 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 17,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "der",
+      "split": "final",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/der",
+      "sourceFile": "sections-09.json",
+      "revision": 10714402,
+      "sourceSha256": "600b3f1727a1985aa3bd22211eaec4e399e500b15d828f9469ca75e4eaa34158",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 12 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 12,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "das",
+      "split": "final",
+      "group": "sections",
+      "sourceUrl": "https://de.wiktionary.org/wiki/das",
+      "sourceFile": "sections-10.json",
+      "revision": 10704497,
+      "sourceSha256": "d63fbd9d4746906829b4d8e9ca55592247a4014158b65da170764d472bdce389",
+      "baseEvidence": {
+        "file": "sections-09.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/der"
+      },
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 12 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-3:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 12,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "bei",
+      "split": "final",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/bei",
+      "sourceFile": "cases-07.json",
+      "revision": 10719075,
+      "sourceSha256": "681fc5abd3d00c4193d4708c3bd9452bf02a012ace6e77ee13bb3a38ee72f394",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 9 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 9,
+        "caseRules": 2,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "durch",
+      "split": "final",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/durch",
+      "sourceFile": "cases-08.json",
+      "revision": 10708473,
+      "sourceSha256": "862c3d68545df093c5f24f6904c96b8b513a564b01c06f02c82c4206843d666a",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "incorrect",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "incorrect"
+      },
+      "sourceEvidence": "Source has seven real meanings. An editor note is an extra extracted meaning; two displayed definitions retain leading colons.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:unlabeled-5",
+          "sourceReference": null
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 10,
+        "caseRules": 1,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "gegen",
+      "split": "final",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gegen",
+      "sourceFile": "cases-09.json",
+      "revision": 10213907,
+      "sourceSha256": "7384294121cffa75a5752bda62cf77d248c3211d798a44fdee17d2c780b12f30",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "missing",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "Source meanings 1–3 explicitly require Akkusativ. The wording remains inline but no structured government is emitted.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 4,
+        "examples": 7,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "zwischen",
+      "split": "final",
+      "group": "cases",
+      "sourceUrl": "https://de.wiktionary.org/wiki/zwischen",
+      "sourceFile": "cases-10.json",
+      "revision": 10645664,
+      "sourceSha256": "521efe4453c92090f0c216cb43ab7d5fdbb03b9e595bbecb066ec9136b10dbab",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 9 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:1a",
+          "sourceReference": "1a"
+        },
+        {
+          "id": "de-1:1b",
+          "sourceReference": "1b"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 9,
+        "caseRules": 5,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "geben",
+      "split": "final",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/geben",
+      "sourceFile": "verbs-07.json",
+      "revision": 10760044,
+      "sourceSha256": "c2f9b1a37cab584a0a7f174a490ce69a32fb51fd79d0afca47a6570f2f28b3e2",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 5 extracted meanings, 13 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 13,
+        "caseRules": 0,
+        "conjugations": 7
+      }
+    },
+    {
+      "word": "ging",
+      "split": "final",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/ging",
+      "sourceFile": "verbs-08.json",
+      "revision": 8107160,
+      "sourceSha256": "24335054479922b8f902386dc1ba5b52992101cf087aad70f9fe405134364104",
+      "baseEvidence": {
+        "file": "verbs-01.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/gehen"
+      },
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 25 extracted meanings, 35 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-1:9",
+          "sourceReference": "9"
+        },
+        {
+          "id": "de-1:10",
+          "sourceReference": "10"
+        },
+        {
+          "id": "de-1:11",
+          "sourceReference": "11"
+        },
+        {
+          "id": "de-1:12",
+          "sourceReference": "12"
+        },
+        {
+          "id": "de-1:13",
+          "sourceReference": "13"
+        },
+        {
+          "id": "de-1:14",
+          "sourceReference": "14"
+        },
+        {
+          "id": "de-1:15",
+          "sourceReference": "15"
+        },
+        {
+          "id": "de-1:16",
+          "sourceReference": "16"
+        },
+        {
+          "id": "de-1:17",
+          "sourceReference": "17"
+        },
+        {
+          "id": "de-1:18",
+          "sourceReference": "18"
+        },
+        {
+          "id": "de-1:19",
+          "sourceReference": "19"
+        },
+        {
+          "id": "de-1:20",
+          "sourceReference": "20"
+        },
+        {
+          "id": "de-1:21",
+          "sourceReference": "21"
+        },
+        {
+          "id": "de-1:22",
+          "sourceReference": "22"
+        },
+        {
+          "id": "de-1:23",
+          "sourceReference": "23"
+        },
+        {
+          "id": "de-1:24",
+          "sourceReference": "24"
+        },
+        {
+          "id": "de-1:25",
+          "sourceReference": "25"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 25,
+        "examples": 35,
+        "caseRules": 0,
+        "conjugations": 9
+      }
+    },
+    {
+      "word": "geholfen",
+      "split": "final",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/geholfen",
+      "sourceFile": "verbs-09.json",
+      "revision": 8753052,
+      "sourceSha256": "0609b242f811b0be9bff2c9b34549dbeb2bcdcb185967cb740ca89b63974fdcb",
+      "baseEvidence": {
+        "file": "cases-02.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/helfen"
+      },
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "correct",
+        "conjugations": "correct",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 15,
+        "caseRules": 1,
+        "conjugations": 8
+      }
+    },
+    {
+      "word": "werden",
+      "split": "final",
+      "group": "verbs",
+      "sourceUrl": "https://de.wiktionary.org/wiki/werden",
+      "sourceFile": "verbs-10.json",
+      "revision": 10806931,
+      "sourceSha256": "88bf2080a523436357ee199f314d69156381cb2e186ece56f89023a96bf344de",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "correct",
+        "conjugations": "incorrect",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "Finite rows match, but structured auxiliary/participial alternatives omit source sein, geworden/worden distinction.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 5,
+        "examples": 14,
+        "caseRules": 0,
+        "conjugations": 9
+      }
+    },
+    {
+      "word": "dass",
+      "split": "final",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dass",
+      "sourceFile": "formatting-07.json",
+      "revision": 10702251,
+      "sourceSha256": "a4135d85362ece6bf10564e1dc8d053ec6d724a72dcd39dd8f9ef2d073dfafcb",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 8 extracted meanings, 13 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 8,
+        "examples": 13,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "ab",
+      "split": "final",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/ab",
+      "sourceFile": "formatting-08.json",
+      "revision": 10718041,
+      "sourceSha256": "c9c61990190871b28f4139d7841722089ec30104f2e33275014f75f4d3e49996",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "correct",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 9 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-2:6",
+          "sourceReference": "6"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 9,
+        "examples": 15,
+        "caseRules": 5,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "denn",
+      "split": "final",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/denn",
+      "sourceFile": "formatting-09.json",
+      "revision": 10630073,
+      "sourceSha256": "1376fc47148441da849f47473485c3a1c8753d86f81d5133f2a7d08d19e8e55f",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 7 extracted meanings, 15 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-4:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-4:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 7,
+        "examples": 15,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "noch",
+      "split": "final",
+      "group": "formatting",
+      "sourceUrl": "https://de.wiktionary.org/wiki/noch",
+      "sourceFile": "formatting-10.json",
+      "revision": 10770538,
+      "sourceSha256": "e79efda6270ac8a57a931f898d4c076b0c065dcedd84ba8a7e0c872ce934f2fb",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "missing",
+        "examples": "correct",
+        "exampleMeaning": "missing",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "Source has 21 lettered child meanings absent from extraction. Sixteen explicitly referenced examples consequently have no resolved meaning or attachment.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-1:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-1:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-1:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-1:7",
+          "sourceReference": "7"
+        },
+        {
+          "id": "de-1:8",
+          "sourceReference": "8"
+        },
+        {
+          "id": "de-2:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-2:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-2:3",
+          "sourceReference": "3"
+        },
+        {
+          "id": "de-2:4",
+          "sourceReference": "4"
+        },
+        {
+          "id": "de-2:5",
+          "sourceReference": "5"
+        },
+        {
+          "id": "de-2:6",
+          "sourceReference": "6"
+        },
+        {
+          "id": "de-3:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 15,
+        "examples": 32,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Konjugation",
+      "split": "final",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Konjugation",
+      "sourceFile": "missing-and-misleading-07.json",
+      "revision": 10687711,
+      "sourceSha256": "6eb6e1f4898350ee913c9dfc9bfd3a91327f5f676c6eb0bdf6bae314cede189d",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 3 extracted meanings, 9 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        },
+        {
+          "id": "de-1:3",
+          "sourceReference": "3"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 3,
+        "examples": 9,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Infinitiv",
+      "split": "final",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Infinitiv",
+      "sourceFile": "missing-and-misleading-08.json",
+      "revision": 10641146,
+      "sourceSha256": "db53c0645118422164cbaeea2606741ef6709b243e94fd2c3e3101acd3e8b21c",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 4 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 4,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Partizip",
+      "split": "final",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Partizip",
+      "sourceFile": "missing-and-misleading-09.json",
+      "revision": 9717091,
+      "sourceSha256": "daca8ba9c4f55b44da6da2237aed9fabd796cd87b64296ba7600c02fc8099607",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 1 extracted meanings, 6 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 1,
+        "examples": 6,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    },
+    {
+      "word": "Präposition",
+      "split": "final",
+      "group": "missing-and-misleading",
+      "sourceUrl": "https://de.wiktionary.org/wiki/Pr%C3%A4position",
+      "sourceFile": "missing-and-misleading-10.json",
+      "revision": 10629563,
+      "sourceSha256": "20954feab16be4b82b5fc831e4e01669c6d7a529adc5b078474e3bc12b1cd68b",
+      "baseEvidence": null,
+      "statuses": {
+        "definitions": "correct",
+        "examples": "correct",
+        "exampleMeaning": "correct",
+        "grammarQualifications": "not-applicable",
+        "baseForm": "not-applicable",
+        "conjugations": "not-applicable",
+        "displayCleanup": "correct"
+      },
+      "sourceEvidence": "All nonempty meanings/examples compared with the frozen German sections: 2 extracted meanings, 4 examples. Source number references, actual joins and sense attachments checked.",
+      "sourceSenseReferences": [
+        {
+          "id": "de-1:1",
+          "sourceReference": "1"
+        },
+        {
+          "id": "de-1:2",
+          "sourceReference": "2"
+        }
+      ],
+      "outputCounts": {
+        "definitions": 2,
+        "examples": 4,
+        "caseRules": 0,
+        "conjugations": 0
+      }
+    }
+  ],
+  "metrics": {
+    "definitions": {
+      "development": {
+        "correct": 36,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 36,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 22,
+        "incorrect": 1,
+        "missing": 1,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 24,
+        "successRate": 0.9166666666666666,
+        "moreThan95Percent": false
+      },
+      "combined": {
+        "correct": 58,
+        "incorrect": 1,
+        "missing": 1,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 60,
+        "successRate": 0.9666666666666667,
+        "moreThan95Percent": true
+      }
+    },
+    "examples": {
+      "development": {
+        "correct": 36,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 36,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 24,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 24,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "combined": {
+        "correct": 60,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 60,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      }
+    },
+    "exampleMeaning": {
+      "development": {
+        "correct": 36,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 36,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 23,
+        "incorrect": 0,
+        "missing": 1,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 24,
+        "successRate": 0.9583333333333334,
+        "moreThan95Percent": true
+      },
+      "combined": {
+        "correct": 59,
+        "incorrect": 0,
+        "missing": 1,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 60,
+        "successRate": 0.9833333333333333,
+        "moreThan95Percent": true
+      }
+    },
+    "grammarQualifications": {
+      "development": {
+        "correct": 6,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 1,
+        "unverified": 0,
+        "not-applicable": 29,
+        "applicable": 7,
+        "successRate": 0.8571428571428571,
+        "moreThan95Percent": false
+      },
+      "final": {
+        "correct": 5,
+        "incorrect": 0,
+        "missing": 1,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 18,
+        "applicable": 6,
+        "successRate": 0.8333333333333334,
+        "moreThan95Percent": false
+      },
+      "combined": {
+        "correct": 11,
+        "incorrect": 0,
+        "missing": 1,
+        "ambiguous": 1,
+        "unverified": 0,
+        "not-applicable": 47,
+        "applicable": 13,
+        "successRate": 0.8461538461538461,
+        "moreThan95Percent": false
+      }
+    },
+    "baseForm": {
+      "development": {
+        "correct": 10,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 26,
+        "applicable": 10,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 5,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 19,
+        "applicable": 5,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "combined": {
+        "correct": 15,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 45,
+        "applicable": 15,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      }
+    },
+    "conjugations": {
+      "development": {
+        "correct": 7,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 29,
+        "applicable": 7,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 3,
+        "incorrect": 1,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 20,
+        "applicable": 4,
+        "successRate": 0.75,
+        "moreThan95Percent": false
+      },
+      "combined": {
+        "correct": 10,
+        "incorrect": 1,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 49,
+        "applicable": 11,
+        "successRate": 0.9090909090909091,
+        "moreThan95Percent": false
+      }
+    },
+    "displayCleanup": {
+      "development": {
+        "correct": 36,
+        "incorrect": 0,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 36,
+        "successRate": 1.0,
+        "moreThan95Percent": true
+      },
+      "final": {
+        "correct": 23,
+        "incorrect": 1,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 24,
+        "successRate": 0.9583333333333334,
+        "moreThan95Percent": true
+      },
+      "combined": {
+        "correct": 59,
+        "incorrect": 1,
+        "missing": 0,
+        "ambiguous": 0,
+        "unverified": 0,
+        "not-applicable": 0,
+        "applicable": 60,
+        "successRate": 0.9833333333333333,
+        "moreThan95Percent": true
+      }
+    }
+  }
+}

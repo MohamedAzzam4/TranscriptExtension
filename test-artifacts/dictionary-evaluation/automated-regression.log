@@ -1,0 +1,87 @@
+Dub Transcript Lab regression runner
+Project: D:\Programming\Antigravity-Projects\Transcript_Extension
+[PASS] Syntax extension\content.js
+[PASS] Syntax extension\german-pronunciation.js
+[PASS] Syntax extension\learning-features.js
+[PASS] Syntax extension\persistence-safety.js
+[PASS] Syntax extension\translation-readiness.js
+[PASS] Syntax extension\translation-setup.js
+[PASS] Syntax extension\local-media.js
+[PASS] Syntax extension\media-candidate.js
+[PASS] Syntax extension\media-observer-bridge.js
+[PASS] Syntax extension\media-observer-main.js
+[PASS] Syntax extension\network-media-observer.js
+[PASS] Syntax extension\netflix-research.js
+[PASS] Syntax extension\offscreen.js
+[PASS] Syntax extension\popup.js
+[PASS] Syntax extension\service-worker.js
+[PASS] Syntax extension\subtitle-segmentation.js
+[PASS] Syntax extension\transcript-groups.js
+Batch lifecycle tests passed
+[PASS] test-batch-lifecycle.mjs
+Browser xHE-AAC fallback bridge tests passed
+[PASS] test-browser-audio-fallback.mjs
+Content initialization, optional pronunciation and retry recovery passed
+[PASS] test-content-initialization.mjs
+Replay coverage tests passed
+[PASS] test-coverage.mjs
+Dictionary boundaries, source rules, real layouts and quotations passed
+[PASS] test-dictionary-structure.mjs
+German browser pronunciation lifecycle passed
+[PASS] test-german-pronunciation.mjs
+Learning feature tests passed
+[PASS] test-learning-features.mjs
+Local media authorization and overlay tests passed
+[PASS] test-local-media.mjs
+Media candidate classification tests passed
+[PASS] test-media-candidate.mjs
+Netflix media-observer tests passed
+[PASS] test-media-observer.mjs
+Netflix research helper tests passed
+[PASS] test-netflix-research.mjs
+Netflix research lifecycle tests passed
+[PASS] test-netflix-research-lifecycle.mjs
+Generic network media-observer tests passed
+[PASS] test-network-media-observer.mjs
+Safe record boundary, canonical links, migration and configured-key preservation passed
+[PASS] test-persistence-safety.mjs
+Popup binding tests passed
+[PASS] test-popup-bindings.mjs
+Analysis startup storage failure and capacity contracts passed
+[PASS] test-popup-startup.mjs
+Saved-word overlay characterization passed
+Cross-show saved-word lifecycle passed
+[PASS] test-saved-word-overlay.mjs
+Subtitle segmentation tests passed
+[PASS] test-segmentation.mjs
+Transcript display-group tests passed
+[PASS] test-transcript-groups.mjs
+Translation preparation, real progress contract, timeout and late-response tests passed (simulated API)
+[PASS] test-translation-readiness.mjs
+Word-card localization and appearance contracts passed
+[PASS] test-word-card-localization.mjs
+..............................................
+----------------------------------------------------------------------
+Ran 46 tests in 0.036s
+
+OK
+[PASS] Server unit tests
+warning: in the working copy of 'docs/DEVELOPMENT_ROADMAP.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/FEATURE_REGISTRY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/PRODUCT_BACKLOG.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/UI_INTERACTION_CONTRACTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'experiments/TEST_MATRIX.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/manifest.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/offscreen.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/popup.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/popup.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/test-batch-lifecycle.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/test-learning-features.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'extension/test-popup-bindings.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/run-regression.ps1', LF will be replaced by CRLF the next time Git touches it
+[PASS] Git whitespace check
+
+Automated regression passed.
+Browser-only checks remain manual:
+  experiments\PHASE1_MANUAL_CHECKLIST.md
+  experiments\PHASE2_MANUAL_CHECKLIST.md

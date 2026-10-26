@@ -28,6 +28,121 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-26 bounded WP1.3/WP2.4/WP3.5/WP0.3 candidate 0.11.1 implements structured
+German dictionary extraction, popup/setup-tab translation preparation and safe
+record projection/migration. Parent owns edits; GPT-6 Luna only compares sources.
+Sixty entries (36 development/24 final) were evaluated with twelve unread
+reserves. Grammar/conjugations and final definitions miss the >95% target; real
+Chrome de→en/de→ar creation timed out with retry feedback. Privacy fixtures pass.
+Status **Needs development**; no features excluded or final-set tuning performed.
+See [`0.11.1-dictionary-readiness-persistence.md`](test-results/0.11.1-dictionary-readiness-persistence.md).
+
+Latest scoped browser acceptance (2026-10-25): user selected only word-card
+content, grammar, translation, and upgrade/setup/privacy (items 4/5/6/13).
+Chrome DevTools MCP against disposable extension profiles found real dictionary
+section/meaning and grammar failures, a first-use Arabic Translator gesture
+failure, and persistent signed-query/URL-credential privacy failures. Across
+36 scoped assertions: 23 Pass, 12 Fail, 1 Inconclusive; read-only setup and
+installer dry-run also passed. Current selected-scope classification is
+**Needs development**, superseding earlier automated-only passes for these
+real-source cases. Product source was not changed; other categories were not
+tested. See
+[`0.11.0-scoped-45613-browser-tests.md`](test-results/0.11.0-scoped-45613-browser-tests.md).
+
+Bounded WP3.5 replay-storage correction (2026-10-25): at the user's request,
+cached playback now stores a versioned transcript reference instead of another
+complete cue payload. Runtime/export reads resolve the canonical version or its
+existing original analysis; stop and preference writes remain compact. Old
+inline records are readable and no user history was deleted. All 18 extension
+suites/46 server tests pass, plus an isolated Chromium storage check: four replay
+records total 6,260 bytes for a 447,592-byte synthetic canonical transcript.
+Real-player acceptance remains unverified. See
+[`0.11.0-replay-transcript-references.md`](test-results/0.11.0-replay-transcript-references.md).
+
+Latest analysis-storage correction (2026-10-25): the user reported
+`Resource::kQuotaBytes quota exceeded` after the discovery issue. The parent
+added unlimitedStorage for local transcript/experiment persistence, fixed
+uncaught popup settings-save failures and recorded analysis-storage failures
+with usage diagnostics. No user data was removed. Exact live usage/failing key
+was not measured because privileged browser inspection was policy-blocked.
+All 18 extension suites, syntax checks and 46 server tests pass; actual quota
+recovery after extension reload remains pending. See
+[`0.11.0-analysis-storage-quota.md`](test-results/0.11.0-analysis-storage-quota.md).
+
+Latest repeated-discovery correction (2026-10-25): read-only inspection of the
+user's actual Edge/AniWorld tab captured `Browser pronunciation helpers were
+not loaded`, proving optional speech initialization was aborting discovery.
+The parent made speech lazy/optional, moved the readiness sentinel after setup,
+and preserved frame inspection errors. All 17 extension suites, 46 server tests
+and syntax checks pass; the user browser was not reloaded or started for
+analysis, so real post-repair acceptance remains pending. See
+[`0.11.0-optional-speech-startup-repair.md`](test-results/0.11.0-optional-speech-startup-repair.md).
+
+Full local validation rerun (2026-10-25): all 16 extension suites, 46 server
+tests, entry/helper syntax checks, supplementary Python/PowerShell/JavaScript
+parsing, manifest references and whitespace checks pass. The read-only setup
+verifier also passes, including native-host registration and existing recognizer
+health, after its initial sandbox registry restriction was resolved by an
+approved read-only run. No browser/live-analysis gate was exercised. See
+[`0.11.0-local-regression-run.md`](test-results/0.11.0-local-regression-run.md).
+
+Latest pronunciation decision (2026-10-25): the parent replaced local-only
+`chrome.tts` with the user's site's Web Speech approach. Browser German voices
+may be local or online, `de-DE` is preferred, and other-language fallback is
+blocked. Voice-list changes and card-local lifecycle feedback remain explicit.
+All 16 extension suites, syntax checks and 46 server tests pass; audible speech
+and platform acceptance remain unverified. See
+[`0.11.0-browser-german-pronunciation.md`](test-results/0.11.0-browser-german-pronunciation.md).
+
+Latest 2026-10-25 correction: after the user stopped Terra delegation and
+authorized local checks only, the parent reproduced and repaired a content
+script syntax error blocking player discovery and cached-transcript replay.
+Application injection errors now retain their real cause, and preparation
+failure diagnostics take precedence over the previous completed experiment.
+All 15 extension suites, JavaScript syntax checks and 46 server tests pass;
+Chrome/platform verification remains unverified. This supersedes the earlier
+blanket testing pause only for local checks. See
+[`0.11.0-player-initialization-repair.md`](test-results/0.11.0-player-initialization-repair.md).
+
+On 2026-10-25 the user requested the supplied Stitch Terra UI and cross-show
+saved-word marking, then reprioritized word-card and appearance corrections
+before further testing. This is an isolated WP1.3/VOC-1 and WP2.2/WP2.4/WP2.5
+candidate on the existing branch, using the saved-vocabulary normalization,
+translation-provider/cache, and interaction contracts. It does not depend on
+the unimplemented YouTube caption-first path: the current batch/live/cache
+renderer provides the source-word spans needed for marking.
+
+The user supplied AniWorld browser screenshots of the first UI candidate and
+requested target-language meanings (including Arabic), German definitions
+followed by translations of those definitions, highlighted examples, outside
+dismissal, a blended scrollbar, smaller titles, and sticky/collapsible settings.
+Testing is paused at the user's request. Earlier automated results do not cover
+these subsequent corrections. See
+[`0.11.0-terra-vocabulary-candidate.md`](test-results/0.11.0-terra-vocabulary-candidate.md)
+for the baseline, changed contracts, deferred checks, and limitations.
+
+The later 2026-10-25 decision replaces the mixed German/English dictionary
+candidate with German Wiktionary as the only active card source. Each German
+meaning/example is translated directly into the selected language. Source-explicit
+case/government information is separate from meanings; verbs also show base
+form and conjugations. Roles/usage notes are excluded. The follow-up
+grammar/sense/TTS contract supersedes the earlier verb-only grammar wording;
+see [`WORD_CARD_FOLLOWUP_PLAN.md`](WORD_CARD_FOLLOWUP_PLAN.md). Candidate
+matching is decided independently for each translated example: zero or
+multiple distinct matches mean no highlight; one means all its occurrences.
+Chrome's built-in Translator is primary, with visible language-pack state and
+configured Google fallback only. Pronunciation, popup continuity, spoken-word
+highlighting, and diagnostics placement are included in the user's request.
+
+The written scope is
+[`GERMAN_ONLY_LEARNING_IMPLEMENTATION_PLAN.md`](GERMAN_ONLY_LEARNING_IMPLEMENTATION_PLAN.md).
+Implementation was delegated using the user's explicitly requested
+`gpt-5.6-terra` subagent override, with source review by the parent. Consult
+[`GERMAN_ONLY_LEARNING_IMPLEMENTATION_REPORT.md`](GERMAN_ONLY_LEARNING_IMPLEMENTATION_REPORT.md)
+for implemented/partial items and pending checks. The implementation and report
+remain an unverified local candidate while the user-requested testing pause
+continues; no release pass or pushed-checkpoint claim follows from delegation.
+
 | WP | Status | Evidence |
 |---|---|---|
 | WP0.1 | Pass | `docs/FEATURE_REGISTRY.md` records protected contracts and distinguishes automated, source-present, and manual evidence. |
@@ -46,7 +161,7 @@ deferred until the core extension has been proven.
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
 | WP3.1/3.4 YouTube caption-first | Planned | Caption tracks are currently evaluation-only. The next candidate must add source-honest selection before reusing an original automatic track. |
 | WP3.2 YouTube ASR timing | Needs evidence | The 0.10.4 change did not modify the YouTube clock/decode path. Add sanitized timing instrumentation and require beginning/middle/end evidence before correction. |
-| WP1.3 saved-word marking | Planned | Exact normalized saved forms should be marked in future source transcript cues without changing selection or word-click ownership. |
+| WP1.3 saved-word marking | Experimental candidate | Version 0.11.0 source marks exact normalized saved forms across batch/live/cache cues and storage changes. The first candidate passed automated overlay coverage; current word-card corrections and combined browser gates remain unverified while testing is paused. |
 
 The current evidence records are
 [`docs/test-results/0.10.0-phase2-ui-candidate.md`](test-results/0.10.0-phase2-ui-candidate.md)

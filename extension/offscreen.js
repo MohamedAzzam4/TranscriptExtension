@@ -14,7 +14,6 @@ let latestMediaClock = null;
 let reconnectTimer = null;
 let connectionWaitStartedAt = null;
 let batchDecodeController = null;
-const translators = new Map();
 const PCM_CHUNK_SECONDS = 0.5;
 const RECONNECT_INTERVAL_MS = 2_000;
 const SERVER_WAIT_TIMEOUT_MS = 10 * 60_000;
@@ -1048,40 +1047,13 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
+let browserTranslationManager = null;
 async function translateWithBrowser(message) {
-  if (!("Translator" in globalThis)) {
-    throw new Error("This browser does not expose the on-device Translator API.");
-  }
-  const text = String(message.text || "").trim();
-  const sourceLanguage = String(message.sourceLanguage || "de").toLowerCase();
-  const targetLanguage = String(message.targetLanguage || "en").toLowerCase();
-  if (!text) return { translatedText: "", provider: "browser" };
-  const key = `${sourceLanguage}:${targetLanguage}`;
-  let translator = translators.get(key);
-  if (!translator) {
-    const availability = await globalThis.Translator.availability({
-      sourceLanguage,
-      targetLanguage
-    });
-    if (availability === "unavailable") {
-      throw new Error(`On-device ${sourceLanguage}→${targetLanguage} translation is unavailable.`);
-    }
-    translator = await globalThis.Translator.create({
-      sourceLanguage,
-      targetLanguage,
-      monitor(monitor) {
-        monitor.addEventListener("downloadprogress", (event) => {
-          const percent = Math.round(Math.max(0, Math.min(1, Number(event.loaded) || 0)) * 100);
-          reportStatus(`Downloading the on-device translation model… ${percent}%`);
-        });
-      }
-    });
-    translators.set(key, translator);
-  }
-  return {
-    translatedText: await translator.translate(text),
-    provider: "browser"
-  };
+  browserTranslationManager ||= globalThis.DubTranslationReadiness.createManager();
+  const sourceLanguage = String(message.sourceLanguage || 'de').toLowerCase();
+  const targetLanguage = String(message.targetLanguage || 'en').toLowerCase();
+  const translatedText = await browserTranslationManager.translate({ sourceLanguage, targetLanguage }, String(message.text || '').trim());
+  return { translatedText, provider: 'browser' };
 }
 
 async function startCapture(streamId) {

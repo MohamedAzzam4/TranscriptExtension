@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set up translation · Transcript Lab</title><link rel="stylesheet" href="popup.css"><link rel="stylesheet" href="translation-setup.css"></head>
+<body><main class="app-shell"><section class="glass-card session-card">
+<h1>Set up translation</h1><p id="pair"></p>
+<p>Chrome manages the language resources. You may switch tabs, but keep this setup tab open until it reports Ready. Network interruptions or browser errors can stop preparation.</p>
+<p id="setupStatus" role="status" aria-live="polite">Checking…</p>
+<progress id="setupProgress" max="100" hidden aria-label="Language resource preparation"></progress>
+<button id="prepareTranslation" class="primary" disabled>Download language resources</button>
+<p>No separate installer or Windows language installation is needed for Chrome translation.</p>
+</section></main><script src="translation-readiness.js"></script><script src="translation-setup.js"></script></body>
+</html>

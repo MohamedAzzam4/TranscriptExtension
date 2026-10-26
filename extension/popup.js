@@ -9,6 +9,9 @@ const elements = {
   translationProvider: document.querySelector("#translationProvider"),
   googleTranslateApiKey: document.querySelector("#googleTranslateApiKey"),
   translationAvailability: document.querySelector("#translationAvailability"),
+  translationReadinessStatus: document.querySelector("#translationReadinessStatus"),
+  setupTranslation: document.querySelector("#setupTranslation"),
+  retryTranslationReadiness: document.querySelector("#retryTranslationReadiness"),
   fontSize: document.querySelector("#fontSize"),
   fontSizeValue: document.querySelector("#fontSizeValue"),
   horizontalPosition: document.querySelector("#horizontalPosition"),
@@ -61,14 +64,136 @@ const elements = {
   savedTranscriptCount: document.querySelector("#savedTranscriptCount"),
   savedWords: document.querySelector("#savedWords"),
   savedWordCount: document.querySelector("#savedWordCount"),
+  wordSearch: document.querySelector("#wordSearch"),
+  wordResults: document.querySelector("#wordResults"),
+  recentWords: document.querySelector("#recentWords"),
+  connectionState: document.querySelector("#connectionState"),
+  sessionTitle: document.querySelector("#sessionTitle"),
+  activePlatform: document.querySelector("#activePlatform"),
+  activeVideoDescription: document.querySelector("#activeVideoDescription"),
+  previewTranscript: document.querySelector("#previewTranscript"),
+  previewTranslation: document.querySelector("#previewTranslation"),
+  previewCaption: document.querySelector("#previewCaption"),
   status: document.querySelector("#status")
 };
 
 const SETTINGS_KEY = "experimentSettings";
 const TRANSLATION_SECRETS_KEY = "translationSecrets";
+const UI_STATE_KEY = "popupUiState:v1";
 let currentSyncOffset = 0;
 let displayUpdateTimer = null;
 let resetTranslationCache = false;
+let savedVocabularyEntries = [];
+let wordFilter = "all";
+let previewLanguageKey = "";
+let previewTranslationRevision = 0;
+let previewConfigurationPending = false;
+let popupUiState = { activeView: "home", scrollByView: {}, scrollAnchorByView: {}, expanded: {}, wordSearch: "", wordFilter: "all" };
+let uiStateSaveTimer = null;
+let uiStateHydrating = true;
+const readinessManager = globalThis.DubTranslationReadiness?.createManager();
+let readinessRevision = 0;
+
+async function refreshTranslationReadiness() {
+  if (!elements.translationReadinessStatus) return;
+  const revision = ++readinessRevision;
+  const pair = { sourceLanguage: elements.audioLanguage.value, targetLanguage: elements.translationLanguage.value };
+  elements.translationReadinessStatus.textContent = 'Checking translation…';
+  elements.translationReadinessStatus.dataset.state = 'checking';
+  elements.setupTranslation.hidden = true;
+  elements.retryTranslationReadiness.hidden = true;
+  try {
+    if (!readinessManager) throw new Error('Translation readiness helper did not load. Reload the extension.');
+    const result = await readinessManager.check(pair);
+    if (revision !== readinessRevision) return;
+    const state = result.availability === 'downloading' ? 'preparing' : result.state;
+    elements.translationReadinessStatus.dataset.state = state;
+    elements.translationReadinessStatus.textContent = state === 'ready' ? 'Translation ready.'
+      : state === 'preparing' ? 'Chrome is downloading/preparing translation resources. Open setup to follow preparation.'
+      : state === 'unavailable' ? 'Chrome translation is unavailable for this language pair.'
+      : 'Translation preparation required.';
+    elements.setupTranslation.hidden = !['preparation-required', 'preparing'].includes(state);
+  } catch (error) {
+    if (revision !== readinessRevision) return;
+    elements.translationReadinessStatus.dataset.state = 'failed';
+    elements.translationReadinessStatus.textContent = `Translation check failed: ${error.message}`;
+    elements.retryTranslationReadiness.hidden = false;
+  }
+}
+elements.setupTranslation?.addEventListener('click', () => {
+  const query = new URLSearchParams({ source: elements.audioLanguage.value, target: elements.translationLanguage.value });
+  void chrome.tabs.create({ url: chrome.runtime.getURL(`translation-setup.html?${query}`) });
+});
+elements.retryTranslationReadiness?.addEventListener('click', () => void refreshTranslationReadiness());
+for (const element of [elements.audioLanguage, elements.translationLanguage]) element.addEventListener('change', () => void refreshTranslationReadiness());
+
+for (const detail of document.querySelectorAll("details")) {
+  const summaryKey = String(detail.querySelector("summary")?.textContent || "panel")
+    .replace(/\s+/g, " ").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 48);
+  detail.dataset.uiStateKey = detail.id || detail.dataset.uiStateKey || `panel:${summaryKey}`;
+  detail.addEventListener("toggle", () => void persistUiState());
+}
+window.addEventListener("scroll", scheduleUiStateSave, { passive: true });
+
+for (const button of document.querySelectorAll("[data-open-view]")) {
+  button.addEventListener("click", () => openView(button.dataset.openView));
+}
+elements.wordSearch.addEventListener("input", () => { renderSavedWords(savedVocabularyEntries); void persistUiState(); });
+for (const button of document.querySelectorAll("[data-word-filter]")) {
+  button.addEventListener("click", () => {
+    wordFilter = button.dataset.wordFilter;
+    for (const filter of document.querySelectorAll("[data-word-filter]")) {
+      filter.setAttribute("aria-pressed", String(filter === button));
+    }
+    renderSavedWords(savedVocabularyEntries);
+    void persistUiState();
+  });
+}
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local") return;
+  if (changes.savedVocabulary) renderSavedWords([...learning.savedVocabularyIndex(changes.savedVocabulary.newValue).values()]);
+  if (changes.transcriptLibraryIndex) void refreshTranscriptLibrary();
+});
+
+function openView(name) {
+  const previous = popupUiState.activeView;
+  if (!uiStateHydrating && previous) {
+    popupUiState.scrollByView[previous] = window.scrollY;
+    const outgoingAnchor = [...document.querySelectorAll(`#view-${previous} [data-scroll-anchor]`)].find((node) => node.getBoundingClientRect().bottom >= 0);
+    if (outgoingAnchor) popupUiState.scrollAnchorByView[previous] = { key: outgoingAnchor.dataset.scrollAnchor, offset: outgoingAnchor.getBoundingClientRect().top };
+  }
+  for (const view of document.querySelectorAll(".app-view")) view.hidden = view.id !== `view-${name}`;
+  for (const button of document.querySelectorAll(".bottom-nav button")) {
+    if (button.dataset.openView === name) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  }
+  popupUiState.activeView = name;
+  window.scrollTo(0, popupUiState.scrollByView[name] || 0);
+  const anchorState = popupUiState.scrollAnchorByView?.[name];
+  if (anchorState) requestAnimationFrame(() => {
+    const anchor = [...document.querySelectorAll(`#view-${name} [data-scroll-anchor]`)].find((node) => node.dataset.scrollAnchor === anchorState.key);
+    if (anchor) window.scrollBy(0, anchor.getBoundingClientRect().top - anchorState.offset);
+  });
+  if (name === "appearance") renderControls();
+  if (!uiStateHydrating) void persistUiState();
+}
+
+function scheduleUiStateSave() {
+  if (uiStateHydrating) return;
+  clearTimeout(uiStateSaveTimer);
+  uiStateSaveTimer = setTimeout(() => void persistUiState(), 180);
+}
+
+async function persistUiState() {
+  const activeView = popupUiState.activeView || "home";
+  popupUiState.scrollByView[activeView] = window.scrollY;
+  const anchor = [...document.querySelectorAll(`#view-${activeView} [data-scroll-anchor]`)].find((node) => node.getBoundingClientRect().bottom >= 0);
+  if (anchor) popupUiState.scrollAnchorByView[activeView] = { key: anchor.dataset.scrollAnchor, offset: anchor.getBoundingClientRect().top };
+  popupUiState.wordSearch = elements.wordSearch.value;
+  popupUiState.wordFilter = wordFilter;
+  popupUiState.expanded = Object.fromEntries([...document.querySelectorAll("details")].map((detail) => [detail.dataset.uiStateKey, detail.open]));
+  await chrome.storage.local.set({ [UI_STATE_KEY]: popupUiState });
+}
 
 void restoreState();
 const diagnosticRefreshTimer = setInterval(() => void refreshDiagnostics(), 1_200);
@@ -102,18 +227,22 @@ for (const element of [
   elements.translationBold,
   elements.backgroundColor
 ]) {
-  element.addEventListener("input", scheduleDisplaySettingsUpdate);
-  element.addEventListener("change", scheduleDisplaySettingsUpdate);
+  element.addEventListener("input", (event) => { void persistSettings(readSettings()); scheduleDisplaySettingsUpdate(event); });
+  element.addEventListener("change", (event) => { void persistSettings(readSettings()); scheduleDisplaySettingsUpdate(event); });
 }
-elements.googleTranslateApiKey.addEventListener("change", scheduleDisplaySettingsUpdate);
+for (const element of [elements.serverUrl, elements.audioLanguage, elements.captionLanguage, elements.collectCaptions]) {
+  element.addEventListener("input", () => void persistSettings(readSettings()));
+  element.addEventListener("change", () => void persistSettings(readSettings()));
+}
+elements.googleTranslateApiKey.addEventListener("change", (event) => { void persistSettings(readSettings()); scheduleDisplaySettingsUpdate(event); });
 
 elements.start.addEventListener("click", async () => {
   setStatus("Checking whether the complete video can be analyzed locally…");
   elements.start.disabled = true;
   const settings = readSettings();
-  await persistSettings(settings);
 
   try {
+    await persistSettings(settings);
     const response = await chrome.runtime.sendMessage({
       type: "START_EXPERIMENT",
       settings
@@ -127,7 +256,9 @@ elements.start.addEventListener("click", async () => {
     await refreshTranscriptLibrary();
     await refreshDiagnostics();
   } catch (error) {
-    setStatus(error.message, true);
+    setStatus(/quota/i.test(error.message || "")
+      ? "The extension's local storage limit was reached while starting analysis. Reload the updated extension to enable larger transcript storage. Saved words and transcripts have not been deleted."
+      : error.message, true);
   } finally {
     elements.start.disabled = false;
   }
@@ -253,26 +384,64 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 async function restoreState() {
-  const stored = await chrome.storage.local.get([SETTINGS_KEY, TRANSLATION_SECRETS_KEY]);
+  const stored = await chrome.storage.local.get([SETTINGS_KEY, TRANSLATION_SECRETS_KEY, UI_STATE_KEY]);
+  const restoredUi = stored[UI_STATE_KEY];
+  if (restoredUi && typeof restoredUi === "object") {
+    popupUiState = { ...popupUiState, ...restoredUi, scrollByView: restoredUi.scrollByView || {}, scrollAnchorByView: restoredUi.scrollAnchorByView || {}, expanded: restoredUi.expanded || {} };
+    wordFilter = popupUiState.wordFilter || "all";
+    elements.wordSearch.value = popupUiState.wordSearch || "";
+    for (const detail of document.querySelectorAll("details")) {
+      if (Object.hasOwn(popupUiState.expanded, detail.dataset.uiStateKey)) detail.open = Boolean(popupUiState.expanded[detail.dataset.uiStateKey]);
+    }
+    for (const filter of document.querySelectorAll("[data-word-filter]")) filter.setAttribute("aria-pressed", String(filter.dataset.wordFilter === wordFilter));
+  }
   const settings = stored[SETTINGS_KEY] || {};
   const caption = learning.normalizeCaptionPreferences(settings.captionPreferences);
   const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
 
   elements.serverUrl.value = settings.serverUrl || elements.serverUrl.value;
-  elements.audioLanguage.value = settings.audioLanguage || "de";
+  setLanguageValue(elements.audioLanguage, settings.audioLanguage || "de");
   elements.captionLanguage.value = settings.captionLanguage || "de";
   elements.collectCaptions.checked = settings.collectCaptions !== false;
   elements.translationEnabled.checked = translation.enabled;
-  elements.translationLanguage.value = translation.targetLanguage;
+  setLanguageValue(elements.translationLanguage, translation.targetLanguage);
   elements.translationProvider.value = translation.provider;
   elements.googleTranslateApiKey.value = stored[TRANSLATION_SECRETS_KEY]?.googleApiKey || "";
   applyAppearanceToControls(caption, translation);
   currentSyncOffset = normalizeSyncOffset(settings.syncOffset);
   renderControls();
+  void refreshTranslationReadiness();
+  void refreshActiveVideo();
   await refreshSavedWords();
   await refreshTranscriptLibrary();
   await refreshDiagnostics();
   await refreshNetflixResearch();
+  openView(popupUiState.activeView || "home");
+  uiStateHydrating = false;
+}
+
+function setLanguageValue(select, code) {
+  if (![...select.options].some((option) => option.value === code)) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code;
+    select.append(option);
+  }
+  select.value = code;
+}
+
+async function refreshActiveVideo() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url || !/^https?:/.test(tab.url)) return;
+    const page = new URL(tab.url);
+    elements.sessionTitle.textContent = tab.title || "Current video";
+    elements.sessionTitle.title = tab.title || "Current video";
+    elements.activePlatform.textContent = page.hostname.replace(/^www\./, "");
+    elements.activeVideoDescription.textContent = "Transcribe the spoken audio, translate it, and collect new words.";
+  } catch {
+    // A popup opened directly may not have an activeTab grant. Keep the honest idle copy.
+  }
 }
 
 async function refreshDiagnostics() {
@@ -295,6 +464,7 @@ function renderDiagnostics(diagnostics) {
     ? diagnostics.level
     : "idle";
   elements.diagnosticPanel.dataset.level = level;
+  elements.connectionState.lastChild.textContent = ` ${ { idle: "Ready", working: "Working", success: "Ready", warning: "Fallback", error: "Error" }[level]}`;
   elements.diagnosticBadge.textContent = {
     idle: "Ready",
     working: "Working",
@@ -413,6 +583,8 @@ function scheduleDisplaySettingsUpdate(event) {
     elements.googleTranslateApiKey
   ].includes(event?.currentTarget)) {
     resetTranslationCache = true;
+    previewLanguageKey = "";
+    previewConfigurationPending = true;
   }
   renderControls();
   clearTimeout(displayUpdateTimer);
@@ -422,6 +594,8 @@ function scheduleDisplaySettingsUpdate(event) {
 async function applyDisplaySettings() {
   const settings = readSettings();
   await persistSettings(settings);
+  previewConfigurationPending = false;
+  renderControls();
   try {
     const response = await chrome.runtime.sendMessage({
       type: "UPDATE_DISPLAY_SETTINGS",
@@ -472,7 +646,7 @@ async function resetAppearance() {
   );
   renderControls();
   await applyDisplaySettings();
-  setStatus("Caption appearance reset to the Phase 2 defaults.");
+  setStatus("Caption appearance reset to the defaults.");
 }
 
 function bindRangeStep(button, range, delta) {
@@ -540,6 +714,7 @@ function renderTranscriptLibrary(entries) {
   for (const entry of entries) {
     const row = document.createElement("div");
     row.className = "saved-word transcript-library-row";
+    row.dataset.scrollAnchor = `transcript:${entry.key}`;
     const body = document.createElement("div");
     body.append(
       createTextElement("div", entry.title || "Untitled video", "saved-word-title"),
@@ -549,6 +724,7 @@ function renderTranscriptLibrary(entries) {
         "saved-word-definition"
       )
     );
+    body.append(createTextElement("div", `${entry.platform || "Video"} · ${Math.round((entry.duration || 0) / 60)} min · ${entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString() : "Saved locally"}`, "source-meta"));
     const actions = document.createElement("div");
     actions.className = "library-actions";
     const download = document.createElement("button");
@@ -586,7 +762,10 @@ function renderTranscriptLibrary(entries) {
       }
       await refreshTranscriptLibrary();
     });
-    actions.append(download, remove);
+    const sourceLink = createSourceLink(entry.url, "Open video ↗");
+    actions.append(download);
+    if (sourceLink) actions.append(sourceLink);
+    actions.append(remove);
     row.append(body, actions);
     fragment.append(row);
   }
@@ -613,51 +792,105 @@ async function downloadDataFile(text, filename, type) {
 }
 
 function renderSavedWords(entries) {
+  savedVocabularyEntries = entries;
   elements.savedWordCount.textContent = String(entries.length);
-  if (!entries.length) {
+  for (const total of document.querySelectorAll("[data-word-total]")) total.textContent = String(entries.length);
+  renderRecentWords(entries);
+  const filtered = filterVocabulary(entries, elements.wordSearch.value, wordFilter);
+  elements.wordResults.textContent = `${filtered.length} of ${entries.length} saved words`;
+  if (!filtered.length) {
     elements.savedWords.replaceChildren(createTextElement(
       "p",
-      "Click a transcript word and choose “Save word”.",
+      entries.length ? "No matching words. Try another search or filter." : "Click a transcript word and choose “Save word”. It will be marked when it appears in another show.",
       "empty-saved"
     ));
     return;
   }
 
   const fragment = document.createDocumentFragment();
-  for (const entry of entries) {
+  for (const entry of filtered) {
     const row = document.createElement("div");
     row.className = "saved-word";
+    row.dataset.scrollAnchor = `word:${learning.normalizedWord(entry.word)}`;
     const body = document.createElement("div");
     body.append(
       createTextElement("div", entry.word, "saved-word-title"),
       createTextElement(
         "div",
-        entry.englishDefinition || entry.germanDefinition || entry.context || "Saved word",
+        entry.germanDefinition || "Saved word",
         "saved-word-definition"
       )
     );
-    const example = entry.context || entry.examples?.[0]?.german;
+    const tags = document.createElement("div");
+    tags.className = "word-tags";
+    if (entry.isVerb) tags.append(createTextElement("span", "Verb", "word-tag"));
+    body.append(tags);
+    const example = entry.examples?.[0]?.german;
     if (example) body.append(createTextElement("div", `„${example}“`, "saved-word-context"));
+    const actions = document.createElement("div");
+    actions.className = "library-actions";
+    const dictionary = createSourceLink(entry.germanSourceUrl, "Dictionary ↗");
+    const video = createSourceLink(entry.video?.url, "Return to source ↗");
+    if (dictionary) actions.append(dictionary);
+    if (video) actions.append(video);
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Remove";
     remove.addEventListener("click", async () => {
       remove.disabled = true;
-      const response = await chrome.runtime.sendMessage({
-        type: "REMOVE_SAVED_WORD",
-        word: entry.word
-      });
-      if (!response?.ok) {
-        setStatus(response?.error || "Could not remove saved word.", true);
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "REMOVE_SAVED_WORD", word: entry.word });
+        if (!response?.ok) throw new Error(response?.error || "Could not remove saved word.");
+        await refreshSavedWords();
+      } catch (error) {
+        elements.wordResults.textContent = error.message;
         remove.disabled = false;
-        return;
       }
-      await refreshSavedWords();
     });
-    row.append(body, remove);
+    actions.append(remove);
+    row.append(body, actions);
     fragment.append(row);
   }
   elements.savedWords.replaceChildren(fragment);
+}
+
+function filterVocabulary(entries, query, type) {
+  const search = String(query || "").normalize("NFC").trim().toLocaleLowerCase("de-DE");
+  return entries.filter((entry) => {
+    const category = entry.isVerb ? "verb" : "other";
+    const searchable = [entry.word, entry.germanDefinition].filter(Boolean).join(" ").normalize("NFC").toLocaleLowerCase("de-DE");
+    return (type === "all" || type === category) && (!search || searchable.includes(search));
+  });
+}
+
+function renderRecentWords(entries) {
+  if (!entries.length) {
+    elements.recentWords.replaceChildren(createTextElement("p", "Click any caption word to start your collection. Saved words will be marked in later shows.", "empty-saved"));
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  for (const entry of entries.slice(0, 3)) {
+    const row = document.createElement("div");
+    row.className = "saved-word";
+    row.append(createTextElement("div", entry.word, "saved-word-title"), createTextElement("div", entry.germanDefinition || "Saved vocabulary", "saved-word-definition"));
+    fragment.append(row);
+  }
+  elements.recentWords.replaceChildren(fragment);
+}
+
+function createSourceLink(rawUrl, label) {
+  const url = learning.stablePageUrl(rawUrl);
+  if (!url) return null;
+  const link = createTextElement("a", label, "source-link");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
+}
+
+function formatClipTime(seconds) {
+  const time = Math.max(0, Math.floor(Number(seconds) || 0));
+  return `${Math.floor(time / 60)}:${String(time % 60).padStart(2, "0")}`;
 }
 
 function createTextElement(tag, text, className) {
@@ -683,10 +916,51 @@ function renderControls() {
   elements.textOpacityValue.textContent = `${Number(elements.textOpacity.value)}%`;
   elements.translationFontSizeValue.textContent = `${Number(elements.translationFontSize.value)} px`;
   elements.translationTextOpacityValue.textContent = `${Number(elements.translationTextOpacity.value)}%`;
+  const caption = readSettings().captionPreferences;
+  const translation = readSettings().translationPreferences;
+  for (const [element, preferences] of [[elements.previewTranscript, caption], [elements.previewTranslation, translation]]) {
+    element.style.color = learning.rgbaFromHex(preferences.textColor, preferences.textOpacity);
+    element.style.fontFamily = learning.fontFamilyValue(preferences.fontFamily);
+    element.style.fontSize = `${Math.round(preferences.fontSize * .7)}px`;
+    element.style.fontWeight = preferences.bold ? "700" : "400";
+  }
+  elements.previewTranslation.hidden = !translation.enabled;
+  elements.previewCaption.style.backgroundColor = learning.rgbaFromHex(caption.backgroundColor, caption.backgroundOpacity);
+  elements.previewCaption.style.left = `${caption.horizontalPosition}%`;
+  elements.previewCaption.style.bottom = `${caption.verticalPosition}%`;
+  elements.previewCaption.style.transform = `translate(-${caption.horizontalPosition}%, ${caption.verticalPosition}%)`;
+  const shadows = { none: "none", shadow: "0 1px 2px black", outline: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000" };
+  elements.previewCaption.style.textShadow = shadows[caption.edgeStyle];
+  if (!document.querySelector("#view-appearance").hidden && translation.enabled && !previewConfigurationPending) void refreshPreviewLanguage(translation);
   const browserTranslatorAvailable = "Translator" in globalThis;
   elements.translationAvailability.textContent = browserTranslatorAvailable
     ? "On-device translation is detected. Automatic mode uses it before Google Cloud."
     : "On-device translation is not detected in this browser. Automatic mode needs the optional Google Cloud key.";
+}
+
+async function refreshPreviewLanguage(preferences) {
+  const language = preferences.targetLanguage;
+  const key = `${preferences.provider}:${language}`;
+  if (previewLanguageKey === key) return;
+  previewLanguageKey = key;
+  const revision = ++previewTranslationRevision;
+  elements.previewTranslation.lang = language;
+  elements.previewTranslation.dir = "auto";
+  const samples = { en: "That is a secret.", de: "Das ist ein Geheimnis." };
+  if (samples[language]) {
+    elements.previewTranslation.textContent = samples[language];
+    return;
+  }
+  elements.previewTranslation.textContent = "…";
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "TRANSLATE_TEXT", text: "Das ist ein Geheimnis.", sourceLanguage: "de", translationPreferences: preferences });
+    if (!response?.ok || !response.translatedText) throw new Error(response?.error || "Preview translation unavailable.");
+    if (revision === previewTranslationRevision) elements.previewTranslation.textContent = response.translatedText;
+  } catch {
+    if (revision === previewTranslationRevision) {
+      elements.previewTranslation.textContent = "Translation unavailable";
+    }
+  }
 }
 
 function renderSyncOffset() {

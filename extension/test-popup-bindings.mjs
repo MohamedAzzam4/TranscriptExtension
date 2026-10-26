@@ -41,9 +41,9 @@ assert.match(content, /captionBoxElement\.addEventListener\("copy", stopPlayerCl
 assert.match(content, /captionBoxElement\.addEventListener\("dblclick", stopPlayerClick\)/);
 assert.match(content, /<div class="word-label">Meaning<\/div>/);
 assert.match(content, /<div class="word-label">Examples<\/div>/);
-assert.match(content, /<div class="word-label">Common combinations<\/div>/);
 assert.match(content, /<div class="word-label">Grammar<\/div>/);
-assert.match(content, /<div class="word-label">Related words<\/div>/);
+assert.match(content, /word-more-meanings/);
+assert.match(content, /word-speak/);
 assert.match(content, /role="group" aria-label="Interactive captions"/);
 assert.match(content, /role="region" aria-label="Word details"/);
 assert.match(content, /function updatePlayerAwarePosition\(force = false\)/);

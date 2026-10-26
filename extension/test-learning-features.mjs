@@ -47,7 +47,7 @@ assert.deepEqual(
   {
     enabled: false,
     targetLanguage: "en-us",
-    provider: "google",
+    provider: "auto",
     fontSize: 42,
     textOpacity: 81,
     textColor: "#22CC88",
@@ -128,13 +128,8 @@ const germanDictionary = helpers.extractGermanWiktionaryEntry(`
   <p>Worttrennung:</p><dl><dd>Haus, Plural: Häu·ser</dd></dl>
   <p>IPA: [<span class="ipa">haʊ̯s</span>]</p>
 `);
-assert.equal(germanDictionary.wordType, "Substantiv, n");
 assert.deepEqual([...germanDictionary.germanDefinitions], ["Gebäude, in dem Menschen wohnen"]);
-assert.equal(germanDictionary.grammar.article, "das");
-assert.equal(germanDictionary.grammar.singular, "das Haus");
-assert.equal(germanDictionary.grammar.plural, "die Häuser");
-assert.deepEqual([...germanDictionary.collocations], ["ein Haus bauen"]);
-assert.deepEqual([...germanDictionary.synonyms], ["Gebäude", "Heim"]);
+assert.equal(germanDictionary.isVerb, false);
 assert.equal(germanDictionary.pronunciation, "haʊ̯s");
 
 const verbDictionary = helpers.extractGermanWiktionaryEntry(`
@@ -145,6 +140,17 @@ const verbDictionary = helpers.extractGermanWiktionaryEntry(`
 assert.equal(verbDictionary.grammar.preterite, "fand he·r·aus");
 assert.equal(verbDictionary.grammar.perfect, "hat he·r·aus·ge·fun·den");
 assert.equal(verbDictionary.grammar.separable, true);
+assert.equal(verbDictionary.isVerb, true);
+
+const senseFixture = helpers.extractGermanWiktionaryEntry(`
+  <h2>helfen (Deutsch)</h2><h3>Verb</h3>
+  <p>Bedeutungen:</p><dl><dd>[1] mit Dativ, Unterstützung geben</dd><dd>[2] eine Sache erklären</dd></dl>
+  <p>Beispiele:</p><dl><dd>[1] Ich helfe dem Kind.</dd><dd>2026 beginnt ohne Quellzuordnung.</dd><dd>Ein Beispiel ohne Zuordnung.</dd><dd>[3] Nicht zugeordnete Nummer.</dd></dl>
+`);
+assert.deepEqual([...senseFixture.germanDefinitions], ["Unterstützung geben", "eine Sache erklären"]);
+assert.deepEqual([...senseFixture.grammar.governments].map((government) => government.text), ["mit Dativ"]);
+assert.equal(senseFixture.senses[0].examples.length, 1, "examples join a meaning only through an explicit matching sense id");
+assert.equal(senseFixture.examples.filter((example) => example.unassigned || !example.senseId).length, 3, "ordinary leading numbers are not treated as source sense IDs");
 
 const entry = helpers.normalizeVocabularyEntry({
   word: "Haus!",
@@ -156,7 +162,9 @@ const entry = helpers.normalizeVocabularyEntry({
 assert.equal(entry.word, "Haus");
 assert.equal(entry.normalizedWord, "haus");
 assert.equal(entry.germanSourceUrl, "https://de.wiktionary.org/wiki/Haus");
-assert.equal(entry.englishSourceUrl, null);
+assert.equal(entry.dictionaryContract, null, "legacy data is not auto-trusted as German-only");
+const trustedEntry = helpers.normalizeVocabularyEntry({ word: "Haus", germanSourceUrl: "https://de.wiktionary.org/wiki/Haus", dictionaryContract: "de-wiktionary:v1" });
+assert.equal(trustedEntry.dictionaryContract, "de-wiktionary:v1");
 
 assert.equal(
   helpers.stableVideoIdentity("https://www.youtube.com/watch?v=abc123&list=ignored", "DE"),

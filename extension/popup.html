@@ -9,113 +9,145 @@
   <body>
     <main class="app-shell">
       <header class="app-header">
-        <div class="brand-mark" aria-hidden="true">DT</div>
-        <div class="brand-copy">
-          <span class="eyebrow">Local-first language lab</span>
-          <h1>Dub Transcript Lab</h1>
-          <p>Hear the real dub. Read it, translate it, and learn from it.</p>
-        </div>
-        <span class="version-chip">v0.10.4</span>
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 8a3 3 0 0 0 3 4h8a3 3 0 0 0 3-4l-5-8V3M8 14h8"/></svg></div>
+        <div class="brand-copy"><span class="eyebrow">Dub extension</span><h1>Transcript Lab</h1></div>
+        <span id="connectionState" class="local-badge"><span aria-hidden="true"></span> Ready</span>
       </header>
 
-      <section class="glass-card session-card" aria-labelledby="sessionTitle">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">Current session</span>
-            <h2 id="sessionTitle">Audio and captions</h2>
-          </div>
-          <span class="local-badge"><span aria-hidden="true"></span> Local</span>
-        </div>
-
+      <section id="view-home" class="app-view" aria-labelledby="nav-home">
+        <section class="glass-card session-card" aria-labelledby="sessionTitle">
+        <div class="session-meta"><span id="activePlatform" class="platform-badge">Current tab</span><span class="micro-label">Local audio</span></div>
+        <h2 id="sessionTitle">Your next discovery</h2>
+        <p id="activeVideoDescription" class="session-description">Open a video, then analyze its spoken audio.</p>
         <div class="languages">
           <label class="field">
             <span>Audio language</span>
-            <input id="audioLanguage" value="de" maxlength="16" spellcheck="false">
+            <select id="audioLanguage"><option value="de" selected>German (DE)</option><option value="en">English (EN)</option><option value="ar">Arabic (AR)</option><option value="ja">Japanese (JA)</option><option value="fr">French (FR)</option><option value="es">Spanish (ES)</option><option value="it">Italian (IT)</option><option value="pt">Portuguese (PT)</option><option value="ru">Russian (RU)</option><option value="ko">Korean (KO)</option><option value="zh">Chinese (ZH)</option><option value="tr">Turkish (TR)</option><option value="nl">Dutch (NL)</option><option value="pl">Polish (PL)</option><option value="uk">Ukrainian (UK)</option></select>
           </label>
-          <label class="field">
-            <span>Caption language</span>
-            <input id="captionLanguage" value="de" maxlength="16" spellcheck="false">
-          </label>
+            <label class="field">
+              <span>Target language</span>
+              <select id="translationLanguage"><option value="de">German (DE)</option><option value="en" selected>English (EN)</option><option value="ar">Arabic (AR)</option><option value="ja">Japanese (JA)</option><option value="fr">French (FR)</option><option value="es">Spanish (ES)</option><option value="it">Italian (IT)</option><option value="pt">Portuguese (PT)</option><option value="ru">Russian (RU)</option><option value="ko">Korean (KO)</option><option value="zh">Chinese (ZH)</option><option value="tr">Turkish (TR)</option><option value="nl">Dutch (NL)</option><option value="pl">Polish (PL)</option><option value="uk">Ukrainian (UK)</option></select>
+            </label>
         </div>
 
-        <label class="check preference-toggle">
-          <input id="collectCaptions" type="checkbox" checked>
-          <span>
-            <strong>Collect reference captions</strong>
-            <small>Used only as an answer key, never as ASR input.</small>
-          </span>
-        </label>
-
+        <div class="translation-readiness" aria-live="polite">
+          <p id="translationReadinessStatus" role="status">Checking translation…</p>
+          <button id="setupTranslation" type="button" hidden>Set up translation</button>
+          <button id="retryTranslationReadiness" type="button" hidden>Retry translation check</button>
+        </div>
         <div class="buttons primary-actions">
           <button id="start" class="primary">
-            <span aria-hidden="true">▶</span>
-            Analyze automatically
+            <span aria-hidden="true">▷</span>
+            Analyze video
           </button>
           <button id="stop" class="stop-button">Stop</button>
         </div>
-        <p id="status" role="status" aria-live="polite">Ready.</p>
-      </section>
 
-      <details class="panel" open>
+      </section>
+        <p id="status" class="session-status" role="status" aria-live="polite">Ready to analyze.</p>
+        <details id="diagnosticPanel" class="panel diagnostic-panel" open>
         <summary>
           <span class="summary-title">
-            <span class="summary-icon" aria-hidden="true">文</span>
-            Translation
+            <span class="summary-icon" aria-hidden="true">i</span>
+            Analysis diagnostics
           </span>
-          <span class="summary-note">English</span>
+          <span id="diagnosticBadge" class="diagnostic-badge">Ready</span>
         </summary>
         <div class="panel-content">
-          <label class="check preference-toggle emphasized-toggle">
-            <input id="translationEnabled" type="checkbox" checked>
-            <span>
-              <strong>Show translation</strong>
-              <small>Display it beneath the original transcript.</small>
-            </span>
-          </label>
-
-          <div class="languages">
-            <label class="field">
-              <span>Target language</span>
-              <input id="translationLanguage" value="en" maxlength="16" spellcheck="false">
-            </label>
-            <label class="field">
-              <span>Provider</span>
-              <select id="translationProvider">
-                <option value="auto">Automatic</option>
-                <option value="browser">On-device only</option>
-                <option value="google">Google Cloud</option>
-              </select>
-            </label>
-          </div>
-
-          <details class="nested-panel">
-            <summary>Online fallback configuration</summary>
-            <label class="field">
-              <span>Google Cloud API key <em>optional</em></span>
-              <input id="googleTranslateApiKey" type="password" autocomplete="off" spellcheck="false">
-            </label>
-            <small class="setting-help">Stored only in this browser profile. Google Cloud may require billing even when credit covers usage.</small>
-          </details>
-          <small id="translationAvailability" class="setting-help"></small>
+          <div id="diagnosticStage" class="diagnostic-stage">Ready</div>
+          <p id="diagnosticMessage" class="diagnostic-message">No analysis has been run yet.</p>
+          <p id="diagnosticAction" class="diagnostic-action" hidden></p>
+          <dl id="diagnosticDetails" class="diagnostic-details"></dl>
         </div>
       </details>
-
-      <details class="panel appearance-panel" open>
+        <details class="panel" data-ui-state-key="home-timing">
         <summary>
           <span class="summary-title">
-            <span class="summary-icon" aria-hidden="true">Aa</span>
-            Caption appearance
+            <span class="summary-icon" aria-hidden="true">◴</span>
+            Timing and recognizer
           </span>
-          <span class="summary-note">Live preview</span>
+          <span class="summary-note">Advanced</span>
         </summary>
         <div class="panel-content">
-          <div class="panel-toolbar">
+          <div class="sync-control">
+            <span>Caption timing</span>
+            <div class="sync-stepper">
+              <button id="syncEarlier" type="button" aria-label="Show captions 0.1 seconds earlier">Earlier</button>
+              <output id="syncOffset" aria-live="polite">0.0 s</output>
+              <button id="syncLater" type="button" aria-label="Show captions 0.1 seconds later">Later</button>
+            </div>
+            <small>Adjusts cached captions without transcribing again.</small>
+          </div>
+
+          <label class="field">
+            <span>Local WhisperLiveKit WebSocket</span>
+            <input id="serverUrl" type="url" value="ws://127.0.0.1:8000/asr" spellcheck="false">
+          </label>
+        </div>
+      </details>
+        <div class="section-heading archive-heading"><span class="section-kicker">Your vocabulary</span><button type="button" class="quiet-button" data-open-view="words">View all →</button></div>
+        <div id="recentWords" class="recent-words"><p class="empty-saved">Click any caption word to start your collection.</p></div>
+        <details id="netflixResearchPanel" class="panel research-panel">
+        <summary>
+          <span class="summary-title"><span class="summary-icon" aria-hidden="true">N</span> Netflix audio research</span>
+          <span id="netflixResearchCount" class="count-badge">0 reports</span>
+        </summary>
+        <div class="panel-content">
+          <p class="research-copy">
+            Inspects title, track, subtitle, CDN, codec, and MP4 protection metadata. It does not
+            transcribe, retain audio, inspect licenses, or save media URLs.
+          </p>
+          <button id="analyzeNetflixTitle" class="wide research-primary">Analyze this Netflix title</button>
+          <button id="attachNetflixSample" class="wide">Attach latest ASR + caption sample</button>
+          <div class="research-actions">
+            <button id="exportNetflixResearch">Report JSON</button>
+            <button id="exportNetflixDataset">Dataset CSV</button>
+          </div>
+          <p id="netflixResearchStatus" class="research-status">No Netflix research report yet.</p>
+          <dl id="netflixResearchDetails" class="diagnostic-details"></dl>
+          <small class="setting-help">
+            Subtitle matching needs a representative ASR/caption sample. Netflix collection is currently optional.
+          </small>
+        </div>
+      </details>
+      </section>
+      <section id="view-words" class="app-view" aria-labelledby="nav-words" hidden><section class="vocabulary-panel" aria-label="Saved vocabulary">
+        <div class="page-heading"><span class="section-kicker">Vocabulary archive</span><h2>Saved vocabulary <span id="savedWordCount" class="count-badge">0</span></h2><p>Keep a word. Recognize it in the next story.</p></div>
+        <div class="archive-stats"><div><span>Total saved</span><strong data-word-total>0</strong><small> words</small></div><div><span>Storage</span><strong>Local</strong><small> this browser</small></div></div>
+        <label class="search-field"><span>Search your vocabulary</span><input id="wordSearch" type="search" placeholder="Words, meanings, or shows…"></label>
+        <div class="word-filters" role="group" aria-label="Filter vocabulary">
+          <button type="button" data-word-filter="all" aria-pressed="true">All</button><button type="button" data-word-filter="verb" aria-pressed="false">Verbs</button><button type="button" data-word-filter="other" aria-pressed="false">Other</button>
+        </div>
+        <p id="wordResults" class="setting-help" role="status"></p>
+        <div class="panel-content">
+          <div id="savedWords" class="saved-words">
+            <p class="empty-saved">Click a transcript word and choose “Save word”.</p>
+          </div>
+        </div>
+      </section></section>
+      <section id="view-videos" class="app-view" aria-labelledby="nav-videos" hidden><section class="transcript-library-panel" aria-label="Saved transcripts">
+        <div class="page-heading"><span class="section-kicker">Library archive</span><h2>Transcribed videos <span id="savedTranscriptCount" class="count-badge">0</span></h2><p>Your spoken transcripts, ready to return to.</p></div>
+        <div class="panel-content">
+          <small class="setting-help">Complete transcripts are restored automatically for the same video and audio language.</small>
+          <div id="savedTranscripts" class="saved-words">
+            <p class="empty-saved">No complete transcript has been saved yet.</p>
+          </div>
+        </div>
+      </section><section class="glass-card export-card" aria-label="Transcript exports">
+        <button id="downloadTranscript" class="wide primary">Download transcript .txt</button>
+        <button id="export" class="wide secondary-export">Technical experiment JSON</button>
+      </section></section>
+      <section id="view-appearance" class="app-view" aria-labelledby="nav-appearance" hidden>
+        <div class="page-heading"><span class="section-kicker">Make it yours</span><h2>Caption appearance</h2><p>Original words. Your way of reading them.</p></div>
+        <div class="caption-preview" aria-label="Caption appearance preview"><span class="micro-label">Preview · sample text</span><div id="previewScene" class="preview-scene"><div id="previewCaption" class="preview-caption"><div id="previewTranscript">Das ist ein Geheimnis.</div><div id="previewTranslation">That is a secret.</div></div></div></div>
+        <section class="appearance-panel" aria-label="Caption appearance settings">
+        <div class="panel-content">
+<div class="panel-toolbar">
             <p>Customize the original and translation independently.</p>
             <button id="resetAppearance" class="quiet-button" type="button">Reset</button>
           </div>
 
-          <fieldset class="appearance-section">
-            <legend><span aria-hidden="true">◎</span> Transcript</legend>
+          <details class="panel appearance-section" data-ui-state-key="appearance-transcript" open><summary>Transcript</summary><div class="appearance-group-content">
             <div class="setting-row">
               <label for="fontSize">Font size</label>
               <div class="value-stepper">
@@ -148,10 +180,9 @@
               <input id="transcriptBold" type="checkbox" checked>
               <span>Bold transcript</span>
             </label>
-          </fieldset>
+          </div></details>
 
-          <fieldset class="appearance-section translation-section">
-            <legend><span aria-hidden="true">译</span> Translation</legend>
+          <details class="panel appearance-section translation-section" data-ui-state-key="appearance-translation"><summary>Translation</summary><div class="appearance-group-content">
             <div class="setting-row">
               <label for="translationFontSize">Font size</label>
               <div class="value-stepper">
@@ -184,10 +215,9 @@
               <input id="translationBold" type="checkbox">
               <span>Bold translation</span>
             </label>
-          </fieldset>
+          </div></details>
 
-          <fieldset class="appearance-section">
-            <legend><span aria-hidden="true">⚙</span> Caption box</legend>
+          <details class="panel appearance-section" data-ui-state-key="appearance-caption-box"><summary>Caption box</summary><div class="appearance-group-content">
             <label class="range-setting">
               <span>Horizontal position <output id="horizontalPositionValue">50%</output></span>
               <input id="horizontalPosition" type="range" min="2" max="98" step="1" value="50">
@@ -214,117 +244,72 @@
                 <input id="backgroundColor" type="color" value="#05070c" aria-label="Caption background color">
               </label>
             </div>
-          </fieldset>
+          </div></details>
 
           <div class="interaction-tip">
             <span aria-hidden="true">↕</span>
             Select transcript or translation normally. Drag the grip beside the caption to reposition it.
           </div>
         </div>
-      </details>
-
-      <details class="panel">
+      </section><details class="panel">
         <summary>
           <span class="summary-title">
-            <span class="summary-icon" aria-hidden="true">◴</span>
-            Timing and recognizer
+            <span class="summary-icon" aria-hidden="true">文</span>
+            Translation
           </span>
-          <span class="summary-note">Advanced</span>
+          <span class="summary-note">Provider &amp; visibility</span>
         </summary>
         <div class="panel-content">
-          <div class="sync-control">
-            <span>Caption timing</span>
-            <div class="sync-stepper">
-              <button id="syncEarlier" type="button" aria-label="Show captions 0.1 seconds earlier">Earlier</button>
-              <output id="syncOffset" aria-live="polite">0.0 s</output>
-              <button id="syncLater" type="button" aria-label="Show captions 0.1 seconds later">Later</button>
-            </div>
-            <small>Adjusts cached captions without transcribing again.</small>
-          </div>
-
-          <label class="field">
-            <span>Local WhisperLiveKit WebSocket</span>
-            <input id="serverUrl" type="url" value="ws://127.0.0.1:8000/asr" spellcheck="false">
+          <label class="check preference-toggle emphasized-toggle">
+            <input id="translationEnabled" type="checkbox" checked>
+            <span>
+              <strong>Show translation</strong>
+              <small>Display it beneath the original transcript.</small>
+            </span>
           </label>
-        </div>
-      </details>
 
-      <details id="diagnosticPanel" class="panel diagnostic-panel" open>
-        <summary>
-          <span class="summary-title">
-            <span class="summary-icon" aria-hidden="true">i</span>
-            Analysis diagnostics
+          <div class="languages">
+
+            <label class="field">
+              <span>Provider</span>
+              <select id="translationProvider">
+                <option value="browser">On-device only</option>
+                <option value="auto">Browser first; configured Google fallback</option>
+              </select>
+            </label>
+          </div>
+
+          <details class="nested-panel">
+            <summary>Online fallback configuration</summary>
+            <label class="field">
+              <span>Google Cloud API key <em>optional</em></span>
+              <input id="googleTranslateApiKey" type="password" autocomplete="off" spellcheck="false">
+            </label>
+            <small class="setting-help">Stored only in this browser profile. Google Cloud may require billing even when credit covers usage.</small>
+          </details>
+          <small id="translationAvailability" class="setting-help"></small>
+        </div>
+      </details><details class="panel"><summary>Reference captions</summary><div class="panel-content">          <label class="field">
+            <span>Caption language</span>
+            <input id="captionLanguage" value="de" maxlength="16" spellcheck="false">
+          </label>        <label class="check preference-toggle">
+          <input id="collectCaptions" type="checkbox" checked>
+          <span>
+            <strong>Collect reference captions</strong>
+            <small>Used only as an answer key, never as ASR input.</small>
           </span>
-          <span id="diagnosticBadge" class="diagnostic-badge">Ready</span>
-        </summary>
-        <div class="panel-content">
-          <div id="diagnosticStage" class="diagnostic-stage">Ready</div>
-          <p id="diagnosticMessage" class="diagnostic-message">No analysis has been run yet.</p>
-          <p id="diagnosticAction" class="diagnostic-action" hidden></p>
-          <dl id="diagnosticDetails" class="diagnostic-details"></dl>
-        </div>
-      </details>
+        </label>
 
-      <section class="glass-card export-card" aria-label="Transcript exports">
-        <button id="downloadTranscript" class="wide primary">Download transcript .txt</button>
-        <button id="export" class="wide secondary-export">Technical experiment JSON</button>
+</div></details>
       </section>
-
-      <details class="panel transcript-library-panel">
-        <summary>
-          <span class="summary-title"><span class="summary-icon" aria-hidden="true">▤</span> Saved transcripts</span>
-          <span id="savedTranscriptCount" class="count-badge">0</span>
-        </summary>
-        <div class="panel-content">
-          <small class="setting-help">Complete transcripts are restored automatically for the same video and audio language.</small>
-          <div id="savedTranscripts" class="saved-words">
-            <p class="empty-saved">No complete transcript has been saved yet.</p>
-          </div>
-        </div>
-      </details>
-
-      <details class="panel vocabulary-panel">
-        <summary>
-          <span class="summary-title"><span class="summary-icon" aria-hidden="true">◇</span> Saved vocabulary</span>
-          <span id="savedWordCount" class="count-badge">0</span>
-        </summary>
-        <div class="panel-content">
-          <div id="savedWords" class="saved-words">
-            <p class="empty-saved">Click a transcript word and choose “Save word”.</p>
-          </div>
-        </div>
-      </details>
-
-      <details id="netflixResearchPanel" class="panel research-panel">
-        <summary>
-          <span class="summary-title"><span class="summary-icon" aria-hidden="true">N</span> Netflix audio research</span>
-          <span id="netflixResearchCount" class="count-badge">0 reports</span>
-        </summary>
-        <div class="panel-content">
-          <p class="research-copy">
-            Inspects title, track, subtitle, CDN, codec, and MP4 protection metadata. It does not
-            transcribe, retain audio, inspect licenses, or save media URLs.
-          </p>
-          <button id="analyzeNetflixTitle" class="wide research-primary">Analyze this Netflix title</button>
-          <button id="attachNetflixSample" class="wide">Attach latest ASR + caption sample</button>
-          <div class="research-actions">
-            <button id="exportNetflixResearch">Report JSON</button>
-            <button id="exportNetflixDataset">Dataset CSV</button>
-          </div>
-          <p id="netflixResearchStatus" class="research-status">No Netflix research report yet.</p>
-          <dl id="netflixResearchDetails" class="diagnostic-details"></dl>
-          <small class="setting-help">
-            Subtitle matching needs a representative ASR/caption sample. Netflix collection is currently optional.
-          </small>
-        </div>
-      </details>
-
       <footer class="app-footer">
         <span>Audio stays local with the default recognizer.</span>
-        <span>Phase 2 preview</span>
+        <span>v0.11.1 · Experimental</span>
       </footer>
     </main>
+    <nav class="bottom-nav" aria-label="Extension navigation"><button id="nav-home" type="button" data-open-view="home" aria-controls="view-home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10M9 20v-7h6v7"/></svg><span>Home</span></button><button id="nav-words" type="button" data-open-view="words" aria-controls="view-words"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C8 2 4 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z"/></svg><span>Words</span></button><button id="nav-videos" type="button" data-open-view="videos" aria-controls="view-videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg><span>Videos</span></button><button id="nav-appearance" type="button" data-open-view="appearance" aria-controls="view-appearance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-4c-1-1 0-2 1-2h2a3 3 0 0 0 3-3 9 9 0 0 0-9-9Z"/><circle cx="7.5" cy="10" r=".7"/><circle cx="11" cy="6.5" r=".7"/><circle cx="16" cy="8" r=".7"/></svg><span>Appearance</span></button></nav>
     <script src="learning-features.js"></script>
+    <script src="translation-readiness.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

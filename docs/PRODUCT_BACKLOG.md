@@ -24,6 +24,12 @@ For priority, dependencies, phases, and future work, use
 
 ## Still deferred
 
+- Measured 0.11.1 dictionary gaps: `noch` child senses/example links; `durch`
+  maintenance cleanup; `gegen` case annotation; `werden` auxiliary/participle
+  variants; ambiguous `wegen` scope. Retain features pending the user's decision.
+  Real Chrome download completion and genuinely hidden-tab behavior need more
+  evidence. See the 0.11.1 report; reserves remain unused.
+
 - A larger searchable library page and an explicit **Open video** action for old transcripts.
 - User-selected filesystem folders or companion-service persistence beyond browser storage.
 - AI-generated B1 simplification or B2 tutoring. The current card deliberately uses only source-backed dictionary data.
@@ -58,6 +64,58 @@ For priority, dependencies, phases, and future work, use
 - Mark whole-token exact forms of previously saved German words in later source
   transcript cues. Initial scope does not infer lemmas or match inflections.
 - Full plan: [YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md](YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md).
+
+## User-requested Terra UI corrections (2026-10-25)
+
+- Word-card headings contain direct meaning in the selected target language,
+  with dictionary-backed alternative meanings underneath. English is not a
+  forced display language; Arabic follows the same provider contract.
+- Keep the German dictionary definition first and translate that exact
+  definition into the target language. Grammatical form notes are secondary,
+  not meanings. Follow an explicitly named dictionary lemma once when needed;
+  do not invent definitions for placeholders or missing entries.
+- Highlight the selected German word and matching target words/phrases in
+  translated examples. Keep unmatched paraphrases unmarked.
+- Blend the card scrollbar with the glass theme. Outside pointer actions close
+  the card without cancelling site/player actions, including parent-frame
+  clicks for embedded players.
+- Keep video titles compact. Pin the scaled caption preview while settings
+  scroll, and group Transcript, Translation, and Caption box into collapsible
+  containers with larger bold summaries. Only Transcript starts open.
+- Source changes are a candidate; automated/provider/browser/upgrade checks
+  after these corrections are deferred at the user's request.
+
+## German-only learning decisions (supersede earlier card sourcing)
+
+- German Wiktionary is the sole active dictionary source. Do not use English
+  Wiktionary content, English glosses as a bridge, displayed grammatical roles,
+  or usage notes. Keep source-explicit case/government separate from meanings;
+  retain verb base form and conjugations alongside it.
+  This follow-up supersedes the earlier verb-only grammar wording; see
+  [`WORD_CARD_FOLLOWUP_PLAN.md`](WORD_CARD_FOLLOWUP_PLAN.md).
+- German definitions remain separate senses, translated individually directly
+  into the chosen target. Whole German examples use the same direct route.
+- Keep one concise example visible by default, with further source content
+  expandable. German example occurrences of the selected form are marked.
+- Per translated example, deduplicate candidates and count distinct matches
+  before rendering: zero or two-plus gives no mark; exactly one marks every
+  occurrence of that candidate. Do not claim semantic alignment.
+- Chrome's built-in on-device Translator is primary; show availability and
+  language-pack download progress. Google Cloud is a fallback only with a
+  configured key and a policy that allows it. Cache provenance must remain
+  honest and cannot bypass the chosen policy.
+- Use browser German pronunciation with local or online voices, prefer de-DE,
+  wait for voice-list changes and block other-language fallback. This supersedes
+  the earlier Windows/local-only voice requirement. Restore last popup view/scroll/groups/search
+  and edits, highlight the currently spoken source word using timing metadata,
+  and place diagnostics directly beneath the Home video card.
+- Preserve existing saved records and source context without using legacy
+  English fields as new card evidence. Keep selection, save/remove, YouGlish,
+  replay restoration, dragging, cached transcripts, and embedded players.
+- Implementation scope and evidence requirements are in
+  [GERMAN_ONLY_LEARNING_IMPLEMENTATION_PLAN.md](GERMAN_ONLY_LEARNING_IMPLEMENTATION_PLAN.md).
+  Testing remains paused; the implementation report distinguishes source
+  changes from unverified runtime behavior.
 
 ## Acceptance notes
 

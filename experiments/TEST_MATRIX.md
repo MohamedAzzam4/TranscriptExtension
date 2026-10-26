@@ -1,5 +1,13 @@
 # Experiment matrix
 
+2026-10-26: 0.11.1 WP1.3/WP2.4/WP3.5/WP0.3 scope tested without media capture.
+21 extension suites/46 server tests/17 syntax checks pass; 60 German source
+entries manually compared by GPT-6 Luna (36 development, 24 final, 12 unread
+reserves). Case rules/conjugations and final definitions miss >95%; Chrome
+English/Arabic creation times out with retry, so pack completion/background
+behavior remains unverified. Synthetic migration/export privacy passes. Result
+**Needs development**. Details: `docs/test-results/0.11.1-dictionary-readiness-persistence.md`.
+
 The transcript input is always the audio that is actually playing. Platform captions are collected separately and used only as a possible reference.
 
 ## Test order
@@ -47,6 +55,14 @@ Netflix and other DRM subscription services are not in this phase. They add prot
 
 ## Current-version user observations
 
+Scoped browser acceptance on 2026-10-25 used clean isolated Chrome DevTools MCP
+profiles, real German Wiktionary and a synthetic empty-video card fixture. Only
+user-selected items 4/5/6/13 were tested: 23 scoped checks passed, 12 failed and
+1 was inconclusive. Live dictionary/grammar, first-use Arabic translation, and
+privacy persistence failures mean **Needs development** for this scope. No
+transcription, speech, platform acquisition or other excluded category was
+tested. See `docs/test-results/0.11.0-scoped-45613-browser-tests.md`.
+
 These observations are useful browser evidence, not a platform-wide support
 claim. A row becomes a full manual pass only after the pass/fail checks above
 and the relevant regression checklist are recorded.
@@ -57,3 +73,7 @@ and the relevant regression checklist are recorded.
 | 2026-07-23 | AniWorld embedded clear media | The user confirmed full-audio analysis now works; preparation can be noticeably slow on some mirrors. | User-run success; speed baseline and full M-14 checks pending |
 | 2026-07-23 | AnimeKai PNG-wrapped clear HLS | The user confirmed the 0.10.3 browser path now works. | User-run success; multi-title coverage and full M-14 checks pending |
 | 2026-08-07 | Local MP4 over `http://127.0.0.1:8050` | On 0.10.3 the bare Chrome media page disappeared when analysis changed the root layout, and the worker rejected the loopback source before decode. Version 0.10.4 contains bounded fixes for both causes. | Automated candidate; user browser retest pending |
+| 2026-10-25 | AniWorld / first 0.11.0 Terra UI candidate | User screenshots show the popup and word card rendering, including an Arabic example line. The user requested smaller titles, themed scrolling, outside dismissal, sticky/collapsible settings, and target-language word details. | Rendering observations only; subsequent corrections unverified. Testing paused at user request; see `docs/test-results/0.11.0-terra-vocabulary-candidate.md`. |
+| 2026-10-25 | AniWorld / German-only word-card candidate | User reported silent pronunciation and showed saved source title/context printed in the card. Source inspection confirmed metadata rendering and conditional local-German-voice selection; the machine-specific speech failure was not established. The follow-up separates case grammar, hides source metadata, groups sense-linked examples, and adds card-local voice availability/error states. | User-reported failure; follow-up source only, no automated or browser checks run. Testing remains paused; see `docs/WORD_CARD_FOLLOWUP_REPORT.md`. |
+| 2026-10-25 | AniWorld / player discovery after word-card follow-up | User reported no-video discovery despite a visible, previously analyzed player. Local checks reproduced a content.js parse error before GET_MEDIA_CONTEXT could register. Parent fixed parsing, application-injection error propagation and stale-Complete diagnostics. | 15 extension suites, JS syntax and 46 server tests pass; real AniWorld/cached replay unverified. Local checks authorized; browser testing remains paused. See `docs/test-results/0.11.0-player-initialization-repair.md`. |
+| 2026-10-25 | Edge / repeated AniWorld player discovery failure | User-authorized read-only inspection captured `Browser pronunciation helpers were not loaded` in the actual video tab. Optional speech initialization aborted discovery, and the premature version guard could suppress retries. Parent isolated optional speech and fixed initialization readiness/error propagation. | Browser cause observed; repaired local fixtures and all 17 extension suites/46 server tests pass. Extension/page were not reloaded; real post-repair acceptance pending. See `docs/test-results/0.11.0-optional-speech-startup-repair.md`. |

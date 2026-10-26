@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.10.4",
+  "version": "0.11.1",
   "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -11,6 +11,7 @@
     "offscreen",
     "scripting",
     "storage",
+    "unlimitedStorage",
     "tabCapture",
     "webRequest"
   ],
@@ -18,7 +19,6 @@
     "http://*/*",
     "https://*/*",
     "https://de.wiktionary.org/*",
-    "https://en.wiktionary.org/*",
     "https://translation.googleapis.com/*"
   ],
   "background": {
@@ -44,6 +44,6 @@
     "default_title": "Dub Transcript Lab"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:* https://de.wiktionary.org https://en.wiktionary.org https://translation.googleapis.com https://nflxvideo.net https://*.nflxvideo.net"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:* https://de.wiktionary.org https://translation.googleapis.com https://nflxvideo.net https://*.nflxvideo.net"
   }
 }
