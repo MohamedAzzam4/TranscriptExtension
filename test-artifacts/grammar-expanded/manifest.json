@@ -1,0 +1,212 @@
+[
+  {
+    "word": "statt",
+    "group": "case-rules",
+    "file": "case-rules-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+    "expectedBase": null
+  },
+  {
+    "word": "während",
+    "group": "case-rules",
+    "file": "case-rules-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/w%C3%A4hrend",
+    "expectedBase": null
+  },
+  {
+    "word": "innerhalb",
+    "group": "case-rules",
+    "file": "case-rules-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/innerhalb",
+    "expectedBase": null
+  },
+  {
+    "word": "außerhalb",
+    "group": "case-rules",
+    "file": "case-rules-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/au%C3%9Ferhalb",
+    "expectedBase": null
+  },
+  {
+    "word": "gemäß",
+    "group": "case-rules",
+    "file": "case-rules-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gem%C3%A4%C3%9F",
+    "expectedBase": null
+  },
+  {
+    "word": "entgegen",
+    "group": "case-rules",
+    "file": "case-rules-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+    "expectedBase": null
+  },
+  {
+    "word": "dank",
+    "group": "case-rules",
+    "file": "case-rules-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+    "expectedBase": null
+  },
+  {
+    "word": "samt",
+    "group": "case-rules",
+    "file": "case-rules-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/samt",
+    "expectedBase": null
+  },
+  {
+    "word": "nebst",
+    "group": "case-rules",
+    "file": "case-rules-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/nebst",
+    "expectedBase": null
+  },
+  {
+    "word": "entlang",
+    "group": "case-rules",
+    "file": "case-rules-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+    "expectedBase": null
+  },
+  {
+    "word": "gefahren",
+    "group": "verb-base",
+    "file": "verb-base-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gefahren",
+    "expectedBase": "fahren"
+  },
+  {
+    "word": "gesessen",
+    "group": "verb-base",
+    "file": "verb-base-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gesessen",
+    "expectedBase": "sitzen"
+  },
+  {
+    "word": "gegessen",
+    "group": "verb-base",
+    "file": "verb-base-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gegessen",
+    "expectedBase": "essen"
+  },
+  {
+    "word": "getrunken",
+    "group": "verb-base",
+    "file": "verb-base-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/getrunken",
+    "expectedBase": "trinken"
+  },
+  {
+    "word": "geschrieben",
+    "group": "verb-base",
+    "file": "verb-base-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/geschrieben",
+    "expectedBase": "schreiben"
+  },
+  {
+    "word": "gelesen",
+    "group": "verb-base",
+    "file": "verb-base-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gelesen",
+    "expectedBase": "lesen"
+  },
+  {
+    "word": "brachte",
+    "group": "verb-base",
+    "file": "verb-base-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/brachte",
+    "expectedBase": "bringen"
+  },
+  {
+    "word": "dachte",
+    "group": "verb-base",
+    "file": "verb-base-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/dachte",
+    "expectedBase": "denken"
+  },
+  {
+    "word": "wusste",
+    "group": "verb-base",
+    "file": "verb-base-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/wusste",
+    "expectedBase": "wissen"
+  },
+  {
+    "word": "gewesen",
+    "group": "verb-base",
+    "file": "verb-base-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/gewesen",
+    "expectedBase": "sein"
+  },
+  {
+    "word": "machen",
+    "group": "conjugations",
+    "file": "conjugations-01.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+    "expectedBase": null
+  },
+  {
+    "word": "sagen",
+    "group": "conjugations",
+    "file": "conjugations-02.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+    "expectedBase": null
+  },
+  {
+    "word": "sehen",
+    "group": "conjugations",
+    "file": "conjugations-03.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+    "expectedBase": null
+  },
+  {
+    "word": "sprechen",
+    "group": "conjugations",
+    "file": "conjugations-04.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+    "expectedBase": null
+  },
+  {
+    "word": "schlafen",
+    "group": "conjugations",
+    "file": "conjugations-05.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+    "expectedBase": null
+  },
+  {
+    "word": "laufen",
+    "group": "conjugations",
+    "file": "conjugations-06.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+    "expectedBase": null
+  },
+  {
+    "word": "dürfen",
+    "group": "conjugations",
+    "file": "conjugations-07.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+    "expectedBase": null
+  },
+  {
+    "word": "müssen",
+    "group": "conjugations",
+    "file": "conjugations-08.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+    "expectedBase": null
+  },
+  {
+    "word": "wollen",
+    "group": "conjugations",
+    "file": "conjugations-09.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+    "expectedBase": null
+  },
+  {
+    "word": "tun",
+    "group": "conjugations",
+    "file": "conjugations-10.json",
+    "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+    "expectedBase": null
+  }
+]

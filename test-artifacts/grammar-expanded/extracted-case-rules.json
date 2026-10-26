@@ -1,0 +1,5033 @@
+{
+  "parserHash": "6816cf9dca71fb6f19a3c92874c57c2b7aa82a187fa21be3233c9f7601ff42f9",
+  "results": [
+    {
+      "word": "statt",
+      "group": "case-rules",
+      "file": "case-rules-01.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+      "expectedBase": null,
+      "revision": 10528149,
+      "sha256": "f58d3791f4112dde3d2ccad45a10f76f41d940f048853dbd83851ef1c1212e84",
+      "direct": {
+        "germanDefinition": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu« leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass« steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert Bezeichnung eines Ersatzes",
+        "germanDefinitions": [
+          "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+          "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+          "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+          "Bezeichnung eines Ersatzes"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+            "definition": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie bleibt lieber auf dem Sofa sitzen, statt uns zu helfen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Er bleibt lieber zu Hause, statt sich uns anzuschließen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:2",
+            "sectionId": "de-1",
+            "sourceSenseId": "2",
+            "sourceText": "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+            "definition": "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Statt dass er uns zu Hilfe kommt, bleibt er lieber zu Hause.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:3",
+            "sectionId": "de-1",
+            "sourceSenseId": "3",
+            "sourceText": "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+            "definition": "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Der Vater statt der Bruder muss es gewesen sein, denn der war als Einziger zuhause.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              },
+              {
+                "german": "Er gab das Buch dann doch seiner Mutter statt dem Bruder.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              },
+              {
+                "german": "Sie wollte lieber den Perserteppich beleihen statt den Brillantring.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich: Bezeichnung eines Ersatzes",
+            "definition": "Bezeichnung eines Ersatzes",
+            "government": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Statt seines Vaters kam dieses Mal seine Mutter zum Elternsprechtag.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Statt ihm kam dieses Mal sie.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "antiquiert: Statt seiner kam dieses Mal sie.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "umgangssprachlich: Statt seinem Vater kam dieses Mal seine Mutter zum Elternsprechtag.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Sie bleibt lieber auf dem Sofa sitzen, statt uns zu helfen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Er bleibt lieber zu Hause, statt sich uns anzuschließen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Statt dass er uns zu Hilfe kommt, bleibt er lieber zu Hause.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "Der Vater statt der Bruder muss es gewesen sein, denn der war als Einziger zuhause.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Er gab das Buch dann doch seiner Mutter statt dem Bruder.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Sie wollte lieber den Perserteppich beleihen statt den Brillantring.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Statt seines Vaters kam dieses Mal seine Mutter zum Elternsprechtag.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Statt ihm kam dieses Mal sie.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "antiquiert: Statt seiner kam dieses Mal sie.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "umgangssprachlich: Statt seinem Vater kam dieses Mal seine Mutter zum Elternsprechtag.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Subjunktion"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-3",
+            "heading": "Konjugierte Form"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [
+            {
+              "sectionId": "de-3",
+              "infinitive": "statten"
+            }
+          ],
+          "infinitive": "statten",
+          "cases": [
+            "Genitiv",
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": true,
+        "lemma": null,
+        "pronunciation": "ʃtat"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu« leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass« steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert Bezeichnung eines Ersatzes",
+        "germanDefinitions": [
+          "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+          "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+          "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+          "Bezeichnung eines Ersatzes"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+            "definition": "schließt zusammen mit der Infinitivkonjunktion › zu ‹ einen abhängigen Infinitiv an und zeigt einen Gegensatz / eine Substitution -> »statt zu«",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie bleibt lieber auf dem Sofa sitzen, statt uns zu helfen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Er bleibt lieber zu Hause, statt sich uns anzuschließen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:2",
+            "sectionId": "de-1",
+            "sourceSenseId": "2",
+            "sourceText": "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+            "definition": "leitet zusammen mit der Konjunktion (genauer: Subjunktion) › dass ‹ einen Adversativsatz / Substitutivsatz ein -> »statt dass«",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Statt dass er uns zu Hilfe kommt, bleibt er lieber zu Hause.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:3",
+            "sectionId": "de-1",
+            "sourceSenseId": "3",
+            "sourceText": "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+            "definition": "steht für „ und nicht “, das folgende Wort steht in dem Kasus, den das verwendete Verb fordert",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Der Vater statt der Bruder muss es gewesen sein, denn der war als Einziger zuhause.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              },
+              {
+                "german": "Er gab das Buch dann doch seiner Mutter statt dem Bruder.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              },
+              {
+                "german": "Sie wollte lieber den Perserteppich beleihen statt den Brillantring.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:3"
+                ],
+                "senseId": "de-1:3",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich: Bezeichnung eines Ersatzes",
+            "definition": "Bezeichnung eines Ersatzes",
+            "government": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Statt seines Vaters kam dieses Mal seine Mutter zum Elternsprechtag.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Statt ihm kam dieses Mal sie.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "antiquiert: Statt seiner kam dieses Mal sie.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "umgangssprachlich: Statt seinem Vater kam dieses Mal seine Mutter zum Elternsprechtag.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Sie bleibt lieber auf dem Sofa sitzen, statt uns zu helfen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Er bleibt lieber zu Hause, statt sich uns anzuschließen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Statt dass er uns zu Hilfe kommt, bleibt er lieber zu Hause.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "Der Vater statt der Bruder muss es gewesen sein, denn der war als Einziger zuhause.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Er gab das Buch dann doch seiner Mutter statt dem Bruder.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Sie wollte lieber den Perserteppich beleihen statt den Brillantring.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:3"
+            ],
+            "senseId": "de-1:3",
+            "unassigned": false
+          },
+          {
+            "german": "Statt seines Vaters kam dieses Mal seine Mutter zum Elternsprechtag.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Statt ihm kam dieses Mal sie.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "antiquiert: Statt seiner kam dieses Mal sie.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "umgangssprachlich: Statt seinem Vater kam dieses Mal seine Mutter zum Elternsprechtag.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Subjunktion"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-3",
+            "heading": "Konjugierte Form"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [
+            {
+              "sectionId": "de-3",
+              "infinitive": "statten"
+            }
+          ],
+          "infinitive": "statten",
+          "cases": [
+            "Genitiv",
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": true,
+        "lemma": null,
+        "pronunciation": "ʃtat"
+      }
+    },
+    {
+      "word": "während",
+      "group": "case-rules",
+      "file": "case-rules-02.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/w%C3%A4hrend",
+      "expectedBase": null,
+      "revision": 10730108,
+      "sha256": "651a11fa684b1c0e1d8f703f2d18bbac32c44e6aa81a65e9c14684545ffb1c15",
+      "direct": {
+        "germanDefinition": "zur gleichen Zeit wie temporal: in der Zeit, als adversativ: wohingegen (drückt einen Gegensatz aus)",
+        "germanDefinitions": [
+          "zur gleichen Zeit wie",
+          "temporal: in der Zeit, als",
+          "adversativ: wohingegen (drückt einen Gegensatz aus)"
+        ],
+        "senses": [
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ: zur gleichen Zeit wie",
+            "definition": "zur gleichen Zeit wie",
+            "government": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während des Festes haben wir uns gestritten.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Hier liegt noch das während dem Winter angetriebene Strandgut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-3:1",
+            "sectionId": "de-3",
+            "sourceSenseId": "1",
+            "sourceText": "temporal: in der Zeit, als",
+            "definition": "temporal: in der Zeit, als",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während wir auf dem Fest waren, haben wir uns gestritten.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:1"
+                ],
+                "senseId": "de-3:1",
+                "unassigned": false
+              },
+              {
+                "german": "Während wir hier streiten, sind die anderen schon beim Nachtisch.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:1"
+                ],
+                "senseId": "de-3:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-3:2",
+            "sectionId": "de-3",
+            "sourceSenseId": "2",
+            "sourceText": "adversativ: wohingegen (drückt einen Gegensatz aus)",
+            "definition": "adversativ: wohingegen (drückt einen Gegensatz aus)",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während die meisten noch auf der Suche nach Geschenken sind, habe ich bereits alle gekauft.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:2"
+                ],
+                "senseId": "de-3:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Während des Festes haben wir uns gestritten.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Hier liegt noch das während dem Winter angetriebene Strandgut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während wir auf dem Fest waren, haben wir uns gestritten.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:1"
+            ],
+            "senseId": "de-3:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während wir hier streiten, sind die anderen schon beim Nachtisch.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:1"
+            ],
+            "senseId": "de-3:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während die meisten noch auf der Suche nach Geschenken sind, habe ich bereits alle gekauft.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:2"
+            ],
+            "senseId": "de-3:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adjektiv"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-3",
+            "heading": "Subjunktion"
+          },
+          {
+            "id": "de-4",
+            "heading": "Partizip I"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken.",
+              "senseId": null,
+              "sectionId": "de-3"
+            },
+            {
+              "text": "Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+              "senseId": null,
+              "sectionId": "de-3"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Genitiv",
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈvɛːʁənt"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "zur gleichen Zeit wie temporal: in der Zeit, als adversativ: wohingegen (drückt einen Gegensatz aus)",
+        "germanDefinitions": [
+          "zur gleichen Zeit wie",
+          "temporal: in der Zeit, als",
+          "adversativ: wohingegen (drückt einen Gegensatz aus)"
+        ],
+        "senses": [
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ: zur gleichen Zeit wie",
+            "definition": "zur gleichen Zeit wie",
+            "government": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während des Festes haben wir uns gestritten.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Hier liegt noch das während dem Winter angetriebene Strandgut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-3:1",
+            "sectionId": "de-3",
+            "sourceSenseId": "1",
+            "sourceText": "temporal: in der Zeit, als",
+            "definition": "temporal: in der Zeit, als",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während wir auf dem Fest waren, haben wir uns gestritten.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:1"
+                ],
+                "senseId": "de-3:1",
+                "unassigned": false
+              },
+              {
+                "german": "Während wir hier streiten, sind die anderen schon beim Nachtisch.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:1"
+                ],
+                "senseId": "de-3:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-3:2",
+            "sectionId": "de-3",
+            "sourceSenseId": "2",
+            "sourceText": "adversativ: wohingegen (drückt einen Gegensatz aus)",
+            "definition": "adversativ: wohingegen (drückt einen Gegensatz aus)",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Während die meisten noch auf der Suche nach Geschenken sind, habe ich bereits alle gekauft.",
+                "sectionId": "de-3",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-3:2"
+                ],
+                "senseId": "de-3:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Während des Festes haben wir uns gestritten.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Hier liegt noch das während dem Winter angetriebene Strandgut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während wir auf dem Fest waren, haben wir uns gestritten.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:1"
+            ],
+            "senseId": "de-3:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während wir hier streiten, sind die anderen schon beim Nachtisch.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:1"
+            ],
+            "senseId": "de-3:1",
+            "unassigned": false
+          },
+          {
+            "german": "Während die meisten noch auf der Suche nach Geschenken sind, habe ich bereits alle gekauft.",
+            "sectionId": "de-3",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-3:2"
+            ],
+            "senseId": "de-3:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adjektiv"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-3",
+            "heading": "Subjunktion"
+          },
+          {
+            "id": "de-4",
+            "heading": "Partizip I"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken.",
+              "senseId": null,
+              "sectionId": "de-3"
+            },
+            {
+              "text": "Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+              "senseId": null,
+              "sectionId": "de-3"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Genitiv",
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈvɛːʁənt"
+      }
+    },
+    {
+      "word": "innerhalb",
+      "group": "case-rules",
+      "file": "case-rules-03.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/innerhalb",
+      "expectedBase": null,
+      "revision": 10358726,
+      "sha256": "87f4014de9bb9a6df60f7890cc9512d84086beb120b5d311966f405ac6b06091",
+      "direct": {
+        "germanDefinition": "in einem bestimmten Zeitraum im Inneren von etwas",
+        "germanDefinitions": [
+          "in einem bestimmten Zeitraum",
+          "im Inneren von etwas"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Genitiv: in einem bestimmten Zeitraum",
+            "definition": "in einem bestimmten Zeitraum",
+            "government": "mit Genitiv",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Bitte die Rechnung innerhalb von zwei Wochen begleichen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Er kann vier Jeans innerhalb von fünfzig Sekunden anprobieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:2",
+            "sectionId": "de-1",
+            "sourceSenseId": "2",
+            "sourceText": "mit Genitiv: im Inneren von etwas",
+            "definition": "im Inneren von etwas",
+            "government": "mit Genitiv",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Zeichnen Sie drei Linien innerhalb des Kreises.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              },
+              {
+                "german": "Über die Kandidatur der Personen wird innerhalb der Partei erst nächste Woche entschieden.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              },
+              {
+                "german": "„Die Widersprüche innerhalb der Regierung bleiben nicht verborgen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Bitte die Rechnung innerhalb von zwei Wochen begleichen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Er kann vier Jeans innerhalb von fünfzig Sekunden anprobieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Zeichnen Sie drei Linien innerhalb des Kreises.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "Über die Kandidatur der Personen wird innerhalb der Partei erst nächste Woche entschieden.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "„Die Widersprüche innerhalb der Regierung bleiben nicht verborgen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Genitiv",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            },
+            {
+              "text": "mit Genitiv",
+              "senseId": "de-1:2",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈɪnɐhalp"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "in einem bestimmten Zeitraum im Inneren von etwas",
+        "germanDefinitions": [
+          "in einem bestimmten Zeitraum",
+          "im Inneren von etwas"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Genitiv: in einem bestimmten Zeitraum",
+            "definition": "in einem bestimmten Zeitraum",
+            "government": "mit Genitiv",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Bitte die Rechnung innerhalb von zwei Wochen begleichen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Er kann vier Jeans innerhalb von fünfzig Sekunden anprobieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-1:2",
+            "sectionId": "de-1",
+            "sourceSenseId": "2",
+            "sourceText": "mit Genitiv: im Inneren von etwas",
+            "definition": "im Inneren von etwas",
+            "government": "mit Genitiv",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Zeichnen Sie drei Linien innerhalb des Kreises.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              },
+              {
+                "german": "Über die Kandidatur der Personen wird innerhalb der Partei erst nächste Woche entschieden.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              },
+              {
+                "german": "„Die Widersprüche innerhalb der Regierung bleiben nicht verborgen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:2"
+                ],
+                "senseId": "de-1:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Bitte die Rechnung innerhalb von zwei Wochen begleichen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Er kann vier Jeans innerhalb von fünfzig Sekunden anprobieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Zeichnen Sie drei Linien innerhalb des Kreises.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "Über die Kandidatur der Personen wird innerhalb der Partei erst nächste Woche entschieden.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          },
+          {
+            "german": "„Die Widersprüche innerhalb der Regierung bleiben nicht verborgen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:2"
+            ],
+            "senseId": "de-1:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Genitiv",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            },
+            {
+              "text": "mit Genitiv",
+              "senseId": "de-1:2",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈɪnɐhalp"
+      }
+    },
+    {
+      "word": "außerhalb",
+      "group": "case-rules",
+      "file": "case-rules-04.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/au%C3%9Ferhalb",
+      "expectedBase": null,
+      "revision": 10310466,
+      "sha256": "5bd3db196a7f398564b5c0c4490f3821e6e59e310fb2c0a265e5e489edff2fcd",
+      "direct": {
+        "germanDefinition": "als Adverb: draußen, in der weiteren Umgebung als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von) als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+        "germanDefinitions": [
+          "als Adverb: draußen, in der weiteren Umgebung",
+          "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+          "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "als Adverb: draußen, in der weiteren Umgebung",
+            "definition": "als Adverb: draußen, in der weiteren Umgebung",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Der Firmensitz lag ziemlich weit außerhalb.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wir wollen heute mal außerhalb essen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+            "definition": "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Außerhalb des Schlosses sah man den Grafen kaum noch.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Der Gasthof befand sich in einem zweistöckigen Gebäude außerhalb der Ortschaft.“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Haralds Invasion in England ist der letzte große Versuch skandinavischer Krieger, ein Reich außerhalb ihrer Heimat zu gewinnen und zu beherrschen.“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:2",
+            "sectionId": "de-2",
+            "sourceSenseId": "2",
+            "sourceText": "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+            "definition": "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie rauchten außerhalb der festgesetzten Arbeitszeit.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:2"
+                ],
+                "senseId": "de-2:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Der Firmensitz lag ziemlich weit außerhalb.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir wollen heute mal außerhalb essen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Außerhalb des Schlosses sah man den Grafen kaum noch.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Der Gasthof befand sich in einem zweistöckigen Gebäude außerhalb der Ortschaft.“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Haralds Invasion in England ist der letzte große Versuch skandinavischer Krieger, ein Reich außerhalb ihrer Heimat zu gewinnen und zu beherrschen.“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Sie rauchten außerhalb der festgesetzten Arbeitszeit.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:2"
+            ],
+            "senseId": "de-2:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adverb"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈaʊ̯sɐhalp"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "als Adverb: draußen, in der weiteren Umgebung als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von) als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+        "germanDefinitions": [
+          "als Adverb: draußen, in der weiteren Umgebung",
+          "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+          "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "als Adverb: draußen, in der weiteren Umgebung",
+            "definition": "als Adverb: draußen, in der weiteren Umgebung",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Der Firmensitz lag ziemlich weit außerhalb.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wir wollen heute mal außerhalb essen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+            "definition": "als lokale (örtliche) Präposition mit Genitiv: außen, in der weiteren Umgebung (von)",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Außerhalb des Schlosses sah man den Grafen kaum noch.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Der Gasthof befand sich in einem zweistöckigen Gebäude außerhalb der Ortschaft.“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Haralds Invasion in England ist der letzte große Versuch skandinavischer Krieger, ein Reich außerhalb ihrer Heimat zu gewinnen und zu beherrschen.“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:2",
+            "sectionId": "de-2",
+            "sourceSenseId": "2",
+            "sourceText": "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+            "definition": "als temporale (zeitliche) Präposition mit Genitiv: nicht innerhalb eines bestimmten Zeitraums",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie rauchten außerhalb der festgesetzten Arbeitszeit.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:2"
+                ],
+                "senseId": "de-2:2",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Der Firmensitz lag ziemlich weit außerhalb.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir wollen heute mal außerhalb essen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Außerhalb des Schlosses sah man den Grafen kaum noch.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Der Gasthof befand sich in einem zweistöckigen Gebäude außerhalb der Ortschaft.“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Haralds Invasion in England ist der letzte große Versuch skandinavischer Krieger, ein Reich außerhalb ihrer Heimat zu gewinnen und zu beherrschen.“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Sie rauchten außerhalb der festgesetzten Arbeitszeit.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:2"
+            ],
+            "senseId": "de-2:2",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adverb"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ˈaʊ̯sɐhalp"
+      }
+    },
+    {
+      "word": "gemäß",
+      "group": "case-rules",
+      "file": "case-rules-05.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gem%C3%A4%C3%9F",
+      "expectedBase": null,
+      "revision": 9643239,
+      "sha256": "75f368b717f87719a1f0c22d45f8acaca1abd58dc0b6e850cc34b7a69b950f96",
+      "direct": {
+        "germanDefinition": "jemandem oder einer Sache angemessen entsprechend, zufolge, nach",
+        "germanDefinitions": [
+          "jemandem oder einer Sache angemessen",
+          "entsprechend, zufolge, nach"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "jemandem oder einer Sache angemessen",
+            "definition": "jemandem oder einer Sache angemessen",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie sucht eine ihren Qualifikationen gemäße Arbeitsstelle.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wir haben Formen der äußeren sowohl als inneren sinnlichen Anschauung a priori an den Vorstellungen von Raum und Zeit, und diesen muß die Synthesis der Apprehension des Mannigfaltigen der Erscheinung jederzeit gemäß sein, weil sie selbst nur nach dieser Form geschehen kann. (Immanuel Kant, Kritik der reinen Vernunft, § 26, z.n. Projekt Gutenberg)",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Dativ: entsprechend, zufolge, nach",
+            "definition": "entsprechend, zufolge, nach",
+            "government": "Präposition mit Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Gemäß seinem Wunsch wurde auf der Feier kein Alkohol getrunken.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ist aber die Natur dem Sittengesetze gemäß, so würde ja dieses durch das Handeln, durch das Aufheben des Seienden verletzt. (Georg Wilhelm Friedrich Hegel, Phänomenologie des Geistes, VI, C, b, z.n. Projekt Gutenberg)",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Gemäß § 41 GmbHG sind die Geschäftsführer verpflichtet, für eine ordnungsgemäße Buchführung der Gesellschaft zu sorgen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Die deutsche Luftwaffe greift die italienische Schlachtflotte an, die den Waffenstillstandsbedingungen mit den Alliierten gemäß von La Spezia nach Malta ausgelaufen ist, und versenkt das Schlachtschiff \"Roma\".“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Sie sucht eine ihren Qualifikationen gemäße Arbeitsstelle.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir haben Formen der äußeren sowohl als inneren sinnlichen Anschauung a priori an den Vorstellungen von Raum und Zeit, und diesen muß die Synthesis der Apprehension des Mannigfaltigen der Erscheinung jederzeit gemäß sein, weil sie selbst nur nach dieser Form geschehen kann. (Immanuel Kant, Kritik der reinen Vernunft, § 26, z.n. Projekt Gutenberg)",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Gemäß seinem Wunsch wurde auf der Feier kein Alkohol getrunken.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ist aber die Natur dem Sittengesetze gemäß, so würde ja dieses durch das Handeln, durch das Aufheben des Seienden verletzt. (Georg Wilhelm Friedrich Hegel, Phänomenologie des Geistes, VI, C, b, z.n. Projekt Gutenberg)",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Gemäß § 41 GmbHG sind die Geschäftsführer verpflichtet, für eine ordnungsgemäße Buchführung der Gesellschaft zu sorgen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Die deutsche Luftwaffe greift die italienische Schlachtflotte an, die den Waffenstillstandsbedingungen mit den Alliierten gemäß von La Spezia nach Malta ausgelaufen ist, und versenkt das Schlachtschiff \"Roma\".“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adjektiv"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Wenngleich „gemäß“ in aller Regel den Dativ verlangt, kann es vermehrt zu einer Hyperkorrektur unter Verwendung des Genitivs kommen, da viele Sprecher den Genitiv nach wie vor für den prestigeträchtigeren Kasus halten.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Präposition mit Dativ",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ",
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɡəˈmɛːs"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "jemandem oder einer Sache angemessen entsprechend, zufolge, nach",
+        "germanDefinitions": [
+          "jemandem oder einer Sache angemessen",
+          "entsprechend, zufolge, nach"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "jemandem oder einer Sache angemessen",
+            "definition": "jemandem oder einer Sache angemessen",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Sie sucht eine ihren Qualifikationen gemäße Arbeitsstelle.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wir haben Formen der äußeren sowohl als inneren sinnlichen Anschauung a priori an den Vorstellungen von Raum und Zeit, und diesen muß die Synthesis der Apprehension des Mannigfaltigen der Erscheinung jederzeit gemäß sein, weil sie selbst nur nach dieser Form geschehen kann. (Immanuel Kant, Kritik der reinen Vernunft, § 26, z.n. Projekt Gutenberg)",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "Präposition mit Dativ: entsprechend, zufolge, nach",
+            "definition": "entsprechend, zufolge, nach",
+            "government": "Präposition mit Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Gemäß seinem Wunsch wurde auf der Feier kein Alkohol getrunken.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ist aber die Natur dem Sittengesetze gemäß, so würde ja dieses durch das Handeln, durch das Aufheben des Seienden verletzt. (Georg Wilhelm Friedrich Hegel, Phänomenologie des Geistes, VI, C, b, z.n. Projekt Gutenberg)",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Gemäß § 41 GmbHG sind die Geschäftsführer verpflichtet, für eine ordnungsgemäße Buchführung der Gesellschaft zu sorgen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Die deutsche Luftwaffe greift die italienische Schlachtflotte an, die den Waffenstillstandsbedingungen mit den Alliierten gemäß von La Spezia nach Malta ausgelaufen ist, und versenkt das Schlachtschiff \"Roma\".“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Sie sucht eine ihren Qualifikationen gemäße Arbeitsstelle.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir haben Formen der äußeren sowohl als inneren sinnlichen Anschauung a priori an den Vorstellungen von Raum und Zeit, und diesen muß die Synthesis der Apprehension des Mannigfaltigen der Erscheinung jederzeit gemäß sein, weil sie selbst nur nach dieser Form geschehen kann. (Immanuel Kant, Kritik der reinen Vernunft, § 26, z.n. Projekt Gutenberg)",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Gemäß seinem Wunsch wurde auf der Feier kein Alkohol getrunken.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ist aber die Natur dem Sittengesetze gemäß, so würde ja dieses durch das Handeln, durch das Aufheben des Seienden verletzt. (Georg Wilhelm Friedrich Hegel, Phänomenologie des Geistes, VI, C, b, z.n. Projekt Gutenberg)",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Gemäß § 41 GmbHG sind die Geschäftsführer verpflichtet, für eine ordnungsgemäße Buchführung der Gesellschaft zu sorgen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Die deutsche Luftwaffe greift die italienische Schlachtflotte an, die den Waffenstillstandsbedingungen mit den Alliierten gemäß von La Spezia nach Malta ausgelaufen ist, und versenkt das Schlachtschiff \"Roma\".“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adjektiv"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "Wenngleich „gemäß“ in aller Regel den Dativ verlangt, kann es vermehrt zu einer Hyperkorrektur unter Verwendung des Genitivs kommen, da viele Sprecher den Genitiv nach wie vor für den prestigeträchtigeren Kasus halten.",
+              "senseId": null,
+              "sectionId": "de-2"
+            },
+            {
+              "text": "Präposition mit Dativ",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ",
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɡəˈmɛːs"
+      }
+    },
+    {
+      "word": "entgegen",
+      "group": "case-rules",
+      "file": "case-rules-06.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+      "expectedBase": null,
+      "revision": 10771587,
+      "sha256": "c7a4b7765e949888db8ee6b6b5b1fcd0839f63ed4d69f264022a8d815d240e07",
+      "direct": {
+        "germanDefinition": "nicht im Einklang mit etwas; zuwider auf etwas zu, zu etwas hin, in Richtung zu etwas beschreibt eine Gegenrichtung: gegenan beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+        "germanDefinitions": [
+          "nicht im Einklang mit etwas; zuwider",
+          "auf etwas zu, zu etwas hin, in Richtung zu etwas",
+          "beschreibt eine Gegenrichtung: gegenan",
+          "beschreibt eine Gegenposition: konträr, zuwidergesetzt"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt): nicht im Einklang mit etwas; zuwider",
+            "definition": "nicht im Einklang mit etwas; zuwider",
+            "government": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt)",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Er hatte entgegen dem Vertrag gehandelt.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Entgegen ihrer Vorstellung kamen nur fünf Leute zum Vortrag.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Seinem Befehl entgegen hat er es nicht getan.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„ Entgegen den Beteuerungen der romfreundlichen Autoren, die den 2. Römisch-Karthagischen Krieg als ein Ringen zwischen zwei gleich starken Gegnern darstellen, war die Disproportion zwischen den Beteiligten groß.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "(mit Genitiv) „Und die Preise seien, entgegen früherer Befürchtungen, derzeit stabil.“ (St. Galler Tagblatt).",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an: auf etwas zu, zu etwas hin, in Richtung zu etwas",
+            "definition": "auf etwas zu, zu etwas hin, in Richtung zu etwas",
+            "government": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Nun brechen wir auf, neuen Ufern entgegen!",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Das Grundstück liegt der Sonne entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wer recht in Freuden wandern will, der geh’ der Sonn’ entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Der Hund läuft ihr entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:2",
+            "sectionId": "de-2",
+            "sourceSenseId": "2",
+            "sourceText": "beschreibt eine Gegenrichtung: gegenan",
+            "definition": "beschreibt eine Gegenrichtung: gegenan",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Wir schwammen entgegen der Strömung.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:2"
+                ],
+                "senseId": "de-2:2",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:3",
+            "sectionId": "de-2",
+            "sourceSenseId": "3",
+            "sourceText": "beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+            "definition": "beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Deine Vorstellungen sind meinen völlig entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:3"
+                ],
+                "senseId": "de-2:3",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Er hatte entgegen dem Vertrag gehandelt.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Entgegen ihrer Vorstellung kamen nur fünf Leute zum Vortrag.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Seinem Befehl entgegen hat er es nicht getan.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„ Entgegen den Beteuerungen der romfreundlichen Autoren, die den 2. Römisch-Karthagischen Krieg als ein Ringen zwischen zwei gleich starken Gegnern darstellen, war die Disproportion zwischen den Beteiligten groß.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "(mit Genitiv) „Und die Preise seien, entgegen früherer Befürchtungen, derzeit stabil.“ (St. Galler Tagblatt).",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Nun brechen wir auf, neuen Ufern entgegen!",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Das Grundstück liegt der Sonne entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wer recht in Freuden wandern will, der geh’ der Sonn’ entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Der Hund läuft ihr entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir schwammen entgegen der Strömung.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:2"
+            ],
+            "senseId": "de-2:2",
+            "unassigned": false
+          },
+          {
+            "german": "Deine Vorstellungen sind meinen völlig entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:3"
+            ],
+            "senseId": "de-2:3",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-2",
+            "heading": "Adverb"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt)",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            },
+            {
+              "text": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ",
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɛntˈɡeːɡn̩"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "nicht im Einklang mit etwas; zuwider auf etwas zu, zu etwas hin, in Richtung zu etwas beschreibt eine Gegenrichtung: gegenan beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+        "germanDefinitions": [
+          "nicht im Einklang mit etwas; zuwider",
+          "auf etwas zu, zu etwas hin, in Richtung zu etwas",
+          "beschreibt eine Gegenrichtung: gegenan",
+          "beschreibt eine Gegenposition: konträr, zuwidergesetzt"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt): nicht im Einklang mit etwas; zuwider",
+            "definition": "nicht im Einklang mit etwas; zuwider",
+            "government": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt)",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Er hatte entgegen dem Vertrag gehandelt.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Entgegen ihrer Vorstellung kamen nur fünf Leute zum Vortrag.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Seinem Befehl entgegen hat er es nicht getan.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„ Entgegen den Beteuerungen der romfreundlichen Autoren, die den 2. Römisch-Karthagischen Krieg als ein Ringen zwischen zwei gleich starken Gegnern darstellen, war die Disproportion zwischen den Beteiligten groß.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "(mit Genitiv) „Und die Preise seien, entgegen früherer Befürchtungen, derzeit stabil.“ (St. Galler Tagblatt).",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an: auf etwas zu, zu etwas hin, in Richtung zu etwas",
+            "definition": "auf etwas zu, zu etwas hin, in Richtung zu etwas",
+            "government": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Nun brechen wir auf, neuen Ufern entgegen!",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Das Grundstück liegt der Sonne entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Wer recht in Freuden wandern will, der geh’ der Sonn’ entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              },
+              {
+                "german": "Der Hund läuft ihr entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1"
+                ],
+                "senseId": "de-2:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:2",
+            "sectionId": "de-2",
+            "sourceSenseId": "2",
+            "sourceText": "beschreibt eine Gegenrichtung: gegenan",
+            "definition": "beschreibt eine Gegenrichtung: gegenan",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Wir schwammen entgegen der Strömung.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "2"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:2"
+                ],
+                "senseId": "de-2:2",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:3",
+            "sectionId": "de-2",
+            "sourceSenseId": "3",
+            "sourceText": "beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+            "definition": "beschreibt eine Gegenposition: konträr, zuwidergesetzt",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Deine Vorstellungen sind meinen völlig entgegen.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "3"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:3"
+                ],
+                "senseId": "de-2:3",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Er hatte entgegen dem Vertrag gehandelt.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Entgegen ihrer Vorstellung kamen nur fünf Leute zum Vortrag.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Seinem Befehl entgegen hat er es nicht getan.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„ Entgegen den Beteuerungen der romfreundlichen Autoren, die den 2. Römisch-Karthagischen Krieg als ein Ringen zwischen zwei gleich starken Gegnern darstellen, war die Disproportion zwischen den Beteiligten groß.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "(mit Genitiv) „Und die Preise seien, entgegen früherer Befürchtungen, derzeit stabil.“ (St. Galler Tagblatt).",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Nun brechen wir auf, neuen Ufern entgegen!",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Das Grundstück liegt der Sonne entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wer recht in Freuden wandern will, der geh’ der Sonn’ entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Der Hund läuft ihr entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1"
+            ],
+            "senseId": "de-2:1",
+            "unassigned": false
+          },
+          {
+            "german": "Wir schwammen entgegen der Strömung.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "2"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:2"
+            ],
+            "senseId": "de-2:2",
+            "unassigned": false
+          },
+          {
+            "german": "Deine Vorstellungen sind meinen völlig entgegen.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "3"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:3"
+            ],
+            "senseId": "de-2:3",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-2",
+            "heading": "Adverb"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt)",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            },
+            {
+              "text": "mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+              "senseId": "de-2:1",
+              "sectionId": "de-2"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ",
+            "Genitiv"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɛntˈɡeːɡn̩"
+      }
+    },
+    {
+      "word": "dank",
+      "group": "case-rules",
+      "file": "case-rules-07.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+      "expectedBase": null,
+      "revision": 10486484,
+      "sha256": "88814fbaf4a1386835febe9d594bbe45754c3d5ceb4b02fe34c7ab6a95e46589",
+      "direct": {
+        "germanDefinition": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+        "germanDefinitions": [
+          "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+            "definition": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "„Drachenfliegen ist heute mindestens ebenso sicher wie Segelfliegen – dank enormer technischer Entwicklungen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ich bin nun schlauer – dank dem Internet.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank ihrer Schnelligkeit kann die Feuerwehr mehr Leben retten.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Mein Buch konnte dank deiner Hilfe schneller fertig werden.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank des Vaters konnten wir eine gute Ausbildung absolvieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank dem Vater konnten wir eine gute Ausbildung absolvieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Zum einen sind die Abgeordneten dank dem Grundgesetz allein ihrem Gewissen verpflichtet und in diesen Sonderfällen tatsächlich frei von Weisungen ihrer Fraktions- und Parteiführungen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Boris hatte es im Laufe seiner Dienstzeit dank den Bemühungen Anna Michailownas, dank seinen eigenen guten Formen und dank der Eigenart seines Charakters – kluger Zurückhaltung – verstanden, sich eine in jeder Hinsicht hervorragende dienstliche Stellung zu verschaffen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "„Drachenfliegen ist heute mindestens ebenso sicher wie Segelfliegen – dank enormer technischer Entwicklungen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ich bin nun schlauer – dank dem Internet.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank ihrer Schnelligkeit kann die Feuerwehr mehr Leben retten.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Mein Buch konnte dank deiner Hilfe schneller fertig werden.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank des Vaters konnten wir eine gute Ausbildung absolvieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank dem Vater konnten wir eine gute Ausbildung absolvieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Zum einen sind die Abgeordneten dank dem Grundgesetz allein ihrem Gewissen verpflichtet und in diesen Sonderfällen tatsächlich frei von Weisungen ihrer Fraktions- und Parteiführungen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Boris hatte es im Laufe seiner Dienstzeit dank den Bemühungen Anna Michailownas, dank seinen eigenen guten Formen und dank der Eigenart seines Charakters – kluger Zurückhaltung – verstanden, sich eine in jeder Hinsicht hervorragende dienstliche Stellung zu verschaffen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-2",
+            "heading": "Konjugierte Form"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [
+            {
+              "sectionId": "de-2",
+              "infinitive": "danken"
+            }
+          ],
+          "infinitive": "danken",
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": true,
+        "lemma": null,
+        "pronunciation": "daŋk"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+        "germanDefinitions": [
+          "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+            "definition": "kausal, mit Dativ und Präposition mit Genitiv (zunehmend): durch etwas oder jemanden; aufgrund etwas oder jemandes",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "„Drachenfliegen ist heute mindestens ebenso sicher wie Segelfliegen – dank enormer technischer Entwicklungen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ich bin nun schlauer – dank dem Internet.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank ihrer Schnelligkeit kann die Feuerwehr mehr Leben retten.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Mein Buch konnte dank deiner Hilfe schneller fertig werden.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank des Vaters konnten wir eine gute Ausbildung absolvieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Dank dem Vater konnten wir eine gute Ausbildung absolvieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Zum einen sind die Abgeordneten dank dem Grundgesetz allein ihrem Gewissen verpflichtet und in diesen Sonderfällen tatsächlich frei von Weisungen ihrer Fraktions- und Parteiführungen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Boris hatte es im Laufe seiner Dienstzeit dank den Bemühungen Anna Michailownas, dank seinen eigenen guten Formen und dank der Eigenart seines Charakters – kluger Zurückhaltung – verstanden, sich eine in jeder Hinsicht hervorragende dienstliche Stellung zu verschaffen.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "„Drachenfliegen ist heute mindestens ebenso sicher wie Segelfliegen – dank enormer technischer Entwicklungen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ich bin nun schlauer – dank dem Internet.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank ihrer Schnelligkeit kann die Feuerwehr mehr Leben retten.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Mein Buch konnte dank deiner Hilfe schneller fertig werden.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank des Vaters konnten wir eine gute Ausbildung absolvieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Dank dem Vater konnten wir eine gute Ausbildung absolvieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Zum einen sind die Abgeordneten dank dem Grundgesetz allein ihrem Gewissen verpflichtet und in diesen Sonderfällen tatsächlich frei von Weisungen ihrer Fraktions- und Parteiführungen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Boris hatte es im Laufe seiner Dienstzeit dank den Bemühungen Anna Michailownas, dank seinen eigenen guten Formen und dank der Eigenart seines Charakters – kluger Zurückhaltung – verstanden, sich eine in jeder Hinsicht hervorragende dienstliche Stellung zu verschaffen.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          },
+          {
+            "id": "de-2",
+            "heading": "Konjugierte Form"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [
+            {
+              "sectionId": "de-2",
+              "infinitive": "danken"
+            }
+          ],
+          "infinitive": "danken",
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": true,
+        "lemma": null,
+        "pronunciation": "daŋk"
+      }
+    },
+    {
+      "word": "samt",
+      "group": "case-rules",
+      "file": "case-rules-08.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/samt",
+      "expectedBase": null,
+      "revision": 10649462,
+      "sha256": "5ae40470df7a9e70db7eeb1067977406d48b07ae4aec1ed51e8754a965b932ff",
+      "direct": {
+        "germanDefinition": "zusammen mit",
+        "germanDefinitions": [
+          "zusammen mit"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ: zusammen mit",
+            "definition": "zusammen mit",
+            "government": "mit Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Das Hausboot wurde samt allem Inventar verkauft.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Fürst Constantin Brâncoveanu, unter dem das walachische Fürstentum seinen höchsten Glanz hatte erreichen können, wurde 1714 samt seinen Söhnen in Konstantinopel hingerichtet …“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Jakob und ich bestaunen die erhabene Erscheinung dieser Troika wie kleine Jungs den Auftritt eines Weihnachtsmanns samt Rentieren.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Der Wasserspiegel ist so stark gestiegen, dass das Sonnendeck samt Reling abgebaut wurde, damit das Boot unbeschadet unter den Brücken durchkommt.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Walter Huppenkothen, Sonderkommissar im Reichssicherheitshauptamt, fährt am 7. April 1945 samt Ehefrau, Koffern, Akten und Benzin von Sachsenhausen nach Bayern.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Das Hausboot wurde samt allem Inventar verkauft.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Fürst Constantin Brâncoveanu, unter dem das walachische Fürstentum seinen höchsten Glanz hatte erreichen können, wurde 1714 samt seinen Söhnen in Konstantinopel hingerichtet …“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Jakob und ich bestaunen die erhabene Erscheinung dieser Troika wie kleine Jungs den Auftritt eines Weihnachtsmanns samt Rentieren.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Der Wasserspiegel ist so stark gestiegen, dass das Sonnendeck samt Reling abgebaut wurde, damit das Boot unbeschadet unter den Brücken durchkommt.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Walter Huppenkothen, Sonderkommissar im Reichssicherheitshauptamt, fährt am 7. April 1945 samt Ehefrau, Koffern, Akten und Benzin von Sachsenhausen nach Bayern.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "zamt"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "zusammen mit",
+        "germanDefinitions": [
+          "zusammen mit"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ: zusammen mit",
+            "definition": "zusammen mit",
+            "government": "mit Dativ",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Das Hausboot wurde samt allem Inventar verkauft.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Fürst Constantin Brâncoveanu, unter dem das walachische Fürstentum seinen höchsten Glanz hatte erreichen können, wurde 1714 samt seinen Söhnen in Konstantinopel hingerichtet …“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Jakob und ich bestaunen die erhabene Erscheinung dieser Troika wie kleine Jungs den Auftritt eines Weihnachtsmanns samt Rentieren.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Der Wasserspiegel ist so stark gestiegen, dass das Sonnendeck samt Reling abgebaut wurde, damit das Boot unbeschadet unter den Brücken durchkommt.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "„Walter Huppenkothen, Sonderkommissar im Reichssicherheitshauptamt, fährt am 7. April 1945 samt Ehefrau, Koffern, Akten und Benzin von Sachsenhausen nach Bayern.“",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Das Hausboot wurde samt allem Inventar verkauft.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Fürst Constantin Brâncoveanu, unter dem das walachische Fürstentum seinen höchsten Glanz hatte erreichen können, wurde 1714 samt seinen Söhnen in Konstantinopel hingerichtet …“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Jakob und ich bestaunen die erhabene Erscheinung dieser Troika wie kleine Jungs den Auftritt eines Weihnachtsmanns samt Rentieren.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Der Wasserspiegel ist so stark gestiegen, dass das Sonnendeck samt Reling abgebaut wurde, damit das Boot unbeschadet unter den Brücken durchkommt.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Walter Huppenkothen, Sonderkommissar im Reichssicherheitshauptamt, fährt am 7. April 1945 samt Ehefrau, Koffern, Akten und Benzin von Sachsenhausen nach Bayern.“",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "zamt"
+      }
+    },
+    {
+      "word": "nebst",
+      "group": "case-rules",
+      "file": "case-rules-09.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/nebst",
+      "expectedBase": null,
+      "revision": 9915103,
+      "sha256": "577b178b37a87290d3c8ea8f9ef6ad10b5a942dd9e7ec7da43acf92954167b92",
+      "direct": {
+        "germanDefinition": "zusammen mit etwas oder jemandem",
+        "germanDefinitions": [
+          "zusammen mit etwas oder jemandem"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ, veraltend: zusammen mit etwas oder jemandem",
+            "definition": "zusammen mit etwas oder jemandem",
+            "government": "mit Dativ, veraltend",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Die ganze Familie nebst Haustieren kam zu Besuch.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ich suche ein Motorrad nebst Beiwagen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Die ganze Familie nebst Haustieren kam zu Besuch.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ich suche ein Motorrad nebst Beiwagen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ, veraltend",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "neːpst"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "zusammen mit etwas oder jemandem",
+        "germanDefinitions": [
+          "zusammen mit etwas oder jemandem"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "mit Dativ, veraltend: zusammen mit etwas oder jemandem",
+            "definition": "zusammen mit etwas oder jemandem",
+            "government": "mit Dativ, veraltend",
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Die ganze Familie nebst Haustieren kam zu Besuch.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "Ich suche ein Motorrad nebst Beiwagen.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "Die ganze Familie nebst Haustieren kam zu Besuch.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "Ich suche ein Motorrad nebst Beiwagen.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Präposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [
+            {
+              "text": "mit Dativ, veraltend",
+              "senseId": "de-1:1",
+              "sectionId": "de-1"
+            }
+          ],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [
+            "Dativ"
+          ],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "neːpst"
+      }
+    },
+    {
+      "word": "entlang",
+      "group": "case-rules",
+      "file": "case-rules-10.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "expectedBase": null,
+      "revision": 10427987,
+      "sha256": "d860fb490224cccd3a77d42e88f561a88006f3677c896a82d262e821feb406a6",
+      "direct": {
+        "germanDefinition": "neben, am Rand, der Länge folgend längs vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ): nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+        "germanDefinitions": [
+          "neben, am Rand, der Länge folgend",
+          "längs",
+          "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+          "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "neben, am Rand, der Länge folgend",
+            "definition": "neben, am Rand, der Länge folgend",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "bei Nachstellung: Er ging den Rhein entlang spazieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "bei Vorausstellung: Er ging entlang dem Rhein spazieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "längs",
+            "definition": "längs",
+            "government": null,
+            "auxiliary": null,
+            "examples": []
+          },
+          {
+            "id": "de-2:1a",
+            "sectionId": "de-2",
+            "sourceSenseId": "1a",
+            "sourceText": "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+            "definition": "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "„Neben Weinhandel, Weinbrennereien und Sektkellereien ist in den Orten auf der Talterrasse entlang dem Rhein (90–100 m ü. M.), die die Hauptverkehrswege trägt, auch Industrie entstanden …“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              },
+              {
+                "german": "Entlang dem Fluss wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              },
+              {
+                "german": "Entlang des Flusses wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1b",
+            "sectionId": "de-2",
+            "sourceSenseId": "1b",
+            "sourceText": "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+            "definition": "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Den Fluss entlang wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1b"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1b"
+                ],
+                "senseId": "de-2:1b",
+                "unassigned": false
+              },
+              {
+                "german": "Dem Fluss entlang wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1b"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1b"
+                ],
+                "senseId": "de-2:1b",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "bei Nachstellung: Er ging den Rhein entlang spazieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "bei Vorausstellung: Er ging entlang dem Rhein spazieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Neben Weinhandel, Weinbrennereien und Sektkellereien ist in den Orten auf der Talterrasse entlang dem Rhein (90–100 m ü. M.), die die Hauptverkehrswege trägt, auch Industrie entstanden …“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Entlang dem Fluss wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Entlang des Flusses wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Den Fluss entlang wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1b"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1b"
+            ],
+            "senseId": "de-2:1b",
+            "unassigned": false
+          },
+          {
+            "german": "Dem Fluss entlang wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1b"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1b"
+            ],
+            "senseId": "de-2:1b",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adverb"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition, Postposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɛntˈlaŋ"
+      },
+      "baseEvidence": null,
+      "result": {
+        "germanDefinition": "neben, am Rand, der Länge folgend längs vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ): nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+        "germanDefinitions": [
+          "neben, am Rand, der Länge folgend",
+          "längs",
+          "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+          "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):"
+        ],
+        "senses": [
+          {
+            "id": "de-1:1",
+            "sectionId": "de-1",
+            "sourceSenseId": "1",
+            "sourceText": "neben, am Rand, der Länge folgend",
+            "definition": "neben, am Rand, der Länge folgend",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "bei Nachstellung: Er ging den Rhein entlang spazieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              },
+              {
+                "german": "bei Vorausstellung: Er ging entlang dem Rhein spazieren.",
+                "sectionId": "de-1",
+                "sourceSenseIds": [
+                  "1"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-1:1"
+                ],
+                "senseId": "de-1:1",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1",
+            "sectionId": "de-2",
+            "sourceSenseId": "1",
+            "sourceText": "längs",
+            "definition": "längs",
+            "government": null,
+            "auxiliary": null,
+            "examples": []
+          },
+          {
+            "id": "de-2:1a",
+            "sectionId": "de-2",
+            "sourceSenseId": "1a",
+            "sourceText": "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+            "definition": "vorangestellt, Präposition mit Genitiv, (seltener mit Dativ; veraltet mit Akkusativ):",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "„Neben Weinhandel, Weinbrennereien und Sektkellereien ist in den Orten auf der Talterrasse entlang dem Rhein (90–100 m ü. M.), die die Hauptverkehrswege trägt, auch Industrie entstanden …“",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              },
+              {
+                "german": "Entlang dem Fluss wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              },
+              {
+                "german": "Entlang des Flusses wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1a"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1a"
+                ],
+                "senseId": "de-2:1a",
+                "unassigned": false
+              }
+            ]
+          },
+          {
+            "id": "de-2:1b",
+            "sectionId": "de-2",
+            "sourceSenseId": "1b",
+            "sourceText": "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+            "definition": "nachgestellt, mit Akkusativ, (sehr selten mit Dativ, nicht in der Standardsprache):",
+            "government": null,
+            "auxiliary": null,
+            "examples": [
+              {
+                "german": "Den Fluss entlang wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1b"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1b"
+                ],
+                "senseId": "de-2:1b",
+                "unassigned": false
+              },
+              {
+                "german": "Dem Fluss entlang wurden die Dämme ausgebaut.",
+                "sectionId": "de-2",
+                "sourceSenseIds": [
+                  "1b"
+                ],
+                "source": "German Wiktionary",
+                "senseIds": [
+                  "de-2:1b"
+                ],
+                "senseId": "de-2:1b",
+                "unassigned": false
+              }
+            ]
+          }
+        ],
+        "examples": [
+          {
+            "german": "bei Nachstellung: Er ging den Rhein entlang spazieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "bei Vorausstellung: Er ging entlang dem Rhein spazieren.",
+            "sectionId": "de-1",
+            "sourceSenseIds": [
+              "1"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-1:1"
+            ],
+            "senseId": "de-1:1",
+            "unassigned": false
+          },
+          {
+            "german": "„Neben Weinhandel, Weinbrennereien und Sektkellereien ist in den Orten auf der Talterrasse entlang dem Rhein (90–100 m ü. M.), die die Hauptverkehrswege trägt, auch Industrie entstanden …“",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Entlang dem Fluss wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Entlang des Flusses wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1a"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1a"
+            ],
+            "senseId": "de-2:1a",
+            "unassigned": false
+          },
+          {
+            "german": "Den Fluss entlang wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1b"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1b"
+            ],
+            "senseId": "de-2:1b",
+            "unassigned": false
+          },
+          {
+            "german": "Dem Fluss entlang wurden die Dämme ausgebaut.",
+            "sectionId": "de-2",
+            "sourceSenseIds": [
+              "1b"
+            ],
+            "source": "German Wiktionary",
+            "senseIds": [
+              "de-2:1b"
+            ],
+            "senseId": "de-2:1b",
+            "unassigned": false
+          }
+        ],
+        "sections": [
+          {
+            "id": "de-1",
+            "heading": "Adverb"
+          },
+          {
+            "id": "de-2",
+            "heading": "Präposition, Postposition"
+          }
+        ],
+        "grammar": {
+          "summary": null,
+          "governments": [],
+          "baseForms": [],
+          "infinitive": null,
+          "cases": [],
+          "auxiliaries": [],
+          "conjugations": [],
+          "present": null,
+          "preterite": null,
+          "participle": null,
+          "auxiliary": null,
+          "perfect": null,
+          "separable": false
+        },
+        "isVerb": false,
+        "lemma": null,
+        "pronunciation": "ɛntˈlaŋ"
+      }
+    }
+  ]
+}

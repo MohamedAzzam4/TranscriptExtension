@@ -28,6 +28,16 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-26 WP1.3/WP0.3 tests-only follow-up keeps application f8e04a6 unchanged.
+Thirty additional entries score case rules7/10, explicit verb bases7/10 and
+main conjugation tables10/10; complementary primary infinitives9/10 reveal tun→
+tunen scope leakage. Expanded automated acceptance95/109 obligations passes,
+14fail; existing regression remains passing. A native Translator control on
+Google's demo also stalls with the extension uninstalled, trusted activation and
+0→100% progress, narrowing the issue beyond application code without establishing
+its internal cause. One reserve sehen consumed; eleven stay unread. **Needs
+development**. See `test-results/0.11.1-expanded-grammar-and-chrome-control.md`.
+
 2026-10-26 bounded WP1.3/WP2.4/WP3.5/WP0.3 candidate 0.11.1 implements structured
 German dictionary extraction, popup/setup-tab translation preparation and safe
 record projection/migration. Parent owns edits; GPT-6 Luna only compares sources.

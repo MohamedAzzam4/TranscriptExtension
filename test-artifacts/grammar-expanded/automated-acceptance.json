@@ -1,0 +1,1203 @@
+{
+  "parserHash": "6816cf9dca71fb6f19a3c92874c57c2b7aa82a187fa21be3233c9f7601ff42f9",
+  "checks": 109,
+  "passed": 95,
+  "failed": 14,
+  "results": [
+    {
+      "word": "statt",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": true,
+      "expected": "Genitiv",
+      "actual": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+      "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+      "revision": 10528149
+    },
+    {
+      "word": "statt",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+      "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+      "revision": 10528149
+    },
+    {
+      "word": "statt",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Pronomen",
+      "pass": true,
+      "expected": "Pronomen",
+      "actual": "Präposition mit Genitiv, mit Dativ; bei Pronomen, wo der Genitiv antiquiert wirkt, auch mit Dativ, ansonsten ist der Dativ umgangssprachlich",
+      "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+      "revision": 10528149
+    },
+    {
+      "word": "während",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": true,
+      "expected": "Genitiv",
+      "actual": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken. Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ. Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken. Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+      "sourceUrl": "https://de.wiktionary.org/wiki/w%C3%A4hrend",
+      "revision": 10730108
+    },
+    {
+      "word": "während",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken. Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ. Präposition mit Genitiv, mit Dativ, umgangssprachlich und in älterer Sprache auch mit dem Dativ Wortart: Häufig bereitet es Schwierigkeiten, die Präposition während (1) und die zeitliche Subjunktion (2) zu unterscheiden. Die Präposition fordert immer einen Kasus (hier den Genitiv): Während des Rennens haben wir vergessen zu winken. Die Subjunktion während kann keinen Kasus fordern, sie leitet dafür einen Gliedsatz ein: Während wir das Rennen fuhren, haben wir vergessen zu winken. Kasus nach Präposition: Das Wort während ist recht jung. Von Beginn an wurde die Präposition sowohl mit dem Genitiv als auch mit dem Dativ verwendet. Heute gilt der Genitiv als hochsprachlich korrekt und der Dativ als umgangssprachlich, doch war das nicht immer so: So verwenden etwa Goethe und Lessing während ganz selbstverständlich auch mit Dativ.",
+      "sourceUrl": "https://de.wiktionary.org/wiki/w%C3%A4hrend",
+      "revision": 10730108
+    },
+    {
+      "word": "innerhalb",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": true,
+      "expected": "Genitiv",
+      "actual": "mit Genitiv mit Genitiv",
+      "sourceUrl": "https://de.wiktionary.org/wiki/innerhalb",
+      "revision": 10358726
+    },
+    {
+      "word": "innerhalb",
+      "part": "case-rules",
+      "obligation": "both numbered senses have explicit rules",
+      "pass": true,
+      "expected": "at least 2",
+      "actual": 2,
+      "sourceUrl": "https://de.wiktionary.org/wiki/innerhalb",
+      "revision": 10358726
+    },
+    {
+      "word": "außerhalb",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": false,
+      "expected": "Genitiv",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/au%C3%9Ferhalb",
+      "revision": 10310466
+    },
+    {
+      "word": "außerhalb",
+      "part": "case-rules",
+      "obligation": "both numbered senses have explicit rules",
+      "pass": false,
+      "expected": "at least 2",
+      "actual": 0,
+      "sourceUrl": "https://de.wiktionary.org/wiki/au%C3%9Ferhalb",
+      "revision": 10310466
+    },
+    {
+      "word": "gemäß",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "Wenngleich „gemäß“ in aller Regel den Dativ verlangt, kann es vermehrt zu einer Hyperkorrektur unter Verwendung des Genitivs kommen, da viele Sprecher den Genitiv nach wie vor für den prestigeträchtigeren Kasus halten. Präposition mit Dativ",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gem%C3%A4%C3%9F",
+      "revision": 9643239
+    },
+    {
+      "word": "gemäß",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": true,
+      "expected": "Genitiv",
+      "actual": "Wenngleich „gemäß“ in aller Regel den Dativ verlangt, kann es vermehrt zu einer Hyperkorrektur unter Verwendung des Genitivs kommen, da viele Sprecher den Genitiv nach wie vor für den prestigeträchtigeren Kasus halten. Präposition mit Dativ",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gem%C3%A4%C3%9F",
+      "revision": 9643239
+    },
+    {
+      "word": "entgegen",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt) mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+      "revision": 10771587
+    },
+    {
+      "word": "entgegen",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": true,
+      "expected": "Genitiv",
+      "actual": "mit Dativ (seltener Genitiv, zumeist dem Substantiv vorgestellt) mit Dativ (dem Substantiv nachgestellt, Postposition) gibt Bewegungsrichtung an",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+      "revision": 10771587
+    },
+    {
+      "word": "entgegen",
+      "part": "case-rules",
+      "obligation": "preposition/postposition sections stay distinct",
+      "pass": true,
+      "expected": "two sections",
+      "actual": [
+        "de-1",
+        "de-2"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+      "revision": 10771587
+    },
+    {
+      "word": "dank",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": false,
+      "expected": "Dativ",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+      "revision": 10486484
+    },
+    {
+      "word": "dank",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": false,
+      "expected": "Genitiv",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+      "revision": 10486484
+    },
+    {
+      "word": "dank",
+      "part": "case-rules",
+      "obligation": "structured rule preserves zunehmend",
+      "pass": false,
+      "expected": "zunehmend",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+      "revision": 10486484
+    },
+    {
+      "word": "samt",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "mit Dativ",
+      "sourceUrl": "https://de.wiktionary.org/wiki/samt",
+      "revision": 10649462
+    },
+    {
+      "word": "nebst",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": true,
+      "expected": "Dativ",
+      "actual": "mit Dativ, veraltend",
+      "sourceUrl": "https://de.wiktionary.org/wiki/nebst",
+      "revision": 9915103
+    },
+    {
+      "word": "nebst",
+      "part": "case-rules",
+      "obligation": "structured rule preserves veraltend",
+      "pass": true,
+      "expected": "veraltend",
+      "actual": "mit Dativ, veraltend",
+      "sourceUrl": "https://de.wiktionary.org/wiki/nebst",
+      "revision": 9915103
+    },
+    {
+      "word": "entlang",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Genitiv",
+      "pass": false,
+      "expected": "Genitiv",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987
+    },
+    {
+      "word": "entlang",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Dativ",
+      "pass": false,
+      "expected": "Dativ",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987
+    },
+    {
+      "word": "entlang",
+      "part": "case-rules",
+      "obligation": "structured rule preserves Akkusativ",
+      "pass": false,
+      "expected": "Akkusativ",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987
+    },
+    {
+      "word": "entlang",
+      "part": "case-rules",
+      "obligation": "structured rule preserves vorangestellt",
+      "pass": false,
+      "expected": "vorangestellt",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987
+    },
+    {
+      "word": "entlang",
+      "part": "case-rules",
+      "obligation": "structured rule preserves nachgestellt",
+      "pass": false,
+      "expected": "nachgestellt",
+      "actual": "",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987
+    },
+    {
+      "word": "gefahren",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "fahren",
+      "actual": [
+        "fahren"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/gefahren",
+      "revision": 7874206
+    },
+    {
+      "word": "gesessen",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "sitzen",
+      "actual": [
+        "sitzen"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/gesessen",
+      "revision": 6404187
+    },
+    {
+      "word": "gegessen",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "essen",
+      "actual": [
+        "essen"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/gegessen",
+      "revision": 6937972
+    },
+    {
+      "word": "getrunken",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "trinken",
+      "actual": [
+        "trinken"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/getrunken",
+      "revision": 9916002
+    },
+    {
+      "word": "geschrieben",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": false,
+      "expected": "schreiben",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/geschrieben",
+      "revision": 10502412
+    },
+    {
+      "word": "gelesen",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": false,
+      "expected": "lesen",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/gelesen",
+      "revision": 10693278
+    },
+    {
+      "word": "brachte",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "bringen",
+      "actual": [
+        "bringen",
+        "bringen"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/brachte",
+      "revision": 7752166
+    },
+    {
+      "word": "dachte",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "denken",
+      "actual": [
+        "denken",
+        "denken"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/dachte",
+      "revision": 6699029
+    },
+    {
+      "word": "wusste",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": true,
+      "expected": "wissen",
+      "actual": [
+        "wissen",
+        "wissen"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wusste",
+      "revision": 7544533
+    },
+    {
+      "word": "gewesen",
+      "part": "verb-base",
+      "obligation": "explicit inflected-form base is retained",
+      "pass": false,
+      "expected": "sein",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/gewesen",
+      "revision": 9643973
+    },
+    {
+      "word": "machen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "machen",
+      "actual": "machen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "mache",
+      "actual": [
+        "mache"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "machst",
+      "actual": [
+        "machst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "macht",
+      "actual": [
+        "macht"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "machte",
+      "actual": "mach·te",
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gemacht",
+      "actual": "ge·macht",
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "machen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084
+    },
+    {
+      "word": "sagen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "sagen",
+      "actual": "sagen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "sage",
+      "actual": [
+        "sage"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "sagst",
+      "actual": [
+        "sagst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "sagt",
+      "actual": [
+        "sagt"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "sagte",
+      "actual": "sag·te",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gesagt",
+      "actual": "ge·sagt",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sagen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415
+    },
+    {
+      "word": "sehen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "sehen",
+      "actual": "sehen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "sehe",
+      "actual": [
+        "sehe"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "siehst",
+      "actual": [
+        "siehst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "sieht",
+      "actual": [
+        "sieht"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "sah",
+      "actual": "sah",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gesehen",
+      "actual": "ge·se·hen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sehen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127
+    },
+    {
+      "word": "sprechen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "sprechen",
+      "actual": "sprechen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "spreche",
+      "actual": [
+        "spreche"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "sprichst",
+      "actual": [
+        "sprichst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "spricht",
+      "actual": [
+        "spricht"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "sprach",
+      "actual": "sprach",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gesprochen",
+      "actual": "ge·spro·chen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "sprechen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839
+    },
+    {
+      "word": "schlafen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "schlafen",
+      "actual": "schlafen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "schlafe",
+      "actual": [
+        "schlafe"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "schläfst",
+      "actual": [
+        "schläfst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "schläft",
+      "actual": [
+        "schläft"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "schlief",
+      "actual": "schlief",
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "geschlafen",
+      "actual": "ge·schla·fen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "schlafen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695
+    },
+    {
+      "word": "laufen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "laufen",
+      "actual": "laufen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "laufe",
+      "actual": [
+        "laufe"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "läufst",
+      "actual": [
+        "läufst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "läuft",
+      "actual": [
+        "läuft"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "lief",
+      "actual": "lief",
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gelaufen",
+      "actual": "ge·lau·fen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "source auxiliary sein",
+      "pass": true,
+      "expected": "sein",
+      "actual": [
+        "sein",
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "laufen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "sein",
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605
+    },
+    {
+      "word": "dürfen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "dürfen",
+      "actual": "dürfen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "darf",
+      "actual": [
+        "darf"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "darfst",
+      "actual": [
+        "darfst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "darf",
+      "actual": [
+        "darf"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "durfte",
+      "actual": "durf·te",
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gedurft",
+      "actual": "ge·durft",
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "dürfen",
+      "part": "conjugations",
+      "obligation": "no invented imperative for source em-dashes",
+      "pass": true,
+      "expected": "no imperative rows",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538
+    },
+    {
+      "word": "müssen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "müssen",
+      "actual": "müssen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "muss",
+      "actual": [
+        "muss"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "musst",
+      "actual": [
+        "musst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "muss",
+      "actual": [
+        "muss"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "musste",
+      "actual": "muss·te",
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gemusst",
+      "actual": "ge·musst",
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "müssen",
+      "part": "conjugations",
+      "obligation": "no invented imperative for source em-dashes",
+      "pass": true,
+      "expected": "no imperative rows",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295
+    },
+    {
+      "word": "wollen",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": true,
+      "expected": "wollen",
+      "actual": "wollen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "will",
+      "actual": [
+        "will"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "willst",
+      "actual": [
+        "willst"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "will",
+      "actual": [
+        "will"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "wollte",
+      "actual": "woll·te",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "gewollt",
+      "actual": "ge·wollt",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "wollen",
+      "part": "conjugations",
+      "obligation": "no invented imperative for source em-dashes",
+      "pass": true,
+      "expected": "no imperative rows",
+      "actual": [],
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504
+    },
+    {
+      "word": "tun",
+      "part": "verb-base-primary",
+      "obligation": "secondary form does not overwrite primary infinitive",
+      "pass": false,
+      "expected": "tun",
+      "actual": "tunen",
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ ich",
+      "pass": true,
+      "expected": "tue",
+      "actual": [
+        "tue",
+        "tu"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ du",
+      "pass": true,
+      "expected": "tust",
+      "actual": [
+        "tust"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "Präsens Indikativ er, sie, es",
+      "pass": true,
+      "expected": "tut",
+      "actual": [
+        "tut"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "Präteritum ich",
+      "pass": true,
+      "expected": "tat",
+      "actual": "tat",
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "Partizip II",
+      "pass": true,
+      "expected": "getan",
+      "actual": "ge·tan",
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    },
+    {
+      "word": "tun",
+      "part": "conjugations",
+      "obligation": "source auxiliary haben",
+      "pass": true,
+      "expected": "haben",
+      "actual": [
+        "haben"
+      ],
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109
+    }
+  ]
+}

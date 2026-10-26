@@ -1,5 +1,12 @@
 # Experiment matrix
 
+2026-10-26 expanded grammar confirmation (application unchanged): 30 new entries,
+case rules7/10, explicit verb bases7/10, conjugation tables10/10, complementary
+primary infinitives9/10. Separate acceptance95/109 pass,14fail; old regression
+passes. Native trusted-click Chrome control with extension uninstalled reports
+progress0/1 but no translator by180seconds. Browser internal cause remains unknown;
+normal-profile comparison needed. See `docs/test-results/0.11.1-expanded-grammar-and-chrome-control.md`.
+
 2026-10-26: 0.11.1 WP1.3/WP2.4/WP3.5/WP0.3 scope tested without media capture.
 21 extension suites/46 server tests/17 syntax checks pass; 60 German source
 entries manually compared by GPT-6 Luna (36 development, 24 final, 12 unread

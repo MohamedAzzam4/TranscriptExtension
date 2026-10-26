@@ -1,0 +1,571 @@
+{
+  "reviewer": "gpt-6-luna, read-only built-in subagent",
+  "consolidatedBy": "parent",
+  "parserCommit": "f8e04a6",
+  "parserHash": "6816cf9dca71fb6f19a3c92874c57c2b7aa82a187fa21be3233c9f7601ff42f9",
+  "scope": "30 new scored confirmation entries; 10 per primary challenge. No extraction tuning.",
+  "completeness": "Each correct judgment includes all applicable main-entry information, not a spot check. Linked full Flexion pages were not fetched.",
+  "reserveConsumption": "sehen overlaps one former reserve and is now consumed; eleven other reserves remain unread.",
+  "supplementary": {
+    "secondaryCaseEntryBases": {
+      "correct": 2,
+      "words": {
+        "statt": "statten",
+        "dank": "danken"
+      }
+    },
+    "primaryInfinitiveCorrection": "Parent checked actual grammar.infinitive and corrected the evaluator initial tun pass to incorrect."
+  },
+  "rows": [
+    {
+      "word": "statt",
+      "group": "case-rules",
+      "file": "case-rules-01.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/statt",
+      "revision": 10528149,
+      "sha256": "f58d3791f4112dde3d2ccad45a10f76f41d940f048853dbd83851ef1c1212e84",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "German preposition source sense preserves Genitiv/Dativ and pronoun qualification; statten is a separately scoped conjugated form."
+    },
+    {
+      "word": "während",
+      "group": "case-rules",
+      "file": "case-rules-02.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/w%C3%A4hrend",
+      "revision": 10730108,
+      "sha256": "651a11fa684b1c0e1d8f703f2d18bbac32c44e6aa81a65e9c14684545ffb1c15",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Source case alternatives and usage qualifications retained; grammar notes are source-explicit section-level notes."
+    },
+    {
+      "word": "innerhalb",
+      "group": "case-rules",
+      "file": "case-rules-03.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/innerhalb",
+      "revision": 10358726,
+      "sha256": "87f4014de9bb9a6df60f7890cc9512d84086beb120b5d311966f405ac6b06091",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Both numbered preposition senses explicitly require Genitiv and both are linked."
+    },
+    {
+      "word": "außerhalb",
+      "group": "case-rules",
+      "file": "case-rules-04.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/au%C3%9Ferhalb",
+      "revision": 10310466,
+      "sha256": "5bd3db196a7f398564b5c0c4490f3821e6e59e310fb2c0a265e5e489edff2fcd",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "missing",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Both source senses explicitly require Genitiv; no structured government is emitted."
+    },
+    {
+      "word": "gemäß",
+      "group": "case-rules",
+      "file": "case-rules-05.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gem%C3%A4%C3%9F",
+      "revision": 9643239,
+      "sha256": "75f368b717f87719a1f0c22d45f8acaca1abd58dc0b6e850cc34b7a69b950f96",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Dativ rule retained; source note on hypercorrect Genitiv retained section-level."
+    },
+    {
+      "word": "entgegen",
+      "group": "case-rules",
+      "file": "case-rules-06.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entgegen",
+      "revision": 10771587,
+      "sha256": "c7a4b7765e949888db8ee6b6b5b1fcd0839f63ed4d69f264022a8d815d240e07",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Preposition Dativ/less often Genitiv and postposition Dativ stay distinct; quoted ordinary Genitiv example is not a rule."
+    },
+    {
+      "word": "dank",
+      "group": "case-rules",
+      "file": "case-rules-07.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dank",
+      "revision": 10486484,
+      "sha256": "88814fbaf4a1386835febe9d594bbe45754c3d5ceb4b02fe34c7ab6a95e46589",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "missing",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Source Dativ plus increasingly Genitiv remains inline but structured government is missing. Secondary base danken is retained."
+    },
+    {
+      "word": "samt",
+      "group": "case-rules",
+      "file": "case-rules-08.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/samt",
+      "revision": 10649462,
+      "sha256": "5ae40470df7a9e70db7eeb1067977406d48b07ae4aec1ed51e8754a965b932ff",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Source Dativ rule preserved with its meaning reference."
+    },
+    {
+      "word": "nebst",
+      "group": "case-rules",
+      "file": "case-rules-09.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/nebst",
+      "revision": 9915103,
+      "sha256": "577b178b37a87290d3c8ea8f9ef6ad10b5a942dd9e7ec7da43acf92954167b92",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "correct",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Source Dativ plus veraltend qualification preserved."
+    },
+    {
+      "word": "entlang",
+      "group": "case-rules",
+      "file": "case-rules-10.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/entlang",
+      "revision": 10427987,
+      "sha256": "d860fb490224cccd3a77d42e88f561a88006f3677c896a82d262e821feb406a6",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "missing",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Source preposed Genitiv/less often Dativ/obsolete Akkusativ and postposed Akkusativ/very rarely Dativ are not structured rules."
+    },
+    {
+      "word": "gefahren",
+      "group": "verb-base",
+      "file": "verb-base-01.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gefahren",
+      "revision": 7874206,
+      "sha256": "aa93e30e581be3316ce85617d46d2d6846a96e2c93009727baf09d4a77bbbe51",
+      "baseEvidence": {
+        "file": "base-01.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/fahren",
+        "revision": 10731105
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "gesessen",
+      "group": "verb-base",
+      "file": "verb-base-02.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gesessen",
+      "revision": 6404187,
+      "sha256": "3804cedd5d9514a4c11ac93b55e5f3908e4b39ef5e0b8127a55cba023523842d",
+      "baseEvidence": {
+        "file": "base-02.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/sitzen",
+        "revision": 10774338
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "gegessen",
+      "group": "verb-base",
+      "file": "verb-base-03.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gegessen",
+      "revision": 6937972,
+      "sha256": "9eaf177189c90f97fc830f9bba49bfe8a5c0112416a4d9272d752bb816c95a7d",
+      "baseEvidence": {
+        "file": "base-03.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/essen",
+        "revision": 10630103
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "getrunken",
+      "group": "verb-base",
+      "file": "verb-base-04.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/getrunken",
+      "revision": 9916002,
+      "sha256": "b97ebfd639130d4aae598364971d8c77ef4d9e936796a7928366f0202230e253",
+      "baseEvidence": {
+        "file": "base-04.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/trinken",
+        "revision": 10424296
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "geschrieben",
+      "group": "verb-base",
+      "file": "verb-base-05.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/geschrieben",
+      "revision": 10502412,
+      "sha256": "4e58738797f25178d85c4912194dccea8679e5e371275149d046fa91f2225d0d",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "missing",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "German source explicitly identifies schreiben; output has neither lemma nor baseForms reference."
+    },
+    {
+      "word": "gelesen",
+      "group": "verb-base",
+      "file": "verb-base-06.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gelesen",
+      "revision": 10693278,
+      "sha256": "254bafd26518eecb9ef53e04dffb87edf2572fb32f0c681e235fa5547a9c3f1b",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "missing",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "German source explicitly identifies lesen; output has neither lemma nor baseForms reference."
+    },
+    {
+      "word": "brachte",
+      "group": "verb-base",
+      "file": "verb-base-07.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/brachte",
+      "revision": 7752166,
+      "sha256": "826ba9b9f5e5b1e3e084d6052a73de12c24182596b80dce55f7e9b97198b2be7",
+      "baseEvidence": {
+        "file": "base-07.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/bringen",
+        "revision": 10610413
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "dachte",
+      "group": "verb-base",
+      "file": "verb-base-08.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/dachte",
+      "revision": 6699029,
+      "sha256": "b00ef71ec305a286c7ef1e057fea7ba9ac45e3fcf3fe2ab862f989eeb712f9fd",
+      "baseEvidence": {
+        "file": "base-08.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/denken",
+        "revision": 9719916
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "wusste",
+      "group": "verb-base",
+      "file": "verb-base-09.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wusste",
+      "revision": 7544533,
+      "sha256": "713a65597be334a4f1b9d707c0756b2dc9f0b76ef5b0fe46842df12b23164b23",
+      "baseEvidence": {
+        "file": "base-09.json",
+        "sourceUrl": "https://de.wiktionary.org/wiki/wissen",
+        "revision": 10649705
+      },
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "correct",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "Complete main-source verb-base comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "gewesen",
+      "group": "verb-base",
+      "file": "verb-base-10.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/gewesen",
+      "revision": 9643973,
+      "sha256": "0c54243086b6f69b783feadbabe1e4a8e9e59850d7b2929f095fd61b3f42d256",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "missing",
+        "conjugations": "not-applicable",
+        "primaryInfinitive": "not-applicable"
+      },
+      "sourceEvidence": "German source explicitly identifies sein; output has neither lemma nor baseForms reference."
+    },
+    {
+      "word": "machen",
+      "group": "conjugations",
+      "file": "conjugations-01.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/machen",
+      "revision": 10793084,
+      "sha256": "72ad4f257ea484ccf69d72d13792b41f8492a7039d487a89d531d796cad33bde",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Complete main-source conjugations comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "sagen",
+      "group": "conjugations",
+      "file": "conjugations-02.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sagen",
+      "revision": 10214415,
+      "sha256": "e1220bf973f0e78588e5e663699d36e5474d03a66cba825716cbfbae1eb55481",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Complete main-source conjugations comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "sehen",
+      "group": "conjugations",
+      "file": "conjugations-03.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sehen",
+      "revision": 10791127,
+      "sha256": "c100d1cea3e51743fe0d40b407f279235476097f352177047d696dcafd668065",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Complete main-source conjugations comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "sprechen",
+      "group": "conjugations",
+      "file": "conjugations-04.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/sprechen",
+      "revision": 10437839,
+      "sha256": "546a8f4b0060735adb98204450e142c9dc90a9d71f480517cb0b9a6e0472dbe0",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Complete main-source conjugations comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "schlafen",
+      "group": "conjugations",
+      "file": "conjugations-05.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/schlafen",
+      "revision": 10714695,
+      "sha256": "2152cdd3ef8f292e9b7617e48bcaecbc45ae07ca85c961709c316901b5d6275e",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Complete main-source conjugations comparison passed; explicit base and/or all available table rows checked against frozen German source."
+    },
+    {
+      "word": "laufen",
+      "group": "conjugations",
+      "file": "conjugations-06.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/laufen",
+      "revision": 10704605,
+      "sha256": "39aa61f1d8d9bf7df2c200d01be66483867ee7486edcf90f363f46f67f6a1cf9",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Main overview table and per-sense sein/haben variation retained."
+    },
+    {
+      "word": "dürfen",
+      "group": "conjugations",
+      "file": "conjugations-07.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/d%C3%BCrfen",
+      "revision": 10203538,
+      "sha256": "8bdb05a27885c05c6725ab0f1093a7d340fa7b18a223b8f181fae16fbbc6b0bc",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Five finite rows and gedurft/haben match; source imperative dashes correctly produce no invented imperative."
+    },
+    {
+      "word": "müssen",
+      "group": "conjugations",
+      "file": "conjugations-08.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/m%C3%BCssen",
+      "revision": 10735295,
+      "sha256": "c6517d409672f98822f364e18da2a0cf0c056977ff2f1d5717df431516700bd3",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Five finite rows and gemusst/haben match; no invented imperative."
+    },
+    {
+      "word": "wollen",
+      "group": "conjugations",
+      "file": "conjugations-09.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/wollen",
+      "revision": 10699504,
+      "sha256": "85bcfdc36be4232a9360e8b94493282206704f04230bcc0b19fc12393d4a2f84",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "correct"
+      },
+      "sourceEvidence": "Five finite rows and gewollt/haben match; no invented imperative."
+    },
+    {
+      "word": "tun",
+      "group": "conjugations",
+      "file": "conjugations-10.json",
+      "sourceUrl": "https://de.wiktionary.org/wiki/tun",
+      "revision": 10740109,
+      "sha256": "1b4108d8b1619b9eda77c3fe9ffd48eb557dd78b6e9d302ccb48815a63e8a645",
+      "baseEvidence": null,
+      "statuses": {
+        "caseRules": "not-applicable",
+        "explicitVerbBase": "not-applicable",
+        "conjugations": "correct",
+        "primaryInfinitive": "incorrect"
+      },
+      "sourceEvidence": "Table forms/auxiliary match. Primary grammar.infinitive is wrongly tunen from a valid but secondary conjugated-form section; primary source is tun."
+    }
+  ],
+  "metrics": {
+    "caseRules": {
+      "correct": 7,
+      "incorrect": 0,
+      "missing": 3,
+      "ambiguous": 0,
+      "unverified": 0,
+      "not-applicable": 20,
+      "applicable": 10,
+      "successRate": 0.7
+    },
+    "explicitVerbBase": {
+      "correct": 7,
+      "incorrect": 0,
+      "missing": 3,
+      "ambiguous": 0,
+      "unverified": 0,
+      "not-applicable": 20,
+      "applicable": 10,
+      "successRate": 0.7
+    },
+    "conjugations": {
+      "correct": 10,
+      "incorrect": 0,
+      "missing": 0,
+      "ambiguous": 0,
+      "unverified": 0,
+      "not-applicable": 20,
+      "applicable": 10,
+      "successRate": 1.0
+    },
+    "primaryInfinitive": {
+      "correct": 9,
+      "incorrect": 1,
+      "missing": 0,
+      "ambiguous": 0,
+      "unverified": 0,
+      "not-applicable": 20,
+      "applicable": 10,
+      "successRate": 0.9
+    }
+  }
+}
