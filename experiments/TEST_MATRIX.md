@@ -1,5 +1,10 @@
 # Experiment matrix
 
+2026-10-26 compact status candidate0.11.3: three JavaScript syntax checks and
+six local suites pass (fake clocks, worker/session diagnostics, initialization,
+bindings, localization, lifecycle, privacy). No browser/audio/translation checks.
+See `docs/test-results/0.11.3-compact-status-ui.md`; real rendering unverified.
+
 2026-10-26 user-run normal-browser translation setup: user reports it worked well;
 pair/first-download/background conditions not supplied. New0.11.2 word-card UI
 edits have static syntax/whitespace/source review only: user requested no functional

@@ -1,5 +1,11 @@
 # Protected feature registry
 
+0.11.3 keeps full voice/card-help text via compact hover/focus indicators, retains
+voice retry, and moves replay/timing information to transient notices plus popup
+diagnostics. Critical errors remain persistent. Source sense references remain
+in data while display numbering is simplified. Six targeted local suites pass;
+real UI/platform acceptance unverified. See `test-results/0.11.3-compact-status-ui.md`.
+
 0.11.2 UI candidate keeps the protected interactions and changes only word-card
 ordering, typography and verb-table presentation. Functional regression was not
 run at the user's explicit request; only static checks/source review. User reports

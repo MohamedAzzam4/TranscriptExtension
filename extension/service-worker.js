@@ -72,6 +72,8 @@ async function handleMessage(message, sender) {
       return getTranscriptLibrary();
     case "GET_VISIBLE_DIAGNOSTICS":
       return getVisibleDiagnostics();
+    case "UI_DIAGNOSTIC":
+      return recordOverlayDiagnostic(message, sender);
     case "ANALYZE_NETFLIX_TITLE":
       return analyzeNetflixTitle(message.audioLanguage);
     case "GET_NETFLIX_RESEARCH_STATE":
@@ -1963,9 +1965,50 @@ async function getLocalStorageDiagnostic() {
   }
 }
 
+const OVERLAY_DIAGNOSTIC_FIELDS = Object.freeze({
+  status: 'Overlay notice (last reported)',
+  timing: 'Word timing (last reported)',
+  voice: 'Pronunciation (last reported)',
+  dictionary: 'Word card information'
+});
+
+let overlayDiagnosticQueue = Promise.resolve();
+function recordOverlayDiagnostic(message, sender) {
+  overlayDiagnosticQueue = overlayDiagnosticQueue.catch(() => {}).then(() => storeOverlayDiagnostic(message, sender));
+  return overlayDiagnosticQueue;
+}
+
+async function storeOverlayDiagnostic(message, sender) {
+  if (!Object.hasOwn(OVERLAY_DIAGNOSTIC_FIELDS, message.kind)) return {};
+  const active = await getActive();
+  if (!active || message.experimentId !== active.experimentId
+    || !isActiveMediaFrame(active, sender?.tab?.id, sender?.frameId ?? 0)) return {};
+  const value = globalThis.DubPersistenceSafety.project({ message: diagnosticMessage(message.value) }).message;
+  if (!value) return {};
+  // Four bounded field keys survive worker suspension without growing history.
+  // Serial writes preserve event order; experiment IDs prevent stale display.
+  const key = `overlayDiagnostic:${message.kind}`;
+  await chrome.storage.session.set({ [key]: { experimentId: active.experimentId, value, reportedAt: new Date().toISOString() } });
+  try { await chrome.runtime.sendMessage({ type: 'UI_DIAGNOSTICS_UPDATED' }); } catch { /* popup may be closed */ }
+  return {};
+}
+
+async function getOverlayDiagnosticDetails(experimentId) {
+  if (!experimentId) return [];
+  const fields = Object.entries(OVERLAY_DIAGNOSTIC_FIELDS);
+  const keys = fields.map(([kind]) => `overlayDiagnostic:${kind}`);
+  const stored = await chrome.storage.session.get(keys);
+  return fields.flatMap(([, label], index) => stored[keys[index]]?.experimentId === experimentId && stored[keys[index]]?.value
+    ? [{ label, value: stored[keys[index]].value }] : []);
+}
+
 async function getVisibleDiagnostics() {
   const storageDiagnostic = await getLocalStorageDiagnostic();
-  const storageDetails = storageDiagnostic ? [storageDiagnostic] : [];
+  const active = await getActive();
+  const stored = await chrome.storage.local.get(LAST_KEY);
+  const experimentId = active?.experimentId || stored[LAST_KEY];
+  const overlayDetails = await getOverlayDiagnosticDetails(experimentId);
+  const storageDetails = [...(storageDiagnostic ? [storageDiagnostic] : []), ...overlayDetails];
   const preparationState = await chrome.storage.session.get(PREPARATION_FAILURE_KEY);
   if (preparationState[PREPARATION_FAILURE_KEY]) {
     return {
@@ -1980,9 +2023,6 @@ async function getVisibleDiagnostics() {
       }
     };
   }
-  const active = await getActive();
-  const stored = await chrome.storage.local.get(LAST_KEY);
-  const experimentId = active?.experimentId || stored[LAST_KEY];
   const experiment = experimentId ? await getExperiment(experimentId) : null;
   if (!experiment) {
     return {

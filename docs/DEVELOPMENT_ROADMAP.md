@@ -28,6 +28,13 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-26 WP2.4/WP2.5 candidate0.11.3 compacts voice/help descriptions into
+hover/focus icons, fades replay/timing notices after a2-second dwell and preserves
+sanitized last-reported details in popup diagnostics. Meanings display one ordinal
+without bracketed source IDs; dictionary relationships remain unchanged. Three
+syntax checks and six quick local suites pass; browser/platform checks not run.
+See `test-results/0.11.3-compact-status-ui.md`.
+
 2026-10-26 WP2.4/WP2.5 UI-only candidate0.11.2 moves alternative meanings below
 the main meaning, isolates disclosure typography from caption sizing and renders
 verb overview/conjugations as full-width semantic tables. User explicitly forbids

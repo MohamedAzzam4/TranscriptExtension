@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 23;
+  const CONTENT_SCRIPT_VERSION = 24;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -12,6 +12,8 @@
   if (!localMedia) throw new Error("Local media helpers were not loaded.");
 
   let pronunciationController = null;
+  const transientNotices = new Map();
+  const WORD_CARD_HELP_TEXT = "Dictionary definitions; translations use your selected provider. Highlights mark matching terms.";
 
   let video = null;
   let session = null;
@@ -233,6 +235,7 @@
       buffer: "",
       replay: false,
       displayedText: null,
+      uiDiagnostics: {},
       displayedTimingKey: null,
       selectedWord: null,
       selectedWordResult: null,
@@ -298,6 +301,8 @@
   }
 
   function endSession() {
+    for (const element of transientNotices.keys()) stopTransientNotice(element);
+    transientNotices.clear();
     finalizeCaption();
     clearInterval(clockTimer);
     if (wordHighlightFrame) cancelAnimationFrame(wordHighlightFrame);
@@ -587,6 +592,9 @@
         }
         .status:empty { display: none; }
         .status.error { color: #ff9b9b; }
+        .status, .word-timing-provenance { transition: opacity .7s ease; }
+        .notice-fading { opacity: 0; }
+        .status[hidden], .word-timing-provenance[hidden] { display: none; }
         .word-card {
           position: absolute;
           left: calc(50% + var(--word-card-offset, 0px));
@@ -666,7 +674,32 @@
         }
         .word-action.secondary { border-color: #3c5142; background: #1c281f; }
         .word-speak { display: inline-flex; align-items: center; gap: .3rem; }
-        .word-voice-status { margin-top: 6px; color: #a4aaa3; font: 11px/1.45 system-ui, sans-serif; }
+        .word-status { position: relative; display: inline-flex; align-items: center; gap: 3px; }
+        .word-status[hidden] { display: none; }
+        .word-status-trigger {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 24px; height: 24px; padding: 3px; border: 1px solid #3c5142;
+          border-radius: 50%; background: #1c281f; color: #b5bcb1;
+          font: 700 12px/1 system-ui, sans-serif; cursor: help;
+        }
+        .word-status-trigger[data-state="ready"] { color: #8dc49b; }
+        .word-status-trigger[data-state="warning"] { color: #e2c583; }
+        .word-status-retry { cursor: pointer; }
+        .word-status-trigger:hover { border-color: #63866c; }
+        .word-status-trigger svg { width: 15px; height: 15px; }
+        .word-status-trigger:focus-visible { outline: 2px solid #8dc49b; outline-offset: 2px; }
+        .word-status-tooltip {
+          position: absolute; z-index: 2; top: calc(100% + 7px); right: 0;
+          width: max-content; max-width: min(280px, 75vw); padding: 8px 10px;
+          border: 1px solid #46644e; border-radius: 7px; background: #111a14;
+          box-shadow: 0 4px 14px rgba(0,0,0,.3); color: #e6e7df;
+          font: 400 12px/1.5 system-ui, sans-serif; text-align: start;
+          white-space: normal; overflow-wrap: anywhere; visibility: hidden; opacity: 0;
+        }
+        .word-status:hover .word-status-tooltip,
+        .word-status:focus-within .word-status-tooltip { visibility: visible; opacity: 1; }
+        .word-status[data-tooltip-dismissed="true"] .word-status-tooltip { visibility: hidden; opacity: 0; }
+        .word-dictionary-status .word-status-tooltip { top: auto; bottom: calc(100% + 7px); left: 0; right: auto; }
         .word-speak svg { width: 17px; height: 17px; flex: 0 0 17px; }
         .word-timing-provenance { margin-top: .2rem; color: rgba(232, 244, 234, .7); font-size: .68rem; line-height: 1.2; text-align: center; }
         .word-action:disabled { cursor: default; opacity: .48; }
@@ -732,11 +765,11 @@
         .word-verb-overview th { width: 28%; }
         .word-verb-table tbody:last-child tr:last-child > * { border-bottom: 0; }
         .word-verb-table tbody tr:hover { background: rgba(141,196,155,.05); }
-        .word-note { margin-top: 9px; color: #a4aaa3; font-size: 10px; }
-        .word-sources { display: flex; gap: 12px; margin-top: 10px; }
+        .word-sources { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
         .word-source { color: #8dc49b; font-size: 11px; }
         @media (prefers-reduced-motion: reduce) {
           .wrap { transition: none; }
+          .status, .word-timing-provenance { transition: none; }
         }
       </style>
       <div class="wrap">
@@ -756,6 +789,7 @@
             <div class="word-card-actions">
               <button class="word-action secondary word-replay" type="button">Replay clip</button>
               <button class="word-action secondary word-speak" type="button" aria-label="Pronounce German word" title="Pronounce German word"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4zm12 0a4 4 0 0 1 0 4m2-6a7 7 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="word-speak-label">Speak</span></button>
+              <div class="word-status word-voice-status" hidden></div>
               <button class="word-action secondary word-return-source" type="button" hidden>Return to source</button>
               <a class="word-action secondary word-youglish" target="_blank" rel="noopener noreferrer">YouGlish</a>
               <button class="word-action word-save" type="button">Save word</button>
@@ -770,7 +804,6 @@
             <details class="word-more-meanings" hidden><summary>Other meanings</summary><div class="word-alternatives" dir="auto"></div></details>
           </div>
           <div class="word-saved-context word-example-card" hidden></div>
-          <div class="word-voice-status" role="status" hidden></div>
           <div class="word-section word-examples-section">
             <div class="word-label">Examples</div>
             <div class="word-examples"></div>
@@ -779,10 +812,10 @@
             <div class="word-label">Grammar</div>
             <dl class="word-grammar"></dl>
           </div>
-          <div class="word-note">Dictionary definitions; translations use your selected provider. Highlights mark matching terms.</div>
           <div class="word-translation-status" role="status" hidden></div>
           <div class="word-sources">
             <a class="word-source word-source-de" target="_blank" rel="noopener noreferrer">German Wiktionary</a>
+            <div class="word-status word-dictionary-status"></div>
           </div>
         </div>
       </div>`;
@@ -814,6 +847,8 @@
     wordAlternativesElement = shadow.querySelector(".word-alternatives");
     wordDefinitionNoteElement = shadow.querySelector(".word-definition-note");
     wordTranslationStatusElement = shadow.querySelector(".word-translation-status");
+    renderStatusIndicator(shadow.querySelector('.word-dictionary-status'), WORD_CARD_HELP_TEXT, 'info', 'Dictionary card information', 'dictionary-card-help');
+    reportUiDiagnostic('dictionary', WORD_CARD_HELP_TEXT);
     shadow.querySelector(".word-close").addEventListener("click", closeWordCard);
     wordSaveElement.addEventListener("click", toggleSavedWord);
     wordReplayElement.addEventListener("click", replaySelectedWord);
@@ -1202,12 +1237,13 @@
       element.classList.toggle("current-word", active);
       if (active) current = element;
     }
-    const timingMode = current?.dataset.timing || "unavailable";
+    const timingMode = current?.dataset.timing || transcriptElement.querySelector('.word')?.dataset.timing || "unavailable";
     transcriptElement.dataset.wordTiming = timingMode;
-    const timingLabel = current
+    const timingLabel = timingMode !== 'unavailable'
       ? (timingMode === "word-timestamps" ? "Word timing: recognizer word timestamps" : "Word timing: estimated within caption")
       : "Word timing unavailable";
-    if (wordTimingProvenanceElement && wordTimingProvenanceElement.textContent !== timingLabel) wordTimingProvenanceElement.textContent = timingLabel;
+    showTransientNotice(wordTimingProvenanceElement, timingLabel);
+    reportUiDiagnostic('timing', timingLabel);
   }
 
   async function renderTranslation(text) {
@@ -1459,7 +1495,7 @@
     wordTitleElement.lang = language;
     wordTitleElement.dir = "auto";
     wordAlternativesElement.parentElement.hidden = true;
-    wordGermanDefinitionElement.textContent = definition ? `${senses[0]?.sourceSenseId ? `[${senses[0].sourceSenseId}] ` : ""}${definition}` : "Keine Wörterbuchdefinition verfügbar.";
+    wordGermanDefinitionElement.textContent = definition ? meaningDisplayText(definition, 1) : "Keine Wörterbuchdefinition verfügbar.";
     wordTranslatedDefinitionElement.textContent = definition ? "Translating definition…" : "";
     wordTranslatedDefinitionElement.hidden = !definition || language === "de";
     wordTranslatedDefinitionElement.lang = language;
@@ -1506,13 +1542,13 @@
       const row = document.createElement("div");
       const german = document.createElement("div");
       german.lang = "de";
-      german.textContent = `${index + 2}${sense.sourceSenseId ? ` [${sense.sourceSenseId}]` : ""}. ${sense.definition}`;
+      german.textContent = meaningDisplayText(sense.definition, index + 2);
       row.append(german);
       if (definitionTranslations[index + 1]) {
         const target = document.createElement("div");
         target.lang = language;
         target.dir = "auto";
-        target.textContent = definitionTranslations[index + 1];
+        target.textContent = meaningDisplayText(definitionTranslations[index + 1]);
         row.append(target);
       }
       const examplesForSense = (translatedSenseExamples[index + 1] || []).map(applyExampleCandidates);
@@ -1528,7 +1564,7 @@
     wordAlternativesElement.parentElement.hidden = senses.length < 2;
     wordAlternativesElement.parentElement.querySelector("summary").textContent = `Other meanings (${Math.max(0, senses.length - 1)})`;
     wordAlternativesElement.setAttribute("aria-label", "Alternative meanings");
-    wordTranslatedDefinitionElement.textContent = definitionTranslations[0] || (definition ? "Definition translation unavailable." : "");
+    wordTranslatedDefinitionElement.textContent = meaningDisplayText(definitionTranslations[0]) || (definition ? "Definition translation unavailable." : "");
     renderWordExamples(translatedExamples.map(applyExampleCandidates), word, [], language, translatedUnassignedExamples.map(applyExampleCandidates));
     const governments = result.grammar?.governments?.length
       ? result.grammar.governments
@@ -1579,21 +1615,55 @@
   function renderVoiceStatus(text, showCheckAgain) {
     if (!wordVoiceStatusElement) return;
     wordVoiceStatusElement.hidden = !text;
-    wordVoiceStatusElement.replaceChildren();
     if (!text) return;
-    wordVoiceStatusElement.append(document.createTextNode(text));
+    const state = showCheckAgain ? 'warning' : /ready|finished|speaking with/i.test(text) ? 'ready' : /checking|waiting/i.test(text) ? 'pending' : 'info';
+    renderStatusIndicator(wordVoiceStatusElement, text, state, 'German pronunciation status', 'german-voice-status');
+    reportUiDiagnostic('voice', text);
     if (showCheckAgain) {
       const check = document.createElement("button");
       check.type = "button";
-      check.className = "word-action secondary";
-      check.textContent = "Check again";
+      check.className = "word-status-trigger word-status-retry";
+      check.setAttribute('aria-label', 'Check German voices again');
+      check.title = 'Check again';
+      check.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 7a6 6 0 1 0 .2 6M15 3v4h-4"/></svg>';
       check.addEventListener("click", (event) => {
         event.stopPropagation();
         const owner = session;
         if (owner?.selectedWord) void checkGermanVoiceAvailability(owner, owner.selectedWord, owner.wordCardEpoch);
       });
-      wordVoiceStatusElement.append(" ", check);
+      wordVoiceStatusElement.append(check);
     }
+  }
+
+  function renderStatusIndicator(container, text, state, label, tooltipId) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'word-status-trigger';
+    button.dataset.state = state;
+    button.setAttribute('aria-label', label);
+    button.setAttribute('aria-describedby', tooltipId);
+    const glyph = state === 'ready' ? '<path d="m5 10 3 3 7-7"/>'
+      : state === 'warning' ? '<path d="M10 5v6m0 3v1"/>'
+      : state === 'pending' ? '<circle cx="10" cy="10" r="2" fill="currentColor" stroke="none"/>'
+      : '<path d="M10 9v6m0-10v1"/>';
+    button.innerHTML = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/>${glyph}</svg>`;
+    const tooltip = document.createElement('span');
+    tooltip.id = tooltipId;
+    tooltip.className = 'word-status-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.textContent = text;
+    container.replaceChildren(button, tooltip);
+    container.onmouseenter = container.onfocusin = () => { delete container.dataset.tooltipDismissed; };
+    container.onkeydown = event => {
+      if (event.key !== 'Escape') return;
+      container.dataset.tooltipDismissed = 'true';
+      event.stopPropagation();
+    };
+  }
+
+  function meaningDisplayText(value, ordinal = null) {
+    const text = String(value || '').replace(/^\s*(?:\[\d+(?:\.\d+)*[a-z]?(?:\s*[,–-]\s*\d+(?:\.\d+)*[a-z]?)*\]\s*)+/iu, '');
+    return ordinal === null ? text : `${ordinal}. ${text}`;
   }
 
   function getPronunciationController() {
@@ -2043,8 +2113,67 @@
 
   function renderStatus(text, isError = false) {
     if (!statusElement) return;
-    statusElement.textContent = text;
+    text = String(text || '');
+    const replayNotice = !isError && /^Cached transcript replay\b/.test(text);
+    if (replayNotice && statusElement.classList.contains('error')) return;
+    if (statusElement.textContent === text && statusElement.classList.contains('error') === isError) return;
+    reportUiDiagnostic('status', text);
     statusElement.classList.toggle("error", isError);
+    if (replayNotice) {
+      if (!showTransientNotice(statusElement, text) && statusElement.textContent !== text) {
+        stopTransientNotice(statusElement);
+        statusElement.textContent = text;
+        statusElement.hidden = true;
+      }
+      return;
+    }
+    stopTransientNotice(statusElement);
+    statusElement.textContent = text;
+    statusElement.hidden = !text;
+  }
+
+  function showTransientNotice(element, text) {
+    if (!element || !text) return false;
+    let notice = transientNotices.get(element);
+    if (!notice) {
+      notice = { seen: new Set(), timers: [], generation: 0 };
+      transientNotices.set(element, notice);
+    }
+    // Rendering runs every frame; a previously explained provenance must not
+    // restart the deadline or flash again between words/cues in this session.
+    if (notice.seen.has(text)) return false;
+    stopTransientNotice(element);
+    notice.seen.add(text);
+    const generation = notice.generation;
+    element.textContent = text;
+    element.hidden = false;
+    notice.timers.push(setTimeout(() => {
+      if (notice.generation !== generation) return;
+      element.classList.add('notice-fading');
+      const fadeDuration = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 700;
+      notice.timers.push(setTimeout(() => {
+        if (notice.generation === generation) element.hidden = true;
+      }, fadeDuration));
+    }, 2000));
+    return true;
+  }
+
+  function stopTransientNotice(element) {
+    const notice = transientNotices.get(element);
+    if (notice) {
+      for (const timer of notice.timers) clearTimeout(timer);
+      notice.timers = [];
+      notice.generation++;
+    }
+    element?.classList.remove('notice-fading');
+  }
+
+  function reportUiDiagnostic(kind, value) {
+    if (!session || !value || session.uiDiagnostics[kind] === value) return;
+    session.uiDiagnostics[kind] = value;
+    try {
+      void chrome.runtime.sendMessage({ type: 'UI_DIAGNOSTIC', experimentId: session.id, kind, value }).catch(() => {});
+    } catch { /* Optional diagnostics must not interrupt caption or word-card rendering. */ }
   }
 
   function findPrimaryVideo() {

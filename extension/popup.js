@@ -374,6 +374,7 @@ elements.export.addEventListener("click", async () => {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'UI_DIAGNOSTICS_UPDATED') void refreshDiagnostics();
   if (message.type === "EXPERIMENT_STATUS") {
     setStatus(message.error || message.status, Boolean(message.error));
     void refreshDiagnostics();
