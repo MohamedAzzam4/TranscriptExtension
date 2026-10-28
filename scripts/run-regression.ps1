@@ -26,6 +26,11 @@ Write-Host "Dub Transcript Lab regression runner" -ForegroundColor Cyan
 Write-Host "Project: $projectRoot"
 
 $syntaxFiles = @(
+    "youtube-captions.js",
+    "youtube-page.js",
+    "youtube-controller.js",
+    "youtube-worker.js",
+    "word-interactions.js",
     "typography.js",
     "content.js",
     "german-pronunciation.js",

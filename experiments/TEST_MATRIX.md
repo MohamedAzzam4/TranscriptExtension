@@ -1,5 +1,12 @@
 # Experiment matrix
 
+2026-10-28 YouTube caption candidate0.12.0:23syntax checks,26extension suites,
+56server tests pass locally with frozen/mocked player, native, network and storage
+edges. Source priority, navigation cancellation, ads, timing provenance, translation
+alignment/cache, concurrent library writes, no implicit ASR and global word toggles
+covered. Actual YouTube/browser/audio/upgrade tests not run; manual gate unverified.
+See `docs/test-results/0.12.0-youtube-captions.md`.
+
 2026-10-28 typography candidate0.11.5:18syntax checks,23extension suites and
 46server tests pass; local font/manifest/registration/isolation checks pass.
 Browser font loading, Arabic and layout remain unverified. User review requested
@@ -36,7 +43,10 @@ English/Arabic creation times out with retry, so pack completion/background
 behavior remains unverified. Synthetic migration/export privacy passes. Result
 **Needs development**. Details: `docs/test-results/0.11.1-dictionary-readiness-persistence.md`.
 
-The transcript input is always the audio that is actually playing. Platform captions are collected separately and used only as a possible reference.
+Audio-recognition sessions use the audio that is actually playing. In the0.12.0
+YouTube caption mode, platform subtitles are explicitly selected as input and
+labelled with source provenance; they are never described as newly recognized
+audio or used as their own recognition evaluation reference.
 
 ## Test order
 

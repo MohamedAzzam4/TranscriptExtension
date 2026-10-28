@@ -1,5 +1,5 @@
 (() => {
-  if (globalThis.DubTranscriptLearning?.version === 10) return;
+  if (globalThis.DubTranscriptLearning?.version === 11) return;
 
   const DEFAULT_CAPTION_PREFERENCES = Object.freeze({
     fontSize: 31,
@@ -11,7 +11,9 @@
     backgroundColor: "#05070C",
     fontFamily: "sans",
     edgeStyle: "shadow",
-    bold: true
+    bold: true,
+    highlightCurrentWord: true,
+    pauseOnWordHover: false
   });
   const DEFAULT_TRANSLATION_PREFERENCES = Object.freeze({
     enabled: true,
@@ -67,7 +69,9 @@
       ),
       fontFamily: Object.hasOwn(FONT_FAMILIES, fontFamily) ? fontFamily : "sans",
       edgeStyle: EDGE_STYLES.has(edgeStyle) ? edgeStyle : "shadow",
-      bold: raw.bold !== false
+      bold: raw.bold !== false,
+      highlightCurrentWord: raw.highlightCurrentWord !== false,
+      pauseOnWordHover: raw.pauseOnWordHover === true
     };
   }
 
@@ -108,6 +112,14 @@
 
   function fontFamilyValue(key) {
     return FONT_FAMILIES[key] || FONT_FAMILIES.sans;
+  }
+
+  function normalizeYouTubePreferences(raw = {}) {
+    return {
+      enabled: raw.enabled !== false,
+      mode: raw.mode === 'audio' ? 'audio' : 'captions',
+      translationSource: raw.translationSource === 'extension' ? 'extension' : 'youtube'
+    };
   }
 
   function rgbaFromHex(hex, opacityPercent) {
@@ -802,7 +814,8 @@
     const title = nullableText(record?.title || record?.page?.title, 300) || "Untitled video";
     const language = nullableText(record?.audioLanguage, 20) || "unknown";
     const url = stablePageUrl(record?.url || record?.page?.url);
-    const segments = Array.isArray(record?.segments) ? record.segments : record?.asrSegments;
+    const segments = Array.isArray(record?.segments) ? record.segments
+      : record.transcriptSource?.provider === 'youtube' ? record.captionSegments : record?.asrSegments;
     const lines = [];
     let previousText = null;
     for (const segment of [...(segments || [])].sort((a, b) => Number(a.start) - Number(b.start))) {
@@ -814,6 +827,7 @@
     return [
       title,
       `Language: ${language}`,
+      ...(record.transcriptSource?.provider === 'youtube' ? [`Transcript: ${record.transcriptSource.kind} (${record.transcriptSource.language})`] : []),
       ...(url ? [`Source: ${url}`] : []),
       "",
       ...lines,
@@ -878,10 +892,11 @@
   }
 
   globalThis.DubTranscriptLearning = Object.freeze({
-    version: 10,
+    version: 11,
     DEFAULT_CAPTION_PREFERENCES,
     DEFAULT_TRANSLATION_PREFERENCES,
     normalizeCaptionPreferences,
+    normalizeYouTubePreferences,
     normalizeTranslationPreferences,
     fontFamilyValue,
     rgbaFromHex,

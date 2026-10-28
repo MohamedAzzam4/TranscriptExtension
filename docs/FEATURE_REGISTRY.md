@@ -1,5 +1,14 @@
 # Protected feature registry
 
+0.12.0 adds ACQ-YT-CAPTIONS: automatic per-video source captions (creator first,
+original automatic second), optional YouTube translations and player settings.
+Local fixtures cover lifecycle/cache/source honesty and privacy; actual YouTube
+retrieval and controls are unverified. Audio ASR remains an explicit YouTube mode;
+generic-site paths remain unchanged. UI-STYLE extends with current-word highlight
+and hover pause, defaults on/off respectively, global popup/player preferences.
+Existing selection, dictionary/save/YouGlish/replay/drag contracts remain present
+and local regression passes. See `test-results/0.12.0-youtube-captions.md`.
+
 0.11.5 unifies popup/setup/card typography using bundled Open Sans and shared
 size roles, with16px Home/Videos titles. Caption settings and behavior contracts
 are retained. Local regression passes; browser appearance awaits user review.

@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 26;
+  const CONTENT_SCRIPT_VERSION = 27;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -16,6 +16,7 @@
   if (!reviewContainer && !localMedia) throw new Error("Local media helpers were not loaded.");
 
   let pronunciationController = null;
+  let hoverPause = null;
   const transientNotices = new Map();
   const WORD_CARD_HELP_TEXT = "Dictionary definitions; translations use your selected provider. Highlights mark matching terms.";
 
@@ -96,6 +97,11 @@
   }
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.experimentSettings && session) {
+      const settings = changes.experimentSettings.newValue || {};
+      applyDisplaySettings(settings.captionPreferences, settings.translationPreferences);
+      session.syncOffset = Number(settings.syncOffset) || 0;
+    }
     if (areaName !== "local" || !changes.savedVocabulary) return;
     vocabularyRevision += 1;
     updateSavedVocabulary(changes.savedVocabulary.newValue);
@@ -248,6 +254,11 @@
     if (!video) throw new Error("No video element is available.");
     session = {
       id: message.experimentId,
+      youtubeCaptions: Boolean(message.youtubeCaptions),
+      youtubeRequest: message.youtubeRequest || null,
+      sourceVideo: message.sourceVideo || null,
+      platformTranslations: message.platformTranslations || [],
+      platformTranslationLanguage: message.platformTranslationLanguage || '',
       collectCaptions: false,
       segments: message.segments || [],
       displayGroups: transcriptGroups.buildDisplayGroups(message.segments || []),
@@ -279,8 +290,22 @@
       controlAvoidance: 0
     };
 
+    if (globalThis.DubWordInteractions) {
+      hoverPause = globalThis.DubWordInteractions.createHoverPause({ media: video });
+      hoverPause.configure(session.captionPreferences.pauseOnWordHover);
+    }
     createOverlay();
     void loadSavedVocabulary();
+    const manualPlaybackIntent = event => {
+      if (event.type === 'keydown' && event.composedPath().some(element => element.classList?.contains('word') || element.classList?.contains('word-card'))) return;
+      if (event.type === 'keydown' && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName)) return;
+      if ((event.type === 'keydown' && [' ', 'k', 'K', 'MediaPlayPause'].includes(event.key))
+        || (event.type === 'pointerdown' && (event.target === video || event.target.closest?.('.ytp-play-button')))) hoverPause?.interrupt();
+    };
+    for (const name of ['keydown', 'pointerdown']) {
+      document.addEventListener(name, manualPlaybackIntent, true);
+      listeners.push({ target: document, name, handler: manualPlaybackIntent, options: true });
+    }
     addVideoListener("play", () => sendMediaEvent("play"));
     addVideoListener("pause", () => sendMediaEvent("pause"));
     addVideoListener("seeking", () => sendMediaEvent("seeking"));
@@ -294,7 +319,7 @@
 
     clockTimer = setInterval(() => {
       if (!video || !session) return;
-      if (!wordReplay) {
+      if (!wordReplay && !session.youtubeCaptions) {
         void chrome.runtime.sendMessage({
           type: "MEDIA_CLOCK",
           currentTime: video.currentTime,
@@ -308,7 +333,8 @@
     if (!video.paused) startCurrentWordHighlight();
 
     setCaptionCollection(Boolean(message.collectCaptions));
-    renderStatus("Preparing the local recognizer…");
+    if (session.youtubeCaptions) { session.replay = true; renderTranscript(); }
+    else renderStatus("Preparing the local recognizer…");
   }
 
   function setCaptionCollection(enabled) {
@@ -320,7 +346,8 @@
     if (enabled) captionTimer = setInterval(sampleCaption, 120);
   }
 
-  function endSession() {
+  function endSession({ resumeHover = false } = {}) {
+    hoverPause?.dispose(resumeHover); hoverPause = null;
     for (const element of transientNotices.keys()) stopTransientNotice(element);
     transientNotices.clear();
     finalizeCaption();
@@ -332,8 +359,8 @@
     clockTimer = null;
     captionTimer = null;
     seekTimer = null;
-    for (const { target, name, handler } of listeners) {
-      target.removeEventListener(name, handler);
+    for (const { target, name, handler, options } of listeners) {
+      target.removeEventListener(name, handler, options);
     }
     listeners = [];
     restoreWordReplay(false, true);
@@ -383,7 +410,7 @@
   }
 
   function sendMediaEvent(name) {
-    if (!video || !session || wordReplay) return;
+    if (!video || !session || wordReplay || session.youtubeCaptions) return;
     void chrome.runtime.sendMessage({
       type: "MEDIA_EVENT",
       event: {
@@ -481,6 +508,7 @@
         :host([data-viewport-fixed="true"]) {
           position: fixed !important;
         }
+        :host([data-suspended="true"]) { display: none !important; }
         .wrap {
           position: absolute;
           left: var(--caption-left, 50%);
@@ -908,6 +936,10 @@
     captionDragHandleElement.addEventListener("pointerdown", startCaptionDrag);
     transcriptElement.addEventListener("click", handleTranscriptClick);
     transcriptElement.addEventListener("keydown", handleTranscriptKeydown);
+    transcriptElement.addEventListener('pointerover', event => { if (event.target.closest('.word')) hoverPause?.enter(); });
+    transcriptElement.addEventListener('pointerout', event => {
+      if (event.target.closest('.word') && !event.relatedTarget?.closest?.('.word')) hoverPause?.leave();
+    });
     captionBoxElement.addEventListener("pointerdown", stopPlayerClick);
     captionBoxElement.addEventListener("copy", stopPlayerClick);
     captionBoxElement.addEventListener("dblclick", stopPlayerClick);
@@ -936,6 +968,9 @@
     const previousTarget = session.translationPreferences?.targetLanguage;
     const previousProvider = session.translationPreferences?.provider;
     session.captionPreferences = learning.normalizeCaptionPreferences(rawCaptionPreferences);
+    hoverPause?.configure(session.captionPreferences.pauseOnWordHover);
+    updateCurrentWordHighlight();
+    if (video && !video.paused) startCurrentWordHighlight();
     session.translationPreferences = learning.normalizeTranslationPreferences(
       rawTranslationPreferences
     );
@@ -1185,7 +1220,7 @@
     const time = video.currentTime - session.syncOffset;
     const displayGroups = session.displayGroups || [];
     const active = displayGroups
-      .filter((group) => time >= group.start - 0.15 && time <= group.end + 0.8)
+      .filter((group) => time >= group.start - (session.youtubeCaptions ? 0 : 0.15) && time <= group.end + (session.youtubeCaptions ? 0 : 0.8))
       .at(-1);
     const recent = [...displayGroups]
       .reverse()
@@ -1195,13 +1230,14 @@
       && performance.now() - session.lastCommitted.receivedAt < 3_500
       ? session.lastCommitted.text
       : "";
-    const text = active?.text || freshCommit || recent?.text || "";
+    const text = active?.text || freshCommit || (!session.youtubeCaptions && recent?.text) || "";
+    session.displayedCue = active || null;
     const timingGroup = active || (freshCommit ? null : recent);
     renderClickableText(text, timingGroup?.words || []);
     updateCurrentWordHighlight();
     void renderTranslation(text);
     if (session.replay) {
-      renderStatus("Cached transcript replay — audio is not being transcribed again.");
+      if (!session.youtubeCaptions) renderStatus("Cached transcript replay — audio is not being transcribed again.");
     }
   }
 
@@ -1218,6 +1254,7 @@
       return;
     }
     if (session.displayedTimingKey === timingKey) return;
+    hoverPause?.release();
     session.displayedText = text;
     session.displayedTimingKey = timingKey;
     transcriptElement.classList.toggle("long", text.length > 110);
@@ -1276,11 +1313,12 @@
   }
 
   function startCurrentWordHighlight() {
+    if (session?.captionPreferences.highlightCurrentWord === false) return;
     if (wordHighlightFrame) return;
     const update = () => {
       wordHighlightFrame = null;
       updateCurrentWordHighlight();
-      if (video && session && !video.paused && !wordReplay) wordHighlightFrame = requestAnimationFrame(update);
+      if (video && session && session.captionPreferences.highlightCurrentWord !== false && !video.paused && !wordReplay) wordHighlightFrame = requestAnimationFrame(update);
     };
     wordHighlightFrame = requestAnimationFrame(update);
   }
@@ -1292,14 +1330,14 @@
     for (const element of transcriptElement.querySelectorAll(".word")) {
       const start = Number(element.dataset.start);
       const end = Number(element.dataset.end);
-      const active = !current && Number.isFinite(start) && Number.isFinite(end) && time >= start && time < end;
+      const active = session.captionPreferences?.highlightCurrentWord !== false && !current && Number.isFinite(start) && Number.isFinite(end) && time >= start && time < end;
       element.classList.toggle("current-word", active);
       if (active) current = element;
     }
     const timingMode = current?.dataset.timing || transcriptElement.querySelector('.word')?.dataset.timing || "unavailable";
     transcriptElement.dataset.wordTiming = timingMode;
     const timingLabel = timingMode !== 'unavailable'
-      ? (timingMode === "word-timestamps" ? "Word timing: recognizer word timestamps" : "Word timing: estimated within caption")
+      ? (timingMode === "word-timestamps" ? "Word timing: recognizer word timestamps" : timingMode === 'platform-word-offsets' ? 'Word timing: YouTube segment offsets' : "Word timing: estimated within caption")
       : "Word timing unavailable";
     showTransientNotice(wordTimingProvenanceElement, timingLabel);
     reportUiDiagnostic('timing', timingLabel);
@@ -1316,6 +1354,11 @@
     }
 
     translationElement.hidden = false;
+    if (session.youtubeCaptions && session.platformTranslationLanguage === preferences.targetLanguage && session.displayedCue) {
+      const translated = globalThis.DubYouTubeCaptions?.alignTranslation(session.platformTranslations, session.displayedCue.start, session.displayedCue.end);
+      if (translated) { showTranslation(translated, 'ready'); return; }
+    }
+    const owner = session;
     const requestKey = translationSessionKey(text, preferences);
     const cached = session.translationCache.get(requestKey);
     if (cached?.translatedText) {
@@ -1341,6 +1384,7 @@
 
     try {
       const result = await pending;
+      if (session !== owner) return;
       if (!result?.ok || !result.translatedText) {
         throw new Error(result?.error || "Translation is unavailable.");
       }
@@ -1353,6 +1397,7 @@
         showTranslation(result.translatedText, "ready");
       }
     } catch (error) {
+      if (session !== owner) return;
       const message = error.message || "Translation is unavailable.";
       session.translationCache.set(requestKey, { error: message });
       if (
@@ -1363,7 +1408,7 @@
         showTranslation(message, "error");
       }
     } finally {
-      session?.translationPending.delete(requestKey);
+      owner.translationPending.delete(requestKey);
     }
   }
 
@@ -2137,6 +2182,7 @@
             type: "SAVE_WORD",
             entry: {
               ...result,
+              ...(owner.sourceVideo ? { video: owner.sourceVideo } : {}),
               context,
               contextTranslation,
               clip
@@ -2265,7 +2311,9 @@
     if (reviewContainer || !session || !value || session.uiDiagnostics[kind] === value) return;
     session.uiDiagnostics[kind] = value;
     try {
-      void chrome.runtime.sendMessage({ type: 'UI_DIAGNOSTIC', experimentId: session.id, kind, value }).catch(() => {});
+      void chrome.runtime.sendMessage(session.youtubeRequest
+        ? { type: 'YOUTUBE_OVERLAY_DIAGNOSTIC', ...session.youtubeRequest, kind, value }
+        : { type: 'UI_DIAGNOSTIC', experimentId: session.id, kind, value }).catch(() => {});
     } catch { /* Optional diagnostics must not interrupt caption or word-card rendering. */ }
   }
 
@@ -2406,5 +2454,14 @@
     return mediaCandidate.classify(url, contentType, location.href);
   }
   // Publish readiness only after dependencies and message listeners initialized successfully.
+  globalThis.DubYouTubeOverlay = {
+    start: message => beginSession({ ...message, youtubeCaptions: true, collectCaptions: false }),
+    stop(resumeHover = false) { if (session?.youtubeCaptions) endSession({ resumeHover }); },
+    suspend(value) {
+      if (!session?.youtubeCaptions || !overlayHost) return;
+      overlayHost.dataset.suspended = String(Boolean(value));
+      if (value) hoverPause?.release(false);
+    }
+  };
   globalThis.__dubTranscriptLabVersion = CONTENT_SCRIPT_VERSION;
 })();

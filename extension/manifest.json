@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.11.5",
+  "version": "0.12.0",
   "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -26,6 +26,17 @@
   },
   "content_scripts": [
     {
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["youtube-page.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["typography.js", "learning-features.js", "german-pronunciation.js", "transcript-groups.js", "media-candidate.js", "local-media.js", "word-interactions.js", "youtube-captions.js", "content.js", "youtube-controller.js"],
+      "run_at": "document_idle"
+    },
+    {
       "matches": ["http://*/*", "https://*/*"],
       "js": ["media-observer-bridge.js"],
       "run_at": "document_start",
@@ -48,6 +59,6 @@
     "default_title": "Dub Transcript Lab"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:* https://de.wiktionary.org https://translation.googleapis.com https://nflxvideo.net https://*.nflxvideo.net"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:* https://de.wiktionary.org https://translation.googleapis.com https://www.youtube.com https://*.youtube.com https://video.google.com https://nflxvideo.net https://*.nflxvideo.net"
   }
 }

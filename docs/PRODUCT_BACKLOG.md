@@ -58,18 +58,24 @@ For priority, dependencies, phases, and future work, use
 
 ## YouTube caption-first and saved-word update
 
-- Prefer an eligible original YouTube automatic transcript before downloading
-  audio for local ASR. Never use a YouTube-translated track as the spoken
-  transcript, and keep manual subtitles evaluation-only by default.
-- Translate the selected original cue through the existing translation provider
-  and persistent cache rather than using YouTube auto-translation.
-- Keep a compact **Local audio transcription** override for comparison and
-  timing diagnosis.
+- 2026-10-28 approved/candidate0.12.0: retrieve automatically on each YouTube
+  video when enabled; creator-provided spoken-language subtitles first, original
+  automatic transcript second. Browser adapter first, subtitle-only local yt-dlp
+  fallback second. Never use a YouTube-translated track as source speech.
+- YouTube auto-translation first (optional), then the existing browser/configured
+  Cloud provider. Preserve source and target track/timing provenance in caches.
+- Missing captions show an error/retry; **Local audio transcription** is an
+  explicit source mode, never an automatic failure fallback on YouTube.
+- Player transcript button provides source-track, translation and appearance
+  settings shared with the popup. Word highlighting (default on) and pause on
+  hover (default off) apply across supported sites. Candidate local checks pass;
+  live YouTube/browser acceptance remains unverified.
 - Measure the reported YouTube ASR timing issue as constant offset, drift,
   grouping, wrong-source, or cache mismatch before changing timestamps.
 - Mark whole-token exact forms of previously saved German words in later source
   transcript cues. Initial scope does not infer lemmas or match inflections.
 - Full plan: [YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md](YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md).
+  Current approved scope: [YOUTUBE_CAPTIONS_IMPLEMENTATION.md](YOUTUBE_CAPTIONS_IMPLEMENTATION.md).
 
 ## User-requested Terra UI corrections (2026-10-25)
 

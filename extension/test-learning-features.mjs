@@ -30,7 +30,9 @@ assert.deepEqual(
     backgroundColor: "#05070C",
     fontFamily: "serif",
     edgeStyle: "outline",
-    bold: false
+    bold: false,
+    highlightCurrentWord: true,
+    pauseOnWordHover: false
   }
 );
 assert.deepEqual(

@@ -1,5 +1,12 @@
 # YouTube caption-first, timing, and saved-word plan
 
+**2026-10-28 supersession:** this remains historical planning memory. The user
+has now approved creator-provided subtitles first, original automatic captions
+second, browser retrieval before subtitle-only yt-dlp fallback, YouTube
+auto-translation, automatic per-video retrieval and explicit-only audio ASR.
+See [YOUTUBE_CAPTIONS_IMPLEMENTATION.md](YOUTUBE_CAPTIONS_IMPLEMENTATION.md) for
+the current implementation scope and [0.12.0 evidence](test-results/0.12.0-youtube-captions.md).
+
 ## Purpose
 
 This is a planning document only. It does not authorize a production rewrite

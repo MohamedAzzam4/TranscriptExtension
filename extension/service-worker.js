@@ -1,4 +1,6 @@
 importScripts(
+  "youtube-captions.js",
+  "youtube-worker.js",
   "learning-features.js",
   "persistence-safety.js",
   "translation-readiness.js",
@@ -23,6 +25,8 @@ const NETFLIX_RESEARCH_LAST_KEY = "lastNetflixResearchId";
 const NETFLIX_RESEARCH_LIMIT = 60;
 const NATIVE_HOST_NAME = "com.dub_transcript_lab.recognizer";
 const learning = globalThis.DubTranscriptLearning;
+const youtubeWorker = globalThis.DubYouTubeWorker.create({ chrome, learning, captions: globalThis.DubYouTubeCaptions,
+  saveExperiment, saveLibrary: saveTranscriptToLibrary, getLibrary: getTranscriptLibraryRecord, maxRecordBytes: TRANSCRIPT_LIBRARY_BYTES_LIMIT });
 const netflixResearch = globalThis.DubTranscriptNetflixResearch;
 const networkMedia = globalThis.DubTranscriptNetworkMedia;
 const localMedia = globalThis.DubTranscriptLocalMedia;
@@ -36,6 +40,7 @@ let translationDiagnostic = null;
 let nativeHostPort = null;
 let nativeHostWaiter = null;
 let batchNativeMessageQueue = Promise.resolve();
+let transcriptLibraryWriteQueue = Promise.resolve();
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
@@ -45,12 +50,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
+  youtubeWorker.cancel(tabId);
   networkMediaStore.clearTab(tabId);
   void stopIfActiveTab(tabId);
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
+    youtubeWorker.cancel(tabId);
     networkMediaStore.clearTab(tabId);
     void stopIfActiveTab(tabId);
   }
@@ -58,10 +65,26 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 async function handleMessage(message, sender) {
   await ensureSafePersistenceMigration();
+  if (message.type?.startsWith('YOUTUBE_')) {
+    if (message.type === 'YOUTUBE_BEGIN' && sender.frameId === 0
+      && globalThis.DubYouTubeCaptions.videoId(sender.tab?.url) === message.videoId) {
+      const active = await getActive();
+      if (active?.tabId === sender.tab.id) await stopExperiment();
+    }
+    return youtubeWorker.handle(message, sender);
+  }
   switch (message.type) {
     case "START_EXPERIMENT":
       return startSmartExperiment(message.settings);
     case "STOP_EXPERIMENT":
+      if (chrome.tabs.query) {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const stored = (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY] || {};
+        if (globalThis.DubYouTubeCaptions.videoId(tab?.url) && learning.normalizeYouTubePreferences(stored.youtubePreferences).mode !== 'audio') {
+          await chrome.tabs.sendMessage(tab.id, { type: 'YT_STOP' }, { frameId: 0 });
+          return {};
+        }
+      }
       await stopExperiment();
       return {};
     case "EXPORT_LAST_EXPERIMENT":
@@ -174,6 +197,13 @@ async function handleMessage(message, sender) {
 }
 
 async function startSmartExperiment(settings) {
+  const [youtubeTab] = chrome.tabs.query ? await chrome.tabs.query({ active: true, currentWindow: true }) : [];
+  if (globalThis.DubYouTubeCaptions.videoId(youtubeTab?.url) && learning.normalizeYouTubePreferences(settings?.youtubePreferences).mode !== 'audio') {
+    if (!learning.normalizeYouTubePreferences(settings?.youtubePreferences).enabled) throw new Error('YouTube learning captions are off. Enable them or choose local audio transcription explicitly.');
+    const result = await chrome.tabs.sendMessage(youtubeTab.id, { type: 'YT_RETRIEVE_NOW' }, { frameId: 0 });
+    if (!result?.ok) throw new Error(result?.error || 'Reload the YouTube page to activate automatic learning captions.');
+    return { mode: 'youtube-captions' };
+  }
   settings = normalizeRuntimeSettings(settings);
   validateSettings(settings);
   const existing = await getActive();
@@ -2003,6 +2033,8 @@ async function getOverlayDiagnosticDetails(experimentId) {
 }
 
 async function getVisibleDiagnostics() {
+  const youtubeDiagnostics = await youtubeWorker.visibleDiagnostics();
+  if (youtubeDiagnostics) return { diagnostics: youtubeDiagnostics };
   const storageDiagnostic = await getLocalStorageDiagnostic();
   const active = await getActive();
   const stored = await chrome.storage.local.get(LAST_KEY);
@@ -2246,7 +2278,7 @@ async function exportLastTranscriptText() {
   const id = stored[LAST_KEY];
   if (!id) throw new Error("Analyze a video before downloading its transcript.");
   const experiment = await getExperiment(id);
-  if (!experiment?.asrSegments?.length) {
+  if (!(experiment?.transcriptSource?.provider === 'youtube' ? experiment.captionSegments : experiment?.asrSegments)?.length) {
     throw new Error("The last experiment does not contain a transcript yet.");
   }
   return transcriptTextExport(experiment);
@@ -2979,10 +3011,18 @@ function hasCompleteLiveCoverage(experiment) {
 }
 
 async function saveTranscriptToLibrary(experiment) {
+  // Automatic caption retrieval can finish in several tabs at once. Keep the
+  // index read/retain/write decision atomic with respect to other library saves.
+  const task = transcriptLibraryWriteQueue.catch(() => {}).then(() => writeTranscriptToLibrary(experiment));
+  transcriptLibraryWriteQueue = task;
+  return task;
+}
+
+async function writeTranscriptToLibrary(experiment) {
   const identity = experiment?.page?.videoIdentity
     || learning.stableVideoIdentity(experiment?.page?.url, experiment?.audioLanguage);
   const key = learning.transcriptStorageKey(identity);
-  const segments = sanitizeTranscriptSegments(experiment?.asrSegments);
+  const segments = sanitizeTranscriptSegments(experiment?.transcriptSource?.provider === 'youtube' ? experiment.captionSegments : experiment?.asrSegments);
   if (!identity || !key || !segments.length) return null;
   const duration = Math.max(
     Number(experiment.page?.duration) || 0,
@@ -3000,6 +3040,8 @@ async function saveTranscriptToLibrary(experiment) {
     duration: round(duration),
     segmentCount: segments.length,
     sourceExperimentId: experiment.id || null,
+    ...(experiment.transcriptSource ? { transcriptSource: experiment.transcriptSource } : {}),
+    ...(experiment.transcriptTranslations?.length ? { transcriptTranslations: experiment.transcriptTranslations } : {}),
     savedAt: now,
     updatedAt: now,
     segments
@@ -3026,11 +3068,11 @@ async function saveTranscriptToLibrary(experiment) {
   if (!retainedKeys.has(key)) {
     throw new Error("This transcript is too large for the browser-local transcript library.");
   }
-  if (removed.length) await chrome.storage.local.remove(removed.map((entry) => entry.key));
   await persistLocal({
     [key]: record,
     [TRANSCRIPT_LIBRARY_INDEX_KEY]: retained
   });
+  if (removed.length) await chrome.storage.local.remove(removed.map((entry) => entry.key));
   return metadata;
 }
 
@@ -3065,6 +3107,7 @@ function sanitizeTranscriptSegments(rawSegments) {
         text,
         complete: segment.complete !== false,
         boundary: String(segment.boundary || "sentence").slice(0, 40),
+        ...(segment.timing ? { timing: String(segment.timing).slice(0, 40) } : {}),
         ...(words.length ? { words } : {})
       };
     })
@@ -3107,7 +3150,8 @@ function transcriptLibraryMetadata(record) {
     duration: record.duration,
     segmentCount: record.segmentCount,
     bytes: record.bytes,
-    updatedAt: record.updatedAt
+    updatedAt: record.updatedAt,
+    ...(record.transcriptSource ? { transcriptSource: record.transcriptSource } : {})
   };
 }
 
@@ -3144,6 +3188,7 @@ async function ensureContentScripts(tabId) {
       key: "application",
       files: [
         "typography.js",
+        "word-interactions.js",
         "learning-features.js",
         "german-pronunciation.js",
         "transcript-groups.js",
@@ -3430,6 +3475,7 @@ function normalizeRuntimeSettings(settings = {}) {
     batchModel: String(settings.batchModel || "small").slice(0, 64),
     syncOffset: normalizeSyncOffset(settings.syncOffset),
     captionPreferences: learning.normalizeCaptionPreferences(settings.captionPreferences),
+    youtubePreferences: learning.normalizeYouTubePreferences(settings.youtubePreferences),
     translationPreferences: learning.normalizeTranslationPreferences(
       settings.translationPreferences
     )

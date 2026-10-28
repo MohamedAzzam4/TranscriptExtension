@@ -24,6 +24,11 @@ const elements = {
   textOpacityValue: document.querySelector("#textOpacityValue"),
   fontFamily: document.querySelector("#fontFamily"),
   transcriptBold: document.querySelector("#transcriptBold"),
+  highlightCurrentWord: document.querySelector("#highlightCurrentWord"),
+  pauseOnWordHover: document.querySelector("#pauseOnWordHover"),
+  youtubeEnabled: document.querySelector("#youtubeEnabled"),
+  youtubeMode: document.querySelector("#youtubeMode"),
+  youtubeTranslationSource: document.querySelector("#youtubeTranslationSource"),
   edgeStyle: document.querySelector("#edgeStyle"),
   textColor: document.querySelector("#textColor"),
   translationFontSize: document.querySelector("#translationFontSize"),
@@ -74,6 +79,7 @@ const elements = {
   connectionState: document.querySelector("#connectionState"),
   sessionTitle: document.querySelector("#sessionTitle"),
   activePlatform: document.querySelector("#activePlatform"),
+  sourceModeBadge: document.querySelector("#sourceModeBadge"),
   activeVideoDescription: document.querySelector("#activeVideoDescription"),
   previewTranscript: document.querySelector("#previewTranscript"),
   previewTranslation: document.querySelector("#previewTranslation"),
@@ -169,6 +175,20 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return;
   if (changes.savedVocabulary) renderSavedWords([...learning.savedVocabularyIndex(changes.savedVocabulary.newValue).values()]);
   if (changes.transcriptLibraryIndex) void refreshTranscriptLibrary();
+  if (changes.experimentSettings) {
+    const settings = changes.experimentSettings.newValue || {};
+    const preferences = learning.normalizeYouTubePreferences(settings.youtubePreferences);
+    elements.youtubeEnabled.checked = preferences.enabled;
+    elements.youtubeMode.value = preferences.mode;
+    elements.youtubeTranslationSource.value = preferences.translationSource;
+    elements.audioLanguage.value = settings.audioLanguage || elements.audioLanguage.value;
+    const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
+    elements.translationEnabled.checked = translation.enabled;
+    setLanguageValue(elements.translationLanguage, translation.targetLanguage);
+    applyAppearanceToControls(learning.normalizeCaptionPreferences(settings.captionPreferences), translation);
+    renderControls();
+    void refreshActiveVideo();
+  }
 });
 
 function openView(name) {
@@ -239,6 +259,11 @@ for (const element of [
   elements.textOpacity,
   elements.fontFamily,
   elements.transcriptBold,
+  elements.highlightCurrentWord,
+  elements.pauseOnWordHover,
+  elements.youtubeEnabled,
+  elements.youtubeMode,
+  elements.youtubeTranslationSource,
   elements.edgeStyle,
   elements.textColor,
   elements.translationFontSize,
@@ -269,7 +294,7 @@ elements.start.addEventListener("click", async () => {
       settings
     });
     if (!response?.ok) throw new Error(response?.error || "Could not start the experiment.");
-    setStatus(response.mode === "batch"
+    setStatus(response.mode === 'youtube-captions' ? 'Retrieving YouTube subtitles. No audio transcription is being started.' : response.mode === "batch"
       ? "Full-video analysis started. Playback will begin when the transcript is ready."
       : response.mode === "library"
         ? "Saved transcript restored. Playback started without transcribing again."
@@ -418,6 +443,10 @@ async function restoreState() {
     for (const filter of document.querySelectorAll("[data-word-filter]")) filter.setAttribute("aria-pressed", String(filter.dataset.wordFilter === wordFilter));
   }
   const settings = stored[SETTINGS_KEY] || {};
+  const youtube = learning.normalizeYouTubePreferences(settings.youtubePreferences);
+  elements.youtubeEnabled.checked = youtube.enabled;
+  elements.youtubeMode.value = youtube.mode;
+  elements.youtubeTranslationSource.value = youtube.translationSource;
   const caption = learning.normalizeCaptionPreferences(settings.captionPreferences);
   const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
 
@@ -465,7 +494,9 @@ async function refreshActiveVideo() {
     elements.sessionTitle.textContent = tab.title || "Current video";
     elements.sessionTitle.title = tab.title || "Current video";
     elements.activePlatform.textContent = page.hostname.replace(/^www\./, "");
-    elements.activeVideoDescription.textContent = "Transcribe the spoken audio, translate it, and collect new words.";
+    const subtitles = /(^|\.)youtube\.com$/.test(page.hostname) && elements.youtubeMode.value !== 'audio';
+    elements.sourceModeBadge.textContent = subtitles ? 'YouTube subtitles' : 'Local audio';
+    elements.activeVideoDescription.textContent = subtitles ? 'YouTube subtitles are retrieved automatically. Translate them and collect new words.' : 'Transcribe the spoken audio, translate it, and collect new words.';
   } catch {
     // A popup opened directly may not have an activeTab grant. Keep the honest idle copy.
   }
@@ -567,6 +598,7 @@ function readSettings() {
     captionLanguage: elements.captionLanguage.value.trim() || "de",
     collectCaptions: elements.collectCaptions.checked,
     batchModel: "small",
+    youtubePreferences: learning.normalizeYouTubePreferences({ enabled: elements.youtubeEnabled.checked, mode: elements.youtubeMode.value, translationSource: elements.youtubeTranslationSource.value }),
     syncOffset: currentSyncOffset,
     captionPreferences: learning.normalizeCaptionPreferences({
       fontSize: elements.fontSize.value,
@@ -576,6 +608,8 @@ function readSettings() {
       textOpacity: elements.textOpacity.value,
       fontFamily: elements.fontFamily.value,
       bold: elements.transcriptBold.checked,
+      highlightCurrentWord: elements.highlightCurrentWord.checked,
+      pauseOnWordHover: elements.pauseOnWordHover.checked,
       edgeStyle: elements.edgeStyle.value,
       textColor: elements.textColor.value,
       backgroundColor: elements.backgroundColor.value
@@ -646,6 +680,8 @@ function applyAppearanceToControls(caption, translation) {
   elements.textOpacity.value = caption.textOpacity;
   elements.fontFamily.value = caption.fontFamily;
   elements.transcriptBold.checked = caption.bold;
+  elements.highlightCurrentWord.checked = caption.highlightCurrentWord;
+  elements.pauseOnWordHover.checked = caption.pauseOnWordHover;
   elements.edgeStyle.value = caption.edgeStyle;
   elements.textColor.value = caption.textColor.toLowerCase();
   elements.translationFontSize.value = translation.fontSize;
@@ -663,7 +699,9 @@ async function resetAppearance() {
     provider: elements.translationProvider.value
   });
   applyAppearanceToControls(
-    learning.DEFAULT_CAPTION_PREFERENCES,
+    { ...learning.DEFAULT_CAPTION_PREFERENCES,
+      highlightCurrentWord: elements.highlightCurrentWord.checked,
+      pauseOnWordHover: elements.pauseOnWordHover.checked },
     {
       ...learning.DEFAULT_TRANSLATION_PREFERENCES,
       enabled: currentTranslation.enabled,
@@ -747,7 +785,7 @@ function renderTranscriptLibrary(entries) {
       createTextElement("div", entry.title || "Untitled video", "saved-word-title"),
       createTextElement(
         "div",
-        `${entry.audioLanguage || "?"} · ${entry.segmentCount || 0} segments`,
+        `${entry.audioLanguage || "?"} · ${entry.segmentCount || 0} segments${entry.transcriptSource ? ` · ${entry.transcriptSource.kind === 'youtube-manual-caption' ? 'Creator subtitles' : 'Automatic captions'}` : ''}`,
         "saved-word-definition"
       )
     );

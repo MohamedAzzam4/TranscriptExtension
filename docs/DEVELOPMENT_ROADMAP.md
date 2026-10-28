@@ -28,6 +28,18 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP3.1/3.2/3.4/3.5 and WP2.2/2.4/2.5 candidate0.12.0 implements
+automatic YouTube caption retrieval, creator subtitles before original automatic
+captions, browser-first/subtitle-only yt-dlp fallback, optional YouTube translation,
+source-aware history/export/diagnostics and an in-player settings button. Global
+word highlight/pause-on-hover settings share popup/player storage. Local23syntax
+checks,26extension suites and56server tests pass. Actual retrieval/player layout/
+fullscreen/hover/upgrade acceptance remains unverified while browser testing is
+paused. Candidate Experimental; overall Needs development until required browser
+evidence. Prior dictionary gaps unchanged. See `YOUTUBE_CAPTIONS_IMPLEMENTATION.md`
+and `test-results/0.12.0-youtube-captions.md`. This supersedes the earlier automatic-
+transcript-only/no-YouTube-translation/automatic-ASR-fallback decisions.
+
 2026-10-28 WP2.2/WP2.4/WP2.5 candidate0.11.5 establishes shared Open Sans
 typography and12/14/16/18/22px roles; Home/Videos titles are16px. Caption
 preferences remain independent. Local18syntax checks,23extension suites and
@@ -198,7 +210,7 @@ continues; no release pass or pushed-checkpoint claim follows from delegation.
 | WP4.1 | Experimental | On 2026-07-23 the user confirmed that current-version full-audio analysis works on YouTube, AniWorld, and AnimeKai. Version 0.10.4 adds a same-origin loopback-video candidate after the 0.10.3 worker correctly rejected `127.0.0.1`; its real-browser local MP4 check is pending. The multi-sample manual matrix remains incomplete. |
 | WP4.1a | Planned | Measure and improve clear-media preparation speed, especially segmented or muxed HLS on AniWorld, without changing language selection, cue coverage, privacy, cache behavior, or the passing YouTube/AnimeKai paths. |
 | WP4.2 | Blocked/paused | Netflix test computer is temporarily unavailable. |
-| WP3.1/3.4 YouTube caption-first | Planned | Caption tracks are currently evaluation-only. The next candidate must add source-honest selection before reusing an original automatic track. |
+| WP3.1/3.4 YouTube caption-first | Experimental candidate |0.12.0 implements creator-first/original-auto-second source selection, automatic browser retrieval/subtitle-only yt-dlp fallback and explicit source provenance. Local fixtures pass; live retrieval/player/browser gate unverified. See `test-results/0.12.0-youtube-captions.md`. |
 | WP3.2 YouTube ASR timing | Needs evidence | The 0.10.4 change did not modify the YouTube clock/decode path. Add sanitized timing instrumentation and require beginning/middle/end evidence before correction. |
 | WP1.3 saved-word marking | Experimental candidate | Version 0.11.0 source marks exact normalized saved forms across batch/live/cache cues and storage changes. The first candidate passed automated overlay coverage; current word-card corrections and combined browser gates remain unverified while testing is paused. |
 

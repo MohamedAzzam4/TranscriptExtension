@@ -21,7 +21,7 @@ import time
 from dataclasses import dataclass, replace
 from difflib import SequenceMatcher
 from typing import Iterable
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, parse_qs, urlencode, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 # CTranslate2 loads these DLLs lazily when inference begins, so the directory
@@ -52,7 +52,7 @@ MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_HLS_SEGMENT_BYTES = 64 * 1024 * 1024
 MAX_HLS_SEGMENTS = 5_000
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.10.4"
+WORKER_VERSION = "0.12.0"
 
 
 @dataclass(frozen=True)
@@ -1799,10 +1799,90 @@ def batch_worker_diagnostics() -> dict:
     return details
 
 
+def youtube_caption_only(request: dict) -> None:
+    """Use the installed native transport without audio acquisition/model loading."""
+    import yt_dlp
+    job_id = str(request["jobId"])
+    page_url = validate_public_http_url(request.get("sourceUrl"), youtube_only=True)
+    language = normalize_language(request.get("language") or "de")
+    target = normalize_language(request.get("targetLanguage") or "")
+    options = {"skip_download": True, "noplaylist": True, "quiet": True,
+               "no_warnings": True, "socket_timeout": 12, "retries": 1,
+               "ignore_no_formats_error": True,
+               "extractor_args": {"youtube": {"skip": ["hls", "dash", "translated_subs"]}}}
+    with yt_dlp.YoutubeDL(options) as downloader:
+        info = downloader.extract_info(page_url, download=False)
+    expected_id = parse_qs(urlsplit(page_url).query).get('v', [None])[-1]
+    if expected_id and info.get('id') and info['id'] != expected_id:
+        raise ValueError('Caption metadata belongs to another video.')
+    if info.get("is_live"):
+        raise ValueError("Live captions require a separate rolling session.")
+    tracks = []
+    for kind, field in (("manual", "subtitles"), ("automatic", "automatic_captions")):
+        for code, formats in (info.get(field) or {}).items():
+            for item in formats or []:
+                if item.get("ext") != "json3" or not item.get("url"):
+                    continue
+                parsed = urlsplit(item["url"])
+                if parsed.scheme != 'https' or parsed.username or parsed.password or not (
+                    (parsed.hostname or '').endswith('.youtube.com') or parsed.hostname in ('youtube.com', 'video.google.com')
+                ) or parsed.path not in ('/api/timedtext', '/timedtext'):
+                    continue
+                query = parse_qs(parsed.query)
+                original = normalize_language(query.get("lang", [code.removesuffix("-orig")])[-1])
+                if query.get("tlang") or original.split("-")[0] != normalize_language(code.removesuffix("-orig")).split("-")[0]:
+                    continue
+                if original.split("-")[0] != language.split("-")[0]:
+                    continue
+                identifier = f"{'a' if kind == 'automatic' else ''}.{original}"
+                if any(track["id"] == identifier for track in tracks):
+                    break
+                tracks.append({"id": identifier, "kind": kind, "language": original,
+                               "name": str(item.get("name") or original)[:180], "url": item["url"]})
+                break
+    selected_id = str(request.get("trackId") or "")
+    track = next((track for track in tracks if track["id"] == selected_id), None) if selected_id else next(iter(tracks), None)
+    if not track:
+        raise ValueError("No matching creator-provided or original automatic subtitle track is available.")
+
+    def read_track(url):
+        # The established bounded HTTP/redirect reader remains the only network
+        # edge. Its temporary selection container cannot choose another track.
+        field = "subtitles" if track["kind"] == "manual" else "automatic_captions"
+        temporary = {field: {language: [{"ext": "json3", "url": url}]}, "http_headers": info.get("http_headers") or {}}
+        answer = download_youtube_answer_key(temporary, language)
+        return answer.segments if answer else []
+
+    segments = read_track(track["url"])
+    if not segments:
+        raise ValueError("The subtitle track is empty.")
+    for segment in segments:
+        segment["timing"] = "estimated-within-cue"
+    for offset in range(0, len(segments), RESULT_CHUNK_SIZE):
+        emit("batch_captions", job_id, segments=segments[offset:offset + RESULT_CHUNK_SIZE])
+    if target and target != language:
+        try:
+            parsed = urlsplit(track["url"])
+            query = parse_qs(parsed.query); query["tlang"] = [target]
+            translated_url = urlunsplit(parsed._replace(query=urlencode(query, doseq=True)))
+            translated = read_track(translated_url)
+            for offset in range(0, len(translated), RESULT_CHUNK_SIZE):
+                emit("batch_translation_captions", job_id, segments=translated[offset:offset + RESULT_CHUNK_SIZE])
+        except Exception:
+            pass  # Original stays available; extension translation can fall back.
+    public_track = {key: value for key, value in track.items() if key != "url"}
+    emit("batch_complete", job_id, captionsOnly=True, track=public_track,
+         tracks=[{key: value for key, value in item.items() if key != "url"} for item in tracks],
+         segmentCount=0, captionSegmentCount=len(segments))
+
+
 def run(request: dict) -> None:
     job_id = str(request.get("jobId") or "")
     if not job_id:
         raise ValueError("The batch request is missing its job ID.")
+    if request.get("captionsOnly") is True:
+        youtube_caption_only(request)
+        return
     language = str(request.get("language") or "de")[:16]
     model_name = str(request.get("model") or "small")[:64]
 

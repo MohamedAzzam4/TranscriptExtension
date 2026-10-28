@@ -109,6 +109,7 @@ assert.deepEqual(
   scriptInjections[2].files,
   [
     "typography.js",
+    "word-interactions.js",
     "learning-features.js",
     "german-pronunciation.js",
     "transcript-groups.js",

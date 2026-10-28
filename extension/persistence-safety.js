@@ -2,12 +2,12 @@
   if (globalThis.DubPersistenceSafety) return;
   const learning = globalThis.DubTranscriptLearning;
   // Explicit persisted contracts. Acquisition objects never cross this boundary.
-  const experimentFields = new Set('schemaVersion id createdAt finishedAt platform page audioLanguage captionLanguage captionsUsedAsInput settings pipeline epochs asrSegments captionSegments evaluation audioCoverage runtimeSamples transcriptReference'.split(' '));
+  const experimentFields = new Set('schemaVersion id createdAt finishedAt platform page audioLanguage captionLanguage captionsUsedAsInput settings pipeline epochs asrSegments captionSegments evaluation audioCoverage runtimeSamples transcriptReference transcriptSource transcriptTranslations'.split(' '));
   const pageFields = new Set('title url videoIdentity playerFrameUrl duration'.split(' '));
-  const libraryFields = new Set('schemaVersion key identity title url platform audioLanguage duration segmentCount sourceExperimentId savedAt updatedAt segments bytes'.split(' '));
+  const libraryFields = new Set('schemaVersion key identity title url platform audioLanguage duration segmentCount sourceExperimentId savedAt updatedAt segments bytes transcriptSource transcriptTranslations'.split(' '));
   const vocabularyFields = new Set('word normalizedWord title germanDefinition germanDefinitions senses lemma definitionLemma example exampleTranslation examples isVerb pronunciation grammar context contextTranslation clip video germanSourceUrl dictionaryContract savedAt englishDefinition englishDefinitions englishSourceUrl directMeanings partOfSpeech grammarNotes'.split(' '));
   const nestedFields = new Set(('id key identity title url videoIdentity playerFrameUrl platform audioLanguage captionLanguage createdAt finishedAt savedAt updatedAt schemaVersion '
-    + 'requested mode status sourceKind sourceHost sourceExperimentId sourceTranscriptSavedAt transcriptIdentity transcriptKey transcriptReference selectedAudioTrack selectedAudio audioTrack '
+    + 'transcriptSource transcriptTranslations segments retrieval translatable highlightCurrentWord pauseOnWordHover youtubePreferences translationSource captionTrackId requested mode status sourceKind sourceHost sourceExperimentId sourceTranscriptSavedAt transcriptIdentity transcriptKey transcriptReference selectedAudioTrack selectedAudio audioTrack '
     + 'model device computeType beamSize duration progress downloadProgress downloadedBytes downloadBytesPerSecond decodeProgress decodedSeconds acquisitionKind fallbackReason fallbackError '
     + 'diagnostics discoveryDiagnostics candidateSummary candidates diagnosticsVersion version attempts selectedAttempt browserDecoder state phase kind reason error message action label value code '
     + 'attempt index startedAt completedAt elapsedSeconds elapsedMs bytes totalBytes bytesPerSecond mediaSeconds decodedFrames decodedSamples sampleRate channels codec container supported available '
