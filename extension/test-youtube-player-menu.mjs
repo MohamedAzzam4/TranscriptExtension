@@ -55,7 +55,8 @@ const document = {
   documentElement: root,
   querySelector: selector => selector === '#movie_player' ? player : null,
   createElement: tag => new Element(tag),
-  addEventListener(name, fn) { (docListeners[name] ||= []).push(fn); }
+  addEventListener(name, fn) { (docListeners[name] ||= []).push(fn); },
+  removeEventListener(name, fn) { docListeners[name] = (docListeners[name] || []).filter(value => value !== fn); }
 };
 const context = vm.createContext({ console, URL, document,
   location: { href: 'https://www.youtube.com/', origin: 'https://www.youtube.com' },
@@ -72,7 +73,7 @@ const context = vm.createContext({ console, URL, document,
     } }, storage: { local: { async get() { return { experimentSettings: settings }; } },
     onChanged: { addListener(fn) { storageListeners.push(fn); } } } }
 });
-for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-menu.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
+for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-menu.js', 'youtube-playback.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
 const flush = async () => { for (let i = 0; i < 15; i++) await Promise.resolve(); };
 await flush();
 const trigger = () => controls.children[0].shadowRoot.querySelector('.trigger');

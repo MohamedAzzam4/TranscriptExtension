@@ -1,5 +1,13 @@
 # Experiment matrix
 
+2026-10-28 progressive YouTube candidate0.12.4:25syntax checks,29extension
+suites and56server tests pass. A new blocked-translation/cache test fails on
+0.12.3 because no source overlay starts, then passes after source-first repair.
+Local mocks cover delayed/failed target/cache/native retrieval, stale navigation,
+in-place render, preparation feedback and guarded autoplay/rejection/user intent.
+No actual Chrome/media check; original paused-start cause unconfirmed. Experimental;
+see `docs/test-results/0.12.4-progressive-start.md`.
+
 2026-10-28 dropdown fit candidate0.12.3:24syntax checks,27extension suites,
 56server tests pass; all popup select IDs/option values match0.12.2. Smaller
 dropdown typography/full-width provider/concise labels applied; no real Chrome

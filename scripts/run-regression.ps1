@@ -30,6 +30,7 @@ $syntaxFiles = @(
     "youtube-page.js",
     "youtube-controller.js",
     "youtube-menu.js",
+    "youtube-playback.js",
     "youtube-worker.js",
     "word-interactions.js",
     "typography.js",

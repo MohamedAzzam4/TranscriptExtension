@@ -26,6 +26,16 @@
       -webkit-font-smoothing: antialiased;
     }
     .menu[hidden] { display: none; }
+    .preparation-notice {
+      position: absolute; top: 16px; left: 16px; max-width: min(360px, calc(100% - 32px));
+      padding: 8px 12px; border: 1px solid #56745e; border-radius: 8px;
+      background: #101a14ed; color: #f0f3ee; pointer-events: none;
+      font: 400 12px/1.5 var(--ui-font, "Segoe UI", Tahoma, sans-serif);
+      text-shadow: none; letter-spacing: normal; overflow-wrap: anywhere;
+      opacity: 0; transition: opacity .3s;
+    }
+    .preparation-notice[data-visible="true"] { opacity: 1; }
+    .preparation-notice[hidden] { display: none; }
     .menu-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 12px 12px 18px; border-bottom: 1px solid var(--menu-border); }
     .menu-eyebrow { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--menu-accent); }
     .menu-title { margin: 0; font: 700 var(--ui-size-section, 18px)/1.35 var(--ui-font, "Segoe UI", Tahoma, sans-serif); color: var(--menu-text); }

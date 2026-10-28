@@ -9,6 +9,8 @@
   let activeAudioLanguage = '', lastAudioProbe = 0, audioProbePending = false;
   let signature = '', suppressStyle = null, controlsStyle = null;
   let statusText = '', statusLevel = 'idle';
+  let notice = null, noticeTimer = null, preparationText = '', playbackNotice = '';
+  let playback = null, playbackMedia = null, playbackVideoId = null, playbackState = {};
   const pending = new Map();
   function preferences() { return learning.normalizeYouTubePreferences(settings.youtubePreferences); }
   function request(type, fields = {}) {
@@ -27,10 +29,23 @@
     for (const { resolve, timer } of pending.values()) { clearTimeout(timer); resolve(null); }
     pending.clear();
   }
-  function setStatus(text, level = 'working') {
+  function renderNotice() {
+    if (!notice) return;
+    const text = [preparationText, playbackNotice].filter(Boolean).join(' · ');
+    const visible = Boolean(text) && !document.querySelector('#movie_player.ad-showing, #movie_player.ad-interrupting');
+    if (text && text !== notice.textContent) notice.textContent = text;
+    notice.hidden = !notice.textContent;
+    notice.dataset.visible = String(visible);
+    notice.setAttribute('aria-hidden', String(!visible));
+  }
+  function setStatus(text, level = 'working', compactText = '') {
     statusText = text; statusLevel = level;
+    clearTimeout(noticeTimer);
+    preparationText = level === 'idle' ? '' : compactText || (level === 'success' ? 'Subtitles ready' : text);
+    renderNotice();
+    if (level === 'success') noticeTimer = setTimeout(() => { preparationText = ''; renderNotice(); }, 2000);
     renderMenuStatus();
-    if (requestId) void request('YOUTUBE_STATE', { stage: level === 'success' ? 'YouTube captions ready' : level === 'warning' ? hasSession ? 'YouTube captions ready with a warning' : 'YouTube captions unavailable' : level === 'idle' ? 'YouTube captions stopped' : 'Retrieving YouTube captions', message: text, level }).catch(() => {});
+    if (requestId) void request('YOUTUBE_STATE', { stage: level === 'success' ? 'YouTube captions ready' : level === 'warning' ? hasSession ? 'YouTube captions ready with a warning' : 'YouTube captions unavailable' : level === 'idle' ? 'YouTube captions stopped' : hasSession ? 'Preparing YouTube translation' : 'Retrieving YouTube captions', message: [text, playbackNotice].filter(Boolean).join(' '), level }).catch(() => {});
   }
   function snapshot() {
     return new Promise(resolve => {
@@ -71,6 +86,7 @@
       return result;
     };
     try {
+      setStatus('Preparing subtitles…');
       await scoped('YOUTUBE_BEGIN'); setStatus('Looking for YouTube subtitle tracks…');
       let metadata = null;
       for (let attempt = 0; attempt < 5 && valid(); attempt++) {
@@ -107,31 +123,20 @@
         if (selectedId !== 'auto' && !track) throw new Error('That source track is unavailable for the current spoken language. Choose Auto or another track.');
         setStatus('Browser captions unavailable. Trying the subtitle-only local helper…');
         const result = await scoped('YOUTUBE_NATIVE_CAPTIONS', { language, duration,
-          trackId: selectedId === 'auto' ? '' : track?.id, targetLanguage: useYouTubeTranslation ? targetLanguage : '' });
+          trackId: selectedId === 'auto' ? '' : track?.id, targetLanguage: '' });
         segments = result.segments; track = result.track; retrieval = 'yt-dlp';
         if (!track || captions.baseLanguage(track.language) !== captions.baseLanguage(language)) throw new Error('No source transcript matches the selected spoken language.');
         sourceTracks = result.tracks?.length ? result.tracks : [track]; drawTracks();
         platformTranslations = result.translationSegments || [];
       }
-      if (useYouTubeTranslation && !platformTranslations.length && track.url && track.translatable && (!metadata?.translationLanguages?.length || metadata.translationLanguages.includes(targetLanguage))) {
-        try { platformTranslations = (await scoped('YOUTUBE_FETCH_CAPTIONS', { url: track.url, targetLanguage, duration })).segments; }
-        catch { /* Original remains usable; Chrome/configured Cloud translates visible cues. */ }
-      }
-      let saved, cacheWarning = '';
-      try {
-        saved = await scoped(cached ? 'YOUTUBE_BIND_CACHE' : 'YOUTUBE_SAVE_TRANSCRIPT', { track, segments, duration,
-          title: metadata?.title || document.title, retrieval, translationSegments: platformTranslations, targetLanguage });
-      } catch (error) {
-        if (!valid()) return;
-        cacheWarning = ` Video-history caching failed: ${error.message} Captions remain available in this tab.`;
-        saved = { experimentId: `youtube-preview-${requestId}` };
-      }
       if (!valid()) return;
-      globalThis.DubYouTubeOverlay.start({ experimentId: saved.experimentId, segments,
+      const translationPending = useYouTubeTranslation && !platformTranslations.length;
+      const youtubeRequest = { videoId: id, requestId };
+      globalThis.DubYouTubeOverlay.start({ experimentId: `youtube-preview-${requestId}`, segments,
         captionPreferences: settings.captionPreferences, translationPreferences: settings.translationPreferences,
         audioLanguage: track.language, syncOffset: Number(settings.syncOffset) || 0,
         platformTranslations, platformTranslationLanguage: platformTranslations.length ? targetLanguage : '',
-        youtubeRequest: { videoId: id, requestId },
+        platformTranslationPending: translationPending, youtubeRequest,
         sourceVideo: { key: captions.cacheIdentity(id, track), title: metadata?.title || document.title,
           url: `https://www.youtube.com/watch?v=${id}`, platform: 'youtube' } });
       hasSession = true;
@@ -140,7 +145,43 @@
       suppressStyle = document.createElement('style');
       suppressStyle.textContent = '#movie_player:not(.ad-showing):not(.ad-interrupting) .ytp-caption-window-container { visibility: hidden !important; }';
       document.documentElement.append(suppressStyle);
-      setStatus(`${cached ? 'Saved' : 'Using'} YouTube ${track.kind === 'manual' ? 'creator-provided subtitles' : 'automatic transcript'} (${track.language}). ${platformTranslations.length ? 'YouTube translation ready.' : 'Translation uses the extension provider when needed.'}${cacheWarning}`, cacheWarning ? 'warning' : 'success');
+      const sourceStatus = `${cached ? 'Saved' : 'Using'} YouTube ${track.kind === 'manual' ? 'creator-provided subtitles' : 'automatic transcript'} (${track.language}).`;
+      setStatus(sourceStatus, translationPending ? 'working' : 'success', translationPending ? 'Captions ready · preparing translation…' : 'Subtitles ready');
+      // Neither optional translation nor persistence can delay source rendering.
+      // Store source first, then bind target captions to that same library entry.
+      let cacheWarning = '';
+      const savedPromise = scoped(cached ? 'YOUTUBE_BIND_CACHE' : 'YOUTUBE_SAVE_TRANSCRIPT', { track, segments, duration,
+        title: metadata?.title || document.title, retrieval, translationSegments: platformTranslations, targetLanguage })
+        .catch(error => {
+          if (valid()) cacheWarning = ` Video-history caching failed: ${error.message} Captions remain available in this tab.`;
+          return null;
+        });
+      if (translationPending) {
+        try {
+          if (retrieval === 'yt-dlp') {
+            const translated = await scoped('YOUTUBE_NATIVE_CAPTIONS', { language, duration, trackId: track.id, targetLanguage });
+            if (translated.track?.id === track.id && translated.track?.language === track.language) platformTranslations = translated.translationSegments || [];
+          } else if (track.url && track.translatable && (!metadata?.translationLanguages?.length || metadata.translationLanguages.includes(targetLanguage))) {
+            platformTranslations = (await scoped('YOUTUBE_FETCH_CAPTIONS', { url: track.url, targetLanguage, duration })).segments;
+          }
+        } catch { /* Keep source visible; use Chrome/configured Cloud for visible cues. */ }
+        if (!valid()) return;
+        globalThis.DubYouTubeOverlay.update({ youtubeRequest, platformTranslations,
+          platformTranslationLanguage: platformTranslations.length ? targetLanguage : '', platformTranslationPending: false });
+      }
+      if (!valid()) return;
+      const readyText = `${sourceStatus} ${platformTranslations.length ? 'YouTube translation ready.' : 'Translation uses the extension provider when needed.'}`;
+      setStatus(readyText, 'success');
+      const saved = await savedPromise;
+      if (!valid()) return;
+      if (saved) {
+        globalThis.DubYouTubeOverlay.update({ youtubeRequest, experimentId: saved.experimentId });
+        if (translationPending && platformTranslations.length) {
+          try { await scoped('YOUTUBE_BIND_CACHE', { track, translationSegments: platformTranslations, targetLanguage }); }
+          catch (error) { if (valid()) cacheWarning = ` Translation caching failed: ${error.message} Captions remain available in this tab.`; }
+        }
+      }
+      if (valid() && cacheWarning) setStatus(`${readyText}${cacheWarning}`, 'warning');
     } catch (error) { if (valid()) setStatus(error.message, 'warning'); }
   }
   async function patch(fields) {
@@ -164,7 +205,8 @@
     status.title = statusText;
     status.setAttribute('aria-label', statusText || 'Settings save automatically');
     status.textContent = statusLevel === 'success' ? 'Subtitles ready · changes save automatically'
-      : statusLevel === 'working' ? 'Preparing subtitles…' : statusLevel === 'warning' ? statusText : 'Changes save automatically';
+      : statusLevel === 'working' ? hasSession ? 'Captions ready · preparing translation…' : 'Preparing subtitles…'
+      : statusLevel === 'warning' ? statusText : 'Changes save automatically';
   }
   function addControl(parent, label, value, change, type = 'checkbox', help = '') {
     const wrapper = document.createElement('label');
@@ -295,6 +337,8 @@
     button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 8h10M7 12h7M7 21h10"/></svg>';
     button.addEventListener('click', () => setMenuOpen(!menuOpen));
     shadow.append(button); menuShadow.append(style.cloneNode(true)); buildPanel(menuShadow);
+    notice = document.createElement('div'); notice.className = 'preparation-notice';
+    notice.setAttribute('role', 'status'); notice.setAttribute('aria-live', 'polite'); menuShadow.append(notice); renderNotice();
     for (const owner of [host, menuHost]) {
       for (const name of ['click', 'pointerdown', 'keydown']) owner.addEventListener(name, event => event.stopPropagation());
       owner.shadowRoot.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); setMenuOpen(false, true); } });
@@ -308,6 +352,20 @@
     const next = captions.videoId(location.href), media = document.querySelector('#movie_player video');
     mount();
     if (next && !media) return;
+    if (next !== playbackVideoId || media !== playbackMedia) {
+      playback?.dispose(); playback = null; playbackMedia = media;
+      if (next !== playbackVideoId) { playbackState = {}; playbackNotice = ''; preparationText = ''; clearTimeout(noticeTimer); }
+      playbackVideoId = next;
+      if (next && media) playback = globalThis.DubYouTubePlayback.create({ media, state: playbackState,
+        eligible: () => !disposed && !document.hidden && !stopped && preferences().enabled && preferences().mode !== 'audio'
+          && playerMetadata?.videoId === next
+          && !document.querySelector('#movie_player.ad-showing, #movie_player.ad-interrupting'),
+        report: (message, detail) => {
+          playbackNotice = message; renderNotice();
+          if (requestId) void request('YOUTUBE_OVERLAY_DIAGNOSTIC', { kind: 'playback', value: detail }).catch(() => {});
+        } });
+    }
+    void playback?.tick(); renderNotice();
     if (next !== videoId || (hasSession && lastVideo && media !== lastVideo)) {
       invalidate(); videoId = next; selectedId = 'auto'; sourceTracks = []; stopped = false; lastVideo = media; drawTracks(); void retrieve();
     }
@@ -325,6 +383,16 @@
     if (message.type === 'YT_RETRIEVE_NOW') { stopped = false; void retrieve(); respond({ ok: true }); }
     if (message.type === 'YT_STOP') { stopped = true; invalidate(true); setStatus('Learning captions stopped for this video.', 'idle'); respond({ ok: true }); }
   });
+  // Capture explicit playback intent before a deferred initial attempt. Settings
+  // clicks and word selection do not count as playback commands.
+  const playbackIntent = event => {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName)) return;
+    const path = event.composedPath();
+    if (path.includes(host) || path.includes(menuHost) || !path.includes(document.querySelector('#movie_player'))) return;
+    if ((event.type === 'keydown' && [' ', 'k', 'K', 'MediaPlayPause'].includes(event.key))
+      || (event.type === 'pointerdown' && (event.target === playbackMedia || event.target.closest?.('.ytp-play-button, .ytp-large-play-button')))) playback?.interrupt();
+  };
+  for (const name of ['keydown', 'pointerdown']) document.addEventListener(name, playbackIntent, true);
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes.experimentSettings) return;
     const previous = signature; settings = changes.experimentSettings.newValue || {};
@@ -343,7 +411,9 @@
   });
   document.addEventListener('pointerdown', event => { if (host && !event.composedPath().includes(host) && !event.composedPath().includes(menuHost)) { menuOpen = false; document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); if (panel) panel.hidden = true; host.shadowRoot.querySelector('.trigger').setAttribute('aria-expanded', 'false'); } }, true);
   let timer;
-  window.addEventListener('pagehide', () => { disposed = true; invalidate(); host?.remove(); menuHost?.remove(); controlsStyle?.remove(); document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); clearInterval(timer); });
+  window.addEventListener('pagehide', () => { disposed = true; invalidate(); playback?.dispose(); clearTimeout(noticeTimer);
+    for (const name of ['keydown', 'pointerdown']) document.removeEventListener(name, playbackIntent, true);
+    host?.remove(); menuHost?.remove(); controlsStyle?.remove(); document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); clearInterval(timer); });
   void chrome.storage.local.get('experimentSettings').then(stored => {
     settings = stored.experimentSettings || {}; signature = JSON.stringify([preferences(), settings.audioLanguage, learning.normalizeTranslationPreferences(settings.translationPreferences).targetLanguage, settings.translationPreferences?.enabled]);
     tick(); timer = setInterval(tick, 800);

@@ -110,6 +110,8 @@ await assert.rejects(handle({ type: 'YOUTUBE_SAVE_TRANSCRIPT', track: tracks[1],
   translationSegments: Array.from({ length: 2000 }, (_, index) => ({ start: index * 0.002, end: index * 0.002 + 0.001, text: 'x'.repeat(1900) })), targetLanguage: 'ar' }), /cache limit/);
 await handle({ type: 'YOUTUBE_OVERLAY_DIAGNOSTIC', kind: 'voice', value: 'German voice ready.' });
 assert.match(JSON.stringify((await context.getVisibleDiagnostics()).diagnostics), /German voice ready/);
+await handle({ type: 'YOUTUBE_OVERLAY_DIAGNOSTIC', kind: 'playback', value: 'Chrome blocked automatic playback — press Play.' });
+assert.match(JSON.stringify((await context.getVisibleDiagnostics()).diagnostics), /Playback.*Chrome blocked automatic playback/);
 await handle({ type: 'YOUTUBE_PATCH_SETTINGS', captionPreferences: { highlightCurrentWord: false, pauseOnWordHover: true } });
 assert.equal(local.experimentSettings.captionPreferences.pauseOnWordHover, true);
 assert.equal(local.experimentSettings.captionPreferences.highlightCurrentWord, false);

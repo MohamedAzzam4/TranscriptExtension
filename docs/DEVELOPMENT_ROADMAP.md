@@ -28,6 +28,16 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP3.1/WP3.4/WP2.4 candidate0.12.4 renders source captions before
+optional translation/cache, updates targets in place, and shows compact player
+preparation feedback. Native fallback requests source-only first. Initial
+playback is attempted once per video with readiness/ad/visibility/user-intent
+guards; rejected autoplay reports press Play. User's original pause cause remains
+unconfirmed; retrieval itself had no pause command. Local25syntax checks,
+29extension suites/56server tests pass. Browser autoplay/render/hover/fullscreen
+remain unverified under the pause. Experimental; broader Needs development
+remains. See `test-results/0.12.4-progressive-start.md`.
+
 2026-10-28 WP2.2/WP2.4/WP2.5 candidate0.12.3 adds a12px dropdown role,
 explicit option typography, full-width provider field and concise mode/provider
 labels. Language controls align when headings wrap. Existing option values and

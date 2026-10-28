@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -33,7 +33,7 @@
     },
     {
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
-      "js": ["typography.js", "learning-features.js", "german-pronunciation.js", "transcript-groups.js", "media-candidate.js", "local-media.js", "word-interactions.js", "youtube-captions.js", "content.js", "youtube-menu.js", "youtube-controller.js"],
+      "js": ["typography.js", "learning-features.js", "german-pronunciation.js", "transcript-groups.js", "media-candidate.js", "local-media.js", "word-interactions.js", "youtube-captions.js", "content.js", "youtube-menu.js", "youtube-playback.js", "youtube-controller.js"],
       "run_at": "document_idle"
     },
     {

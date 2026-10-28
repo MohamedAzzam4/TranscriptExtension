@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 28;
+  const CONTENT_SCRIPT_VERSION = 29;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -259,6 +259,7 @@
       sourceVideo: message.sourceVideo || null,
       platformTranslations: message.platformTranslations || [],
       platformTranslationLanguage: message.platformTranslationLanguage || '',
+      platformTranslationPending: Boolean(message.platformTranslationPending),
       collectCaptions: false,
       segments: message.segments || [],
       displayGroups: transcriptGroups.buildDisplayGroups(message.segments || []),
@@ -1358,6 +1359,9 @@
       const translated = globalThis.DubYouTubeCaptions?.alignTranslation(session.platformTranslations, session.displayedCue.start, session.displayedCue.end);
       if (translated) { showTranslation(translated, 'ready'); return; }
     }
+    if (session.youtubeCaptions && session.platformTranslationPending) {
+      showTranslation('Preparing translation…', 'pending'); return;
+    }
     const owner = session;
     const requestKey = translationSessionKey(text, preferences);
     const cached = session.translationCache.get(requestKey);
@@ -2456,6 +2460,17 @@
   // Publish readiness only after dependencies and message listeners initialized successfully.
   globalThis.DubYouTubeOverlay = {
     start: message => beginSession({ ...message, youtubeCaptions: true, collectCaptions: false }),
+    update(message) {
+      if (!session?.youtubeCaptions || session.youtubeRequest?.requestId !== message.youtubeRequest?.requestId
+        || session.youtubeRequest?.videoId !== message.youtubeRequest?.videoId) return;
+      if (message.experimentId) session.id = message.experimentId;
+      if (message.platformTranslations) {
+        session.platformTranslations = message.platformTranslations;
+        session.platformTranslationLanguage = message.platformTranslationLanguage || '';
+        session.platformTranslationPending = Boolean(message.platformTranslationPending);
+        void renderTranslation(session.displayedText || '');
+      }
+    },
     stop(resumeHover = false) { if (session?.youtubeCaptions) endSession({ resumeHover }); },
     suspend(value) {
       if (!session?.youtubeCaptions || !overlayHost) return;

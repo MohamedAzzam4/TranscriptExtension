@@ -166,7 +166,7 @@
         await stateWrite(sender, state); return { experimentId: record.sourceExperimentId };
       }
       if (message.type === 'YOUTUBE_OVERLAY_DIAGNOSTIC') {
-        const labels = { voice: 'Pronunciation', timing: 'Word timing', dictionary: 'Word card information', status: 'Overlay notice' };
+        const labels = { voice: 'Pronunciation', timing: 'Word timing', dictionary: 'Word card information', status: 'Overlay notice', playback: 'Playback' };
         if (!labels[message.kind]) return {};
         const value = globalThis.DubPersistenceSafety.project({ message: String(message.value || '').slice(0, 800) }).message;
         state.details = [...(state.details || []).filter(item => item.label !== labels[message.kind]), { label: labels[message.kind], value }].slice(-8);

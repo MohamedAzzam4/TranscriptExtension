@@ -1,5 +1,13 @@
 # Protected feature registry
 
+0.12.4 extends ACQ-YT-CAPTIONS with source-first rendering independent of
+translation/cache writes, in-place target updates and player preparation status.
+One initial autoplay attempt per video respects user/hover pauses and Chrome
+policy; generic media/audio ASR are unchanged. Source priority, provenance,
+saved learning/card/replay, caption selection and appearance contracts remain.
+Local cross-feature regression passes; real browser checks remain unverified.
+See `test-results/0.12.4-progressive-start.md`.
+
 0.12.3 adjusts dropdown font size/weight and popup field layout. All dropdown
 IDs, option values and preference behavior are preserved; no caption-font or
 storage changes. Full local regression passes. Real native-menu/font/zoom fit

@@ -1,5 +1,13 @@
 # YouTube caption mode — approved 2026-10-28
 
+0.12.4 follow-up: source captions now render before optional translation or
+history saving, with in-place translation updates and compact player preparation
+feedback. The subtitle-only native path requests source first, then optional
+target. One initial playback attempt per video is guarded by current-video
+metadata, media readiness, visibility/ad state and user intent. Browser autoplay
+rejection remains actionable rather than bypassed with mute/retries. See
+`YOUTUBE_PROGRESSIVE_START_PLAN.md` and `test-results/0.12.4-progressive-start.md`.
+
 Baseline805fe83 /0.11.5, codex/local-media-loopback. WP3.1/3.2/3.4/3.5,
 WP2.2/2.4/2.5, WP1.3. This approved scope supersedes the source, translation
 and automatic-ASR fallback decisions in YOUTUBE_CAPTION_FIRST_TIMING_VOCAB_PLAN.md.
