@@ -1,5 +1,12 @@
 # Protected feature registry
 
+2026-10-28 decoder dependency repair (worker0.12.1, extension0.12.5): direct
+and PNG-wrapped HLS retain source/header/format/selection/fallback contracts while
+accepting PyAV's old/new metadata API. Tested decoder pinned for fresh setup.
+No browser/UI/storage/native-host interaction changed. Local full regression
+passes; friend/platform acceptance remains unverified. See
+test-results/2026-10-28-pyav-compatibility.md.
+
 2026-10-28 installer discovery follow-up (extension0.12.5 unchanged): missing
 Python versions/launcher no longer abort discovery. Registry/common folders and
 explicit-path recovery preserve the tested3.11–3.13/64-bit setup contract.

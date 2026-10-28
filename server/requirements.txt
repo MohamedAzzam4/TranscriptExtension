@@ -1,2 +1,4 @@
+# Tested decoder API; faster-whisper 1.2.1 also passes metadata_errors.
+av==18.0.0
 whisperlivekit==0.2.24
 yt-dlp==2026.7.4

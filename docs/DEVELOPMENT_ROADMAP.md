@@ -1,5 +1,15 @@
 # Development roadmap
 
+2026-10-28 WP0.2/WP0.3 decoder compatibility follow-up: worker 0.12.1,
+extension 0.12.5 unchanged. Baseline 24a4b32/56 server tests. Reproduced the
+friend's metadata_errors failure in both direct and wrapped-HLS opening paths.
+A narrow PyAV 19 API fallback preserves legacy metadata tolerance and original
+errors. Fresh setups pin tested av18 for faster-whisper compatibility. Local
+25 syntax checks,29 extension suites,61 server tests and Windows discovery pass.
+Friend/site, real media, upgrade and manual gates remain unverified: Experimental.
+See PYAV_COMPATIBILITY_FIX_PLAN.md, PYAV_DECODER_UPDATE.md and
+test-results/2026-10-28-pyav-compatibility.md.
+
 ## Purpose
 
 This roadmap preserves the product direction and work sequence while Dub

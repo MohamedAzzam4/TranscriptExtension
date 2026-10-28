@@ -1,5 +1,13 @@
 # Experiment matrix
 
+2026-10-28 PyAV compatibility: baseline56server tests; two signature fixtures
+first reproduce metadata_errors rejection. Fixed candidate passes25syntax,
+29extension suites,61server tests and Windows Python discovery. Five new checks
+cover both decoder call paths, legacy behavior, non-keyword failure propagation
+and dependency pin. Synthetic WAV/API fixtures are not actual PyAV19 or remote
+HLS proof. Friend/site, browser, clean install and upgrade unverified: Experimental.
+See ../docs/test-results/2026-10-28-pyav-compatibility.md.
+
 2026-10-28 WP0.2 Python discovery: Windows PowerShell5.1 baseline dry-run
 reproduces NativeCommandError from a missing version selector. Fixed automatic
 3.13 and explicit3.12 read-only plans pass; discovery fixtures cover failures,

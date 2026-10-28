@@ -52,7 +52,7 @@ MAX_PLAYLIST_BYTES = 2 * 1024 * 1024
 MAX_HLS_SEGMENT_BYTES = 64 * 1024 * 1024
 MAX_HLS_SEGMENTS = 5_000
 MAX_DIRECT_CANDIDATES = 10
-WORKER_VERSION = "0.12.0"
+WORKER_VERSION = "0.12.1"
 
 
 @dataclass(frozen=True)
@@ -564,6 +564,21 @@ def ffmpeg_http_options(headers: dict[str, str]) -> dict[str, str]:
     return options
 
 
+def open_media_container(source, **options):
+    """Preserve legacy metadata tolerance and accept PyAV 19's native handling."""
+    import av
+
+    try:
+        return av.open(source, metadata_errors="ignore", **options)
+    except TypeError as error:
+        # PyAV 19 removed this keyword and always uses UTF-8/surrogateescape.
+        # Retry only argument rejection, before any stream/file has been read.
+        # Network, codec, format and unrelated TypeErrors must retain their cause.
+        if not re.search(r"unexpected keyword argument ['\"]metadata_errors['\"]", str(error)):
+            raise
+        return av.open(source, **options)
+
+
 def decode_source(
     source: ResolvedSource,
     job_id: str,
@@ -639,7 +654,7 @@ def decode_source(
     last_reported_percent = -5
     last_reported_seconds = -30.0
     last_reported_at = 0.0
-    with av.open(source.url, mode="r", options=options, metadata_errors="ignore") as container:
+    with open_media_container(source.url, mode="r", options=options) as container:
         if not container.streams.audio:
             raise RuntimeError("The selected media source has no audio stream.")
         audio_stream = select_audio_stream(container.streams.audio, language)
@@ -784,11 +799,10 @@ def decode_png_wrapped_hls(
                 )
 
         try:
-            with av.open(
+            with open_media_container(
                 io.BytesIO(transport_stream),
                 mode="r",
                 format="mpegts",
-                metadata_errors="ignore",
                 buffer_size=min(max(len(transport_stream), 32_768), 1024 * 1024),
             ) as container:
                 if not container.streams.audio:

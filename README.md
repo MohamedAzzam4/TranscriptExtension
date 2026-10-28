@@ -67,6 +67,17 @@ Replace that example with the actual path on your computer. Python 3.12 must be
 64-bit; Python 3.11 and 3.13 are also accepted. Unsupported versions and broken
 Windows aliases produce a reason instead of a generic instruction to reinstall.
 
+### Decoder compatibility update
+
+If every media candidate reports `open() got an unexpected keyword argument
+'metadata_errors'`, the local decoder API differs from the worker's expectation.
+Worker **0.12.1** supports the legacy/PyAV19 metadata APIs; new installs pin
+tested **av18.0.0**. Extension0.12.5 remains compatible. Apply the small worker
+update in the existing folder, then retry. See
+[existing-install repair](docs/PYAV_DECODER_UPDATE.md) for exact steps and the
+optional local-venv dependency command. Do not delete saved extension data or
+reinstall the whole extension merely for this error.
+
 ### Update an existing installation
 
 Keep the existing project folder and extension card so the extension ID and browser-local transcripts, vocabulary, settings, and translation cache remain available.
