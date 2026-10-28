@@ -37,22 +37,30 @@ highlight.updateCurrentWordHighlight(); assert.equal(classes.has('current-word')
 vm.runInContext('session.captionPreferences.highlightCurrentWord = false;', highlight);
 highlight.updateCurrentWordHighlight(); assert.equal(classes.has('current-word'), false);
 assert.equal(classes.has('saved-word'), true); assert.equal(classes.has('selected'), true);
-// Exercise the actual delegated DOM listeners, not just the pause controller.
+// Exercise actual stable-box listeners. pointerenter/leave are boundary events:
+// moving between descendants does not leave the box or depend on a word target.
 const delegated = {};
 const attached = context.DubWordInteractions.createHoverPause({ media,
   setTimer(fn) { const id = ++next; timers.set(id, fn); return id; }, clearTimer(id) { timers.delete(id); } });
-const wiring = vm.createContext({ transcriptElement: { addEventListener(name, fn) { delegated[name] = fn; } }, hoverPause: attached });
-const bindingStart = content.indexOf("    transcriptElement.addEventListener('pointerover'");
-const bindingEnd = content.indexOf('\n    captionBoxElement.addEventListener', bindingStart);
+const wiring = vm.createContext({ captionBoxElement: { addEventListener(name, fn) { delegated[name] = fn; } }, hoverPause: attached });
+const bindingStart = content.indexOf("    captionBoxElement.addEventListener('pointerenter'");
+const bindingEnd = content.indexOf('\n    captionBoxElement.addEventListener("pointerdown"', bindingStart);
 assert.ok(bindingStart >= 0 && bindingEnd > bindingStart);
 vm.runInContext(content.slice(bindingStart, bindingEnd), wiring);
-const hovered = { closest: () => hovered }, neighbor = { closest: () => neighbor };
 media.paused = false;
 const previousPlays = plays, previousPauses = pauses;
-delegated.pointerover({ target: hovered }); assert.equal(pauses, previousPauses, 'hover listener respects default-off');
+delegated.pointerenter(); assert.equal(pauses, previousPauses, 'hover listener respects default-off');
 attached.configure(true);
-delegated.pointerover({ target: hovered }); assert.equal(media.paused, true, 'actual caption pointerover pauses when enabled');
-delegated.pointerout({ target: hovered, relatedTarget: neighbor }); flush(); assert.equal(plays, previousPlays);
-delegated.pointerout({ target: neighbor, relatedTarget: null }); flush(); assert.equal(plays, previousPlays + 1);
+delegated.pointerenter();
+assert.equal(media.paused, true, 'caption-box padding should pause without a word target');
+flush(); assert.equal(plays, previousPlays, 'internal word/gap/translation movement has no box exit');
+delegated.pointerleave(); flush(); assert.equal(plays, previousPlays + 1);
+for (const region of ['original', 'translation', 'padding', 'drag handle']) {
+  delegated.pointerenter(); assert.equal(media.paused, true, region);
+  delegated.pointerleave(); flush(); assert.equal(media.paused, false, region);
+}
+delegated.pointerenter(); attached.interrupt();
+const manualPlays = plays; delegated.pointerleave(); flush();
+assert.equal(plays, manualPlays, 'box exit preserves explicit pause intent');
 attached.dispose();
-console.log('Hover-pause ownership, default off, adjacent words, manual pause, preference change, navigation and listener cleanup passed');
+console.log('Caption-box hover ownership, default off, whole-box entry/exit, internal movement, manual pause, preference change, navigation and cleanup passed');

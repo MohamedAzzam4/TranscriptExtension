@@ -28,6 +28,14 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP2.4/WP2.5 candidate0.12.5 expands enabled hover pause to the
+whole stable caption box, including source/translation/padding. Internal word
+replacement no longer releases pause; hiding an empty box does. Existing shared
+preference/default off and manual playback ownership remain. Local25syntax
+checks,29extension suites/56server tests pass; physical hover/drag/fullscreen
+remain unverified under the browser pause. Experimental; see
+`CAPTION_BOX_HOVER_PLAN.md` and `test-results/0.12.5-caption-box-hover.md`.
+
 2026-10-28 WP3.1/WP3.4/WP2.4 candidate0.12.4 renders source captions before
 optional translation/cache, updates targets in place, and shows compact player
 preparation feedback. Native fallback requests source-only first. Initial

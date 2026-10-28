@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 29;
+  const CONTENT_SCRIPT_VERSION = 30;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -937,10 +937,10 @@
     captionDragHandleElement.addEventListener("pointerdown", startCaptionDrag);
     transcriptElement.addEventListener("click", handleTranscriptClick);
     transcriptElement.addEventListener("keydown", handleTranscriptKeydown);
-    transcriptElement.addEventListener('pointerover', event => { if (event.target.closest('.word')) hoverPause?.enter(); });
-    transcriptElement.addEventListener('pointerout', event => {
-      if (event.target.closest('.word') && !event.relatedTarget?.closest?.('.word')) hoverPause?.leave();
-    });
+    // The stable box owns hover, so gaps, translation and child replacement
+    // cannot resume playback while the pointer is still inside its bounds.
+    captionBoxElement.addEventListener('pointerenter', () => hoverPause?.enter());
+    captionBoxElement.addEventListener('pointerleave', () => hoverPause?.leave());
     captionBoxElement.addEventListener("pointerdown", stopPlayerClick);
     captionBoxElement.addEventListener("copy", stopPlayerClick);
     captionBoxElement.addEventListener("dblclick", stopPlayerClick);
@@ -1248,6 +1248,7 @@
 
   function renderClickableText(text, wordTimings = []) {
     captionBoxElement.hidden = !text;
+    if (!text) hoverPause?.release();
     const timingKey = `${text}|${wordTimings.map((timing) => `${timing?.text || ""}:${timing?.start ?? ""}:${timing?.end ?? ""}:${timing?.timing || ""}`).join("|")}`;
     if (session.displayedText === text && session.displayedTimingKey !== timingKey) {
       applyTimingMetadataInPlace(mapValidatedWordTimings(text, wordTimings));
@@ -1255,7 +1256,6 @@
       return;
     }
     if (session.displayedTimingKey === timingKey) return;
-    hoverPause?.release();
     session.displayedText = text;
     session.displayedTimingKey = timingKey;
     transcriptElement.classList.toggle("long", text.length > 110);

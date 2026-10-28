@@ -262,7 +262,7 @@
     const tools = document.createElement('section'); tools.className = 'menu-group';
     const toolsHeading = document.createElement('h3'); toolsHeading.className = 'group-title'; toolsHeading.textContent = 'Learning tools'; tools.append(toolsHeading);
     addControl(tools, 'Highlight current word', caption.highlightCurrentWord, highlightCurrentWord => patch({ captionPreferences: { highlightCurrentWord } }), 'checkbox', 'Follow the word being spoken.');
-    addControl(tools, 'Pause while hovering', caption.pauseOnWordHover, pauseOnWordHover => patch({ captionPreferences: { pauseOnWordHover } }), 'checkbox', 'Resume when you leave the word.');
+    addControl(tools, 'Pause while hovering captions', caption.pauseOnWordHover, pauseOnWordHover => patch({ captionPreferences: { pauseOnWordHover } }), 'checkbox', 'Pause anywhere in the caption box. Resume when you leave it.');
     body.append(tools);
     const translation = learning.normalizeTranslationPreferences(settings.translationPreferences);
     const translationGroup = document.createElement('details'), translationSummary = document.createElement('summary'); translationSummary.textContent = 'Translation'; translationGroup.append(translationSummary);

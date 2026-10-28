@@ -50,6 +50,7 @@ vm.runInContext(source.replace(/\}\)\(\);\s*$/, `
   globalThis.overlayTest = {
     renderClickableText,
     configure(transcript) { session = { displayedTimingKey: null }; transcriptElement = transcript; captionBoxElement = {}; },
+    setHoverController(controller) { hoverPause = controller; },
     ...(typeof refreshSavedWordMarks === "function" ? { refreshSavedWordMarks, loadSavedVocabulary } : {})
   };
 })();`), context);
@@ -103,5 +104,12 @@ await pending;
 assert.deepEqual(marked().map((word) => word.dataset.word), ["finden"], "an old load cannot overwrite a newer cross-tab update");
 changed(undefined);
 assert.equal(marked().length, 0, "removing the storage key clears every mark");
+let hoverReleases = 0;
+api.setHoverController({ release() { hoverReleases++; } });
+api.renderClickableText('Ein neuer Satz.');
+api.renderClickableText('Noch ein Satz.');
+assert.equal(hoverReleases, 0, 'nonempty source replacement keeps box-hover pause ownership');
+api.renderClickableText('');
+assert.equal(hoverReleases, 1, 'hiding the empty caption box releases an owned hover pause');
 assert.ok(requests.every((message) => message.type === "GET_SAVED_WORDS"));
 console.log("Cross-show saved-word lifecycle passed");

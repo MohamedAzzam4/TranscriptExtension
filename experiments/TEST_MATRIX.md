@@ -1,5 +1,11 @@
 # Experiment matrix
 
+2026-10-28 caption-box hover candidate0.12.5:25syntax checks,29extension
+suites/56server tests pass. Added padding characterization fails on0.12.4;
+stable-box entry/exit and nonempty rerender/empty-hide ownership checks pass
+after repair. Real pointer boundaries, drag and fullscreen are unverified.
+Experimental; see `docs/test-results/0.12.5-caption-box-hover.md`.
+
 2026-10-28 progressive YouTube candidate0.12.4:25syntax checks,29extension
 suites and56server tests pass. A new blocked-translation/cache test fails on
 0.12.3 because no source overlay starts, then passes after source-first repair.

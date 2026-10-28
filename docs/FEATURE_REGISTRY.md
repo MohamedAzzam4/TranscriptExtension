@@ -1,5 +1,12 @@
 # Protected feature registry
 
+0.12.5 expands the shared hover-pause region from source words to the whole
+caption box. Original words, translation, gaps/padding and drag handle use the
+same owned pause/resume setting; manual pauses, selection/copy, dictionary/card,
+replay, drag, cache and global settings remain protected. Local regression passes;
+real pointer/drag/fullscreen checks remain unverified. See
+`test-results/0.12.5-caption-box-hover.md`.
+
 0.12.4 extends ACQ-YT-CAPTIONS with source-first rendering independent of
 translation/cache writes, in-place target updates and player preparation status.
 One initial autoplay attempt per video respects user/hover pauses and Chrome
