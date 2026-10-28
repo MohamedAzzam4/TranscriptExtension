@@ -64,6 +64,10 @@ const elements = {
   savedTranscriptCount: document.querySelector("#savedTranscriptCount"),
   savedWords: document.querySelector("#savedWords"),
   savedWordCount: document.querySelector("#savedWordCount"),
+  savedWordList: document.querySelector("#savedWordList"),
+  savedWordDetail: document.querySelector("#savedWordDetail"),
+  savedWordDetailTitle: document.querySelector("#savedWordDetailTitle"),
+  backToWords: document.querySelector("#backToWords"),
   wordSearch: document.querySelector("#wordSearch"),
   wordResults: document.querySelector("#wordResults"),
   recentWords: document.querySelector("#recentWords"),
@@ -93,6 +97,7 @@ let uiStateSaveTimer = null;
 let uiStateHydrating = true;
 const readinessManager = globalThis.DubTranslationReadiness?.createManager();
 let readinessRevision = 0;
+let reviewedWord = null;
 
 async function refreshTranslationReadiness() {
   if (!elements.translationReadinessStatus) return;
@@ -139,6 +144,17 @@ for (const button of document.querySelectorAll("[data-open-view]")) {
   button.addEventListener("click", () => openView(button.dataset.openView));
 }
 elements.wordSearch.addEventListener("input", () => { renderSavedWords(savedVocabularyEntries); void persistUiState(); });
+elements.backToWords.addEventListener("click", () => globalThis.DubSavedWordReview.close());
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !elements.savedWordDetail.hidden && !event.defaultPrevented) {
+    event.preventDefault();
+    globalThis.DubSavedWordReview.close();
+  }
+});
+window.addEventListener("pagehide", () => {
+  void persistUiState();
+  globalThis.DubSavedWordReview.suspend();
+});
 for (const button of document.querySelectorAll("[data-word-filter]")) {
   button.addEventListener("click", () => {
     wordFilter = button.dataset.wordFilter;
@@ -156,6 +172,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 function openView(name) {
+  if (name !== "words" && reviewedWord) globalThis.DubSavedWordReview.close();
   const previous = popupUiState.activeView;
   if (!uiStateHydrating && previous) {
     popupUiState.scrollByView[previous] = window.scrollY;
@@ -187,7 +204,11 @@ function scheduleUiStateSave() {
 async function persistUiState() {
   const activeView = popupUiState.activeView || "home";
   popupUiState.scrollByView[activeView] = window.scrollY;
-  const anchor = [...document.querySelectorAll(`#view-${activeView} [data-scroll-anchor]`)].find((node) => node.getBoundingClientRect().bottom >= 0);
+  if (reviewedWord) {
+    popupUiState.reviewScroll = window.scrollY;
+    popupUiState.reviewCardState = globalThis.DubSavedWordReview.getState();
+  }
+  const anchor = [...document.querySelectorAll(`#view-${activeView} [data-scroll-anchor]`)].find((node) => !node.closest("[hidden]") && node.getBoundingClientRect().bottom >= 0);
   if (anchor) popupUiState.scrollAnchorByView[activeView] = { key: anchor.dataset.scrollAnchor, offset: anchor.getBoundingClientRect().top };
   popupUiState.wordSearch = elements.wordSearch.value;
   popupUiState.wordFilter = wordFilter;
@@ -419,6 +440,11 @@ async function restoreState() {
   await refreshNetflixResearch();
   openView(popupUiState.activeView || "home");
   uiStateHydrating = false;
+  if (popupUiState.activeView === "words" && popupUiState.reviewWord) {
+    const entry = savedVocabularyEntries.find((item) => learning.normalizedWord(item.word) === popupUiState.reviewWord);
+    if (entry) void openSavedWord(entry, true);
+    else { popupUiState.reviewWord = null; void persistUiState(); }
+  }
 }
 
 function setLanguageValue(select, code) {
@@ -794,6 +820,9 @@ async function downloadDataFile(text, filename, type) {
 
 function renderSavedWords(entries) {
   savedVocabularyEntries = entries;
+  if (reviewedWord && !entries.some((entry) => learning.normalizedWord(entry.word) === reviewedWord)) {
+    globalThis.DubSavedWordReview.close();
+  }
   elements.savedWordCount.textContent = String(entries.length);
   for (const total of document.querySelectorAll("[data-word-total]")) total.textContent = String(entries.length);
   renderRecentWords(entries);
@@ -815,7 +844,7 @@ function renderSavedWords(entries) {
     row.dataset.scrollAnchor = `word:${learning.normalizedWord(entry.word)}`;
     const body = document.createElement("div");
     body.append(
-      createTextElement("div", entry.word, "saved-word-title"),
+      createSavedWordButton(entry),
       createTextElement(
         "div",
         entry.germanDefinition || "Saved word",
@@ -864,6 +893,64 @@ function filterVocabulary(entries, query, type) {
   });
 }
 
+function createSavedWordButton(entry) {
+  const button = createTextElement("button", entry.word, "saved-word-title saved-word-open");
+  button.type = "button";
+  button.dataset.reviewWord = learning.normalizedWord(entry.word);
+  button.setAttribute("aria-label", `View full details for ${entry.word}`);
+  button.setAttribute("aria-controls", "savedWordDetail");
+  button.addEventListener("click", () => void openSavedWord(entry));
+  return button;
+}
+
+async function openSavedWord(entry, restoring = false) {
+  if (popupUiState.activeView !== "words") openView("words");
+  if (!restoring) popupUiState.wordListScroll = window.scrollY;
+  reviewedWord = learning.normalizedWord(entry.word);
+  popupUiState.reviewWord = reviewedWord;
+  const reviewScroll = restoring ? Number(popupUiState.reviewScroll) || 0 : 0;
+  const reviewCardState = restoring ? popupUiState.reviewCardState : null;
+  elements.savedWordList.hidden = true;
+  elements.savedWordDetail.hidden = false;
+  elements.savedWordDetailTitle.textContent = entry.word;
+  elements.savedWordDetailTitle.focus({ preventScroll: true });
+  window.scrollTo(0, reviewScroll);
+  void persistUiState();
+  const selected = reviewedWord;
+  try {
+    const pending = globalThis.DubSavedWordReview.open(entry, readSettings().translationPreferences, {
+      onClose: closeSavedWordReview,
+      onRemoved: () => void refreshSavedWords(),
+      onChange: scheduleUiStateSave
+    });
+    window.scrollTo(0, reviewScroll);
+    await pending;
+    if (reviewedWord === selected && restoring) {
+      globalThis.DubSavedWordReview.restoreState(reviewCardState);
+      window.scrollTo(0, reviewScroll);
+    }
+  } catch (error) {
+    if (reviewedWord !== selected) return;
+    // Keep the list reachable even if mounting the optional detail view fails.
+    globalThis.DubSavedWordReview.close();
+    if (reviewedWord === selected) closeSavedWordReview();
+    elements.wordResults.textContent = `Could not open word details: ${error.message}`;
+  }
+}
+
+function closeSavedWordReview() {
+  const selected = reviewedWord;
+  reviewedWord = null;
+  popupUiState.reviewWord = null;
+  elements.savedWordDetail.hidden = true;
+  elements.savedWordList.hidden = false;
+  window.scrollTo(0, Number(popupUiState.wordListScroll) || 0);
+  const opener = [...elements.savedWords.querySelectorAll("[data-review-word]")]
+    .find((button) => button.dataset.reviewWord === selected);
+  (opener || elements.wordSearch).focus({ preventScroll: true });
+  void persistUiState();
+}
+
 function renderRecentWords(entries) {
   if (!entries.length) {
     elements.recentWords.replaceChildren(createTextElement("p", "Click any caption word to start your collection. Saved words will be marked in later shows.", "empty-saved"));
@@ -873,7 +960,7 @@ function renderRecentWords(entries) {
   for (const entry of entries.slice(0, 3)) {
     const row = document.createElement("div");
     row.className = "saved-word";
-    row.append(createTextElement("div", entry.word, "saved-word-title"), createTextElement("div", entry.germanDefinition || "Saved vocabulary", "saved-word-definition"));
+    row.append(createSavedWordButton(entry), createTextElement("div", entry.germanDefinition || "Saved vocabulary", "saved-word-definition"));
     fragment.append(row);
   }
   elements.recentWords.replaceChildren(fragment);

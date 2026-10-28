@@ -1,5 +1,10 @@
 # Protected feature registry
 
+0.11.4 extends LEARN-SAVE/LEARN-CARD: saved-word titles open the same full card
+inside Words, preserving dictionary metadata and list/review state. No video
+analysis is required. Local review lifecycle and existing regression pass;
+browser acceptance remains unverified. See `test-results/0.11.4-saved-word-review.md`.
+
 0.11.3 keeps full voice/card-help text via compact hover/focus indicators, retains
 voice retry, and moves replay/timing information to transient notices plus popup
 diagnostics. Critical errors remain persistent. Source sense references remain

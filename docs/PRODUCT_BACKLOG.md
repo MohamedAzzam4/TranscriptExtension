@@ -11,6 +11,11 @@ For priority, dependencies, phases, and future work, use
 
 ## Historically implemented in extension 0.8.0
 
+- 0.11.4 candidate: clickable saved vocabulary opens the same full word card
+  within Words, with list/review state, removal and Return to source. Local
+  regression passes; browser acceptance unverified. See
+  `test-results/0.11.4-saved-word-review.md`.
+
 - Reorganized the word card into meanings, paired examples, combinations, grammar, and related-word sections. Empty dictionary sections are hidden.
 - Added **Replay clip** using exact batch word timestamps or a clearly identified cue-based estimate. The original media time, pause state, and playback rate are restored.
 - Added **YouGlish**, opening the selected word in the public German pronunciation route.

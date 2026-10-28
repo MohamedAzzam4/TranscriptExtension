@@ -112,6 +112,7 @@
       </details>
       </section>
       <section id="view-words" class="app-view" aria-labelledby="nav-words" hidden><section class="vocabulary-panel" aria-label="Saved vocabulary">
+        <div id="savedWordList">
         <div class="page-heading"><span class="section-kicker">Vocabulary archive</span><h2>Saved vocabulary <span id="savedWordCount" class="count-badge">0</span></h2><p>Keep a word. Recognize it in the next story.</p></div>
         <div class="archive-stats"><div><span>Total saved</span><strong data-word-total>0</strong><small> words</small></div><div><span>Storage</span><strong>Local</strong><small> this browser</small></div></div>
         <label class="search-field"><span>Search your vocabulary</span><input id="wordSearch" type="search" placeholder="Words, meanings, or shows…"></label>
@@ -124,6 +125,12 @@
             <p class="empty-saved">Click a transcript word and choose “Save word”.</p>
           </div>
         </div>
+        </div>
+        <section id="savedWordDetail" aria-labelledby="savedWordDetailTitle" hidden>
+          <button id="backToWords" type="button" class="quiet-button">← Back to saved words</button>
+          <h2 id="savedWordDetailTitle" tabindex="-1"></h2>
+          <div id="savedWordDetailCard"></div>
+        </section>
       </section></section>
       <section id="view-videos" class="app-view" aria-labelledby="nav-videos" hidden><section class="transcript-library-panel" aria-label="Saved transcripts">
         <div class="page-heading"><span class="section-kicker">Library archive</span><h2>Transcribed videos <span id="savedTranscriptCount" class="count-badge">0</span></h2><p>Your spoken transcripts, ready to return to.</p></div>
@@ -304,12 +311,14 @@
       </section>
       <footer class="app-footer">
         <span>Audio stays local with the default recognizer.</span>
-        <span>v0.11.3 · Experimental</span>
+        <span>v0.11.4 · Experimental</span>
       </footer>
     </main>
     <nav class="bottom-nav" aria-label="Extension navigation"><button id="nav-home" type="button" data-open-view="home" aria-controls="view-home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10M9 20v-7h6v7"/></svg><span>Home</span></button><button id="nav-words" type="button" data-open-view="words" aria-controls="view-words"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v15M12 5C8 2 4 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z"/></svg><span>Words</span></button><button id="nav-videos" type="button" data-open-view="videos" aria-controls="view-videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg><span>Videos</span></button><button id="nav-appearance" type="button" data-open-view="appearance" aria-controls="view-appearance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-4c-1-1 0-2 1-2h2a3 3 0 0 0 3-3 9 9 0 0 0-9-9Z"/><circle cx="7.5" cy="10" r=".7"/><circle cx="11" cy="6.5" r=".7"/><circle cx="16" cy="8" r=".7"/></svg><span>Appearance</span></button></nav>
     <script src="learning-features.js"></script>
     <script src="translation-readiness.js"></script>
+    <script src="german-pronunciation.js"></script>
+    <script src="content.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

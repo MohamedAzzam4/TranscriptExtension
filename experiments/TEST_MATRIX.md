@@ -1,5 +1,10 @@
 # Experiment matrix
 
+2026-10-28 saved-word review candidate0.11.4: local17syntax checks,
+23extension suites/46server tests pass. Shared card DOM, offline saved data,
+removal, stale responses, navigation and popup state covered with mocks. Browser,
+speech and platform tests not run. See `docs/test-results/0.11.4-saved-word-review.md`.
+
 2026-10-26 compact status candidate0.11.3: three JavaScript syntax checks and
 six local suites pass (fake clocks, worker/session diagnostics, initialization,
 bindings, localization, lifecycle, privacy). No browser/audio/translation checks.

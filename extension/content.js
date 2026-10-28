@@ -1,15 +1,19 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 24;
+  const CONTENT_SCRIPT_VERSION = 25;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
   const learning = globalThis.DubTranscriptLearning;
   const mediaCandidate = globalThis.DubTranscriptMediaCandidate;
   const localMedia = globalThis.DubTranscriptLocalMedia;
-  if (!transcriptGroups) throw new Error("Transcript grouping helpers were not loaded.");
+  // Only the extension popup can mount a standalone review. Ordinary sites keep
+  // the player lifecycle and its required discovery dependencies.
+  const reviewContainer = globalThis.location?.protocol === "chrome-extension:"
+    ? document.querySelector("#savedWordDetailCard") : null;
+  if (!reviewContainer && !transcriptGroups) throw new Error("Transcript grouping helpers were not loaded.");
   if (!learning) throw new Error("Learning feature helpers were not loaded.");
-  if (!mediaCandidate) throw new Error("Media candidate helpers were not loaded.");
-  if (!localMedia) throw new Error("Local media helpers were not loaded.");
+  if (!reviewContainer && !mediaCandidate) throw new Error("Media candidate helpers were not loaded.");
+  if (!reviewContainer && !localMedia) throw new Error("Local media helpers were not loaded.");
 
   let pronunciationController = null;
   const transientNotices = new Map();
@@ -60,6 +64,22 @@
   let savedVocabulary = new Map();
   let vocabularyRevision = 0;
   const mediaSecurityStates = new WeakMap();
+  let reviewCallbacks = null;
+
+  if (reviewContainer) {
+    globalThis.DubSavedWordReview = {
+      open: openSavedWordReview, close: closeWordCard,
+      suspend: () => pronunciationController?.cancel(),
+      getState: () => ({ expanded: [...(wordCardElement?.querySelectorAll("details") || [])].map(detail => Boolean(detail.open)) }),
+      restoreState(state) {
+        if (!Array.isArray(state?.expanded)) return;
+        [...(wordCardElement?.querySelectorAll("details") || [])].forEach((detail, index) => {
+          detail.open = Boolean(state.expanded[index]);
+        });
+      }
+    };
+    return;
+  }
 
   document.addEventListener("pointerdown", dismissWordCardOutside, true);
 
@@ -425,6 +445,22 @@
     return { text: "", source: null };
   }
 
+  function openSavedWordReview(entry, preferences, callbacks = {}) {
+    if (session) closeWordCard();
+    reviewCallbacks = callbacks;
+    session = {
+      selectedWord: null, selectedWordResult: null, selectedWordClip: null,
+      wordCardRevision: 0, wordCardTranslations: new Map(), displayedText: "",
+      translationPreferences: learning.normalizeTranslationPreferences(preferences)
+    };
+    savedVocabulary = learning.savedVocabularyIndex([entry]);
+    createOverlay();
+    // Use the same lookup, legacy fallback, localization and grammar renderer as
+    // a caption click, without inventing a playback interval or media session.
+    const selection = document.createElement("span");
+    return showWordDefinition(entry.word, selection);
+  }
+
   function createOverlay() {
     document.getElementById("dub-transcript-lab-overlay")?.remove();
     overlayHost = document.createElement("div");
@@ -629,6 +665,17 @@
         .word-card::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
         .word-card::-webkit-scrollbar-corner { background: #111a14; }
         .word-card[hidden] { display: none; }
+        :host([data-saved-review]) {
+          position: static !important; inset: auto !important;
+          z-index: auto !important; pointer-events: auto !important;
+        }
+        :host([data-saved-review]) .wrap { position: static; width: 100%; transform: none; text-align: left; }
+        :host([data-saved-review]) .status,
+        :host([data-saved-review]) .caption-box { display: none; }
+        :host([data-saved-review]) .word-card {
+          position: static; width: 100%; max-height: none; transform: none;
+          overflow: visible; box-shadow: none;
+        }
         .word-card-header {
           display: flex;
           align-items: center;
@@ -863,8 +910,16 @@
     captionBoxElement.addEventListener("click", stopPlayerClick);
     wordCardElement.addEventListener("pointerdown", stopPlayerClick);
     wordCardElement.addEventListener("click", (event) => event.stopPropagation());
-    applyDisplaySettings(session.captionPreferences, session.translationPreferences);
-    placeOverlay();
+    if (reviewContainer) {
+      overlayHost.dataset.savedReview = "true";
+      wordReplayElement.hidden = true;
+      wordCardElement.setAttribute("aria-live", "polite");
+      wordCardElement.addEventListener("toggle", () => reviewCallbacks?.onChange?.(), true);
+      reviewContainer.replaceChildren(overlayHost);
+    } else {
+      applyDisplaySettings(session.captionPreferences, session.translationPreferences);
+      placeOverlay();
+    }
   }
 
   function applyDisplaySettings(
@@ -1594,6 +1649,14 @@
     const entry = savedVocabulary.get(learning.normalizedWord(session?.selectedWord));
     const source = entry?.video?.url;
     if (!source) return;
+    if (reviewContainer) {
+      const url = learning.stablePageUrl(source);
+      if (url) void chrome.tabs.create({ url }).catch((error) => {
+        wordTranslationStatusElement.hidden = false;
+        wordTranslationStatusElement.textContent = `Could not open the saved source: ${error.message}`;
+      });
+      return;
+    }
     const clipStart = Number(entry?.clip?.start);
     if (video && learning.stablePageUrl(location.href) === learning.stablePageUrl(source) && Number.isFinite(clipStart)) {
       const seekable = video.seekable;
@@ -2038,6 +2101,24 @@
     event.stopPropagation();
     const result = session?.selectedWordResult;
     if (!result) return;
+    if (reviewContainer) {
+      const owner = session;
+      wordSaveElement.disabled = true;
+      try {
+        const response = await chrome.runtime.sendMessage({ type: "REMOVE_SAVED_WORD", word: result.word });
+        if (!response?.ok) throw new Error(response?.error || "Could not remove saved word.");
+        if (session !== owner) return;
+        const changed = reviewCallbacks?.onRemoved;
+        closeWordCard();
+        changed?.();
+      } catch (error) {
+        if (session?.selectedWordResult !== result) return;
+        wordSaveElement.disabled = false;
+        wordTranslationStatusElement.hidden = false;
+        wordTranslationStatusElement.textContent = error.message;
+      }
+      return;
+    }
     const owner = session;
     const wasSaved = Boolean(result.saved);
     const revision = vocabularyRevision;
@@ -2076,6 +2157,7 @@
     wordSaveElement.disabled = disabled;
     wordSaveElement.classList.toggle("saved", saved);
     wordSaveElement.textContent = saved ? "Saved ✓" : "Save word";
+    if (reviewContainer && saved) wordSaveElement.textContent = "Remove saved word";
   }
 
   function closeWordCard(event) {
@@ -2092,6 +2174,13 @@
     if (session) session.selectedWordClip = null;
     transcriptElement?.querySelector(".word.selected")?.classList.remove("selected");
     if (wordCardElement) wordCardElement.hidden = true;
+    if (reviewContainer && session) {
+      session = null;
+      overlayHost?.remove();
+      const closed = reviewCallbacks?.onClose;
+      reviewCallbacks = null;
+      closed?.();
+    }
   }
 
   function stopPlayerClick(event) {
@@ -2169,7 +2258,7 @@
   }
 
   function reportUiDiagnostic(kind, value) {
-    if (!session || !value || session.uiDiagnostics[kind] === value) return;
+    if (reviewContainer || !session || !value || session.uiDiagnostics[kind] === value) return;
     session.uiDiagnostics[kind] = value;
     try {
       void chrome.runtime.sendMessage({ type: 'UI_DIAGNOSTIC', experimentId: session.id, kind, value }).catch(() => {});

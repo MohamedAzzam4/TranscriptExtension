@@ -28,6 +28,13 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP1.3/WP2.4 candidate0.11.4 makes saved-word titles open the existing
+full dictionary card inside Words without a media session. Back/Escape, removal,
+source navigation and popup review state are preserved. Local17syntax checks,
+23extension suites and46server tests pass; browser testing remains paused.
+UI candidate Experimental; prior dictionary gaps remain Needs development.
+See `test-results/0.11.4-saved-word-review.md` and `SAVED_WORD_REVIEW_PLAN.md`.
+
 2026-10-26 WP2.4/WP2.5 candidate0.11.3 compacts voice/help descriptions into
 hover/focus icons, fades replay/timing notices after a2-second dwell and preserves
 sanitized last-reported details in popup diagnostics. Meanings display one ordinal

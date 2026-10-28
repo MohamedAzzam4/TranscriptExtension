@@ -166,9 +166,18 @@ details[open] > summary { border-bottom: 1px solid var(--stroke); }
 .word-filters { display: flex; gap: 7px; margin: 14px 0 5px; }
 .word-filters button { min-height: 32px; border-radius: 20px; padding: 6px 12px; font: 11px var(--mono); background: transparent; color: var(--text-soft); }
 .word-filters [aria-pressed="true"] { background: var(--accent-strong); color: #fff; border-color: #63926f; }
-.vocabulary-panel > .panel-content, .transcript-library-panel > .panel-content { padding: 0; }
+.vocabulary-panel .panel-content, .transcript-library-panel > .panel-content { padding: 0; }
 .saved-word { min-width: 0; margin: 12px 0; padding: 17px; border: 1px solid var(--stroke); border-radius: 15px; background: linear-gradient(135deg, rgba(255,255,255,.025), transparent), var(--surface); }
 .saved-word-title { font-family: var(--serif); font-size: 21px; font-weight: 700; line-height: 1.25; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.saved-word-open {
+  display: block; width: 100%; min-height: 44px; padding: 5px 0;
+  border: 0; border-radius: 4px; background: transparent; color: var(--accent);
+  text-align: left; cursor: pointer;
+}
+.saved-word-open:hover { color: var(--text); background: var(--accent-soft); }
+.saved-word-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+#savedWordDetail > h2 { margin: 12px 0; overflow-wrap: anywhere; }
+#backToWords { min-height: 44px; }
 .saved-word-definition { margin-top: 9px; color: #e2e4dd; font-size: 12px; line-height: 1.5; }
 .saved-word-context { border-left: 2px solid #3a6045; padding-left: 10px; margin-top: 10px; color: var(--text-soft); font-size: 12px; font-style: italic; }
 .word-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 0; }
