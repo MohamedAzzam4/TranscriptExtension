@@ -1,5 +1,5 @@
 (() => {
-  const CONTENT_SCRIPT_VERSION = 27;
+  const CONTENT_SCRIPT_VERSION = 28;
   if (globalThis.__dubTranscriptLabVersion === CONTENT_SCRIPT_VERSION) return;
 
   const transcriptGroups = globalThis.DubTranscriptGroups;
@@ -852,7 +852,7 @@
         }
       </style>
       <div class="wrap">
-        <div class="status">Starting…</div>
+        <div class="status" hidden></div>
         <div class="caption-box" role="group" aria-label="Interactive captions" hidden>
           <button class="caption-drag-handle" type="button" aria-label="Drag captions" title="Drag captions">&#8942;</button>
           <div class="transcript" aria-live="polite" aria-atomic="true"></div>

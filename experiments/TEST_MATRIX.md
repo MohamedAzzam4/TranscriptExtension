@@ -1,5 +1,11 @@
 # Experiment matrix
 
+2026-10-28 user reports0.12.0 automatic YouTube transcript works, but persistent
+Starting/menu/hover UI fails.0.12.1 repair passes23syntax checks,27extension
+suites and56server tests. Actual menu DOM/shared setting events and caption
+hover delegation covered locally; browser rendering/physical hover not run.
+See `docs/test-results/0.12.1-youtube-controls.md`.
+
 2026-10-28 YouTube caption candidate0.12.0:23syntax checks,26extension suites,
 56server tests pass locally with frozen/mocked player, native, network and storage
 edges. Source priority, navigation cancellation, ads, timing provenance, translation

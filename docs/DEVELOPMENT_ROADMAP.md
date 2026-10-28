@@ -28,6 +28,16 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP2.4/WP2.5/WP3.4 candidate0.12.1 addresses user-reported persistent
+Starting and inaccessible player/hover settings. The shared template now starts
+empty/hidden; the panel mounts directly in the player outside native control
+clipping ancestry; shared word switches are visible on popup Home. Actual menu
+DOM regression added and delegated hover bindings tested. Local23syntax checks,
+27extension suites/56server tests pass. User confirms0.12.0 automatic retrieval
+works, with route/sample unspecified. New real rendering/mouse/fullscreen checks
+remain unverified under the browser-testing pause. Candidate Experimental;
+broader Needs development remains. See `test-results/0.12.1-youtube-controls.md`.
+
 2026-10-28 WP3.1/3.2/3.4/3.5 and WP2.2/2.4/2.5 candidate0.12.0 implements
 automatic YouTube caption retrieval, creator subtitles before original automatic
 captions, browser-first/subtitle-only yt-dlp fallback, optional YouTube translation,

@@ -4,7 +4,7 @@
   const captions = globalThis.DubYouTubeCaptions;
   const learning = globalThis.DubTranscriptLearning;
   let settings = {}, videoId = null, generation = 0, requestId = '', selectedId = 'auto';
-  let sourceTracks = [], playerMetadata = null, host = null, panel = null, status = null, trackSelect = null;
+  let sourceTracks = [], playerMetadata = null, host = null, menuHost = null, panel = null, status = null, trackSelect = null;
   let menuOpen = false, hasSession = false, lastVideo = null, stopped = false, disposed = false;
   let activeAudioLanguage = '', lastAudioProbe = 0, audioProbePending = false;
   let signature = '', suppressStyle = null, controlsStyle = null;
@@ -222,27 +222,39 @@
     }
     player.classList.toggle('dub-transcript-menu-open', menuOpen);
     const positionMenu = () => {
-      if (!host?.isConnected) return;
+      if (!host?.isConnected || !menuHost) return;
       const bounds = player.getBoundingClientRect(), anchor = host.getBoundingClientRect();
-      host.style.setProperty('--yt-panel-height', `${Math.max(80, bounds.height - 80)}px`);
-      host.style.setProperty('--yt-panel-width', `${Math.max(140, bounds.width - 24)}px`);
-      host.style.setProperty('--yt-panel-right', `${anchor.right - bounds.right + 12}px`);
+      const width = Math.max(140, Math.min(330, bounds.width - 24));
+      const bottom = Math.max(12, bounds.bottom - anchor.top + 10);
+      menuHost.style.setProperty('--yt-panel-height', `${Math.max(60, bounds.height - bottom - 12)}px`);
+      menuHost.style.setProperty('--yt-panel-width', `${width}px`);
+      menuHost.style.setProperty('--yt-panel-bottom', `${bottom}px`);
+      menuHost.style.setProperty('--yt-panel-right', `${Math.max(12, Math.min(bounds.right - anchor.right, bounds.width - width - 12))}px`);
     };
-    if (host?.isConnected && host.parentElement === controls) { positionMenu(); return; }
-    host?.remove(); host = document.createElement('span'); host.className = 'ytp-button'; host.style.cssText = 'display:inline-block;position:relative;width:48px;height:100%;vertical-align:top;';
+    if (host?.isConnected && host.parentElement === controls && menuHost?.isConnected && menuHost.parentElement === player) { positionMenu(); return; }
+    host?.remove(); menuHost?.remove();
+    host = document.createElement('span'); host.className = 'ytp-button'; host.style.cssText = 'display:inline-block;position:relative;width:48px;height:100%;vertical-align:top;pointer-events:auto;';
+    // Native controls may clip their children. Keep only the icon in that
+    // ancestry; the panel gets an isolated, fullscreen-safe player-level layer.
+    menuHost = document.createElement('div'); menuHost.className = 'dub-transcript-player-menu';
+    menuHost.style.cssText = 'all:initial;position:absolute;inset:0;z-index:2147483647;pointer-events:none;';
+    const menuShadow = menuHost.attachShadow({ mode: 'open' });
     const shadow = host.attachShadow({ mode: 'open' });
     const style = document.createElement('style'); style.textContent = `${globalThis.DubTypography?.css || ''}
       :host{font-family:var(--ui-font,Tahoma,sans-serif);color:#f5f5f0;text-align:left}
       button,select,input{font:inherit}button,select{cursor:pointer}.trigger{width:48px;height:100%;min-height:40px;border:0;background:transparent;color:white;display:grid;place-items:center}.trigger[aria-expanded=true]{color:#8dc49b}.trigger svg{width:25px;height:25px}
-      .menu{position:absolute;bottom:calc(100% + 14px);right:var(--yt-panel-right,0px);width:min(330px,80vw,var(--yt-panel-width,80vw));max-height:min(65vh,520px,var(--yt-panel-height,65vh));overflow:auto;background:#111a14;border:1px solid #46644e;border-radius:12px;padding:16px;box-sizing:border-box;font-size:14px;line-height:1.5;box-shadow:0 8px 28px #0008;scrollbar-color:#46644e #111a14}.menu[hidden]{display:none}.menu strong{font-size:18px}label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0}select{max-width:100%;width:100%;min-height:36px;background:#1c281f;color:#f5f5f0;border:1px solid #46644e;border-radius:6px}label:has(select){display:block}input[type=number]{width:70px}input[type=checkbox]{accent-color:#8dc49b;width:18px;height:18px}input[type=color]{width:48px}fieldset{border:1px solid #46644e;border-radius:7px}summary{cursor:pointer;font-weight:700}p{font-size:12px;color:#c2bfb5}button:not(.trigger){min-height:40px;margin:4px 0;padding:8px;border:1px solid #46644e;border-radius:6px;background:#1c281f;color:#f5f5f0;width:100%}:focus-visible{outline:2px solid #8dc49b;outline-offset:2px}`;
+      .menu{pointer-events:auto;position:absolute;bottom:var(--yt-panel-bottom,60px);right:var(--yt-panel-right,0px);width:min(330px,80vw,var(--yt-panel-width,80vw));max-height:min(65vh,520px,var(--yt-panel-height,65vh));overflow:auto;background:#111a14;border:1px solid #46644e;border-radius:12px;padding:16px;box-sizing:border-box;font-size:14px;line-height:1.5;box-shadow:0 8px 28px #0008;scrollbar-color:#46644e #111a14}.menu[hidden]{display:none}.menu strong{font-size:18px}label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0}select{max-width:100%;width:100%;min-height:36px;background:#1c281f;color:#f5f5f0;border:1px solid #46644e;border-radius:6px}label:has(select){display:block}input[type=number]{width:70px}input[type=checkbox]{accent-color:#8dc49b;width:18px;height:18px}input[type=color]{width:48px}fieldset{border:1px solid #46644e;border-radius:7px}summary{cursor:pointer;font-weight:700}p{font-size:12px;color:#c2bfb5}button:not(.trigger){min-height:40px;margin:4px 0;padding:8px;border:1px solid #46644e;border-radius:6px;background:#1c281f;color:#f5f5f0;width:100%}:focus-visible{outline:2px solid #8dc49b;outline-offset:2px}`;
     shadow.append(style);
     const button = document.createElement('button'); button.className = 'trigger'; button.type = 'button'; button.title = 'Transcript Lab'; button.setAttribute('aria-label', 'Transcript Lab settings'); button.setAttribute('aria-expanded', String(menuOpen));
     button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 8h10M7 12h7M7 21h10"/></svg>';
     button.addEventListener('click', () => { menuOpen = !menuOpen; player.classList.toggle('dub-transcript-menu-open', menuOpen); panel.hidden = !menuOpen; button.setAttribute('aria-expanded', String(menuOpen)); });
-    shadow.append(button); buildPanel(shadow);
-    for (const name of ['click', 'pointerdown', 'keydown']) host.addEventListener(name, event => event.stopPropagation());
-    shadow.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); panel.hidden = true; menuOpen = false; player.classList.remove('dub-transcript-menu-open'); button.setAttribute('aria-expanded', 'false'); button.focus(); } });
+    shadow.append(button); menuShadow.append(style.cloneNode(true)); buildPanel(menuShadow);
+    for (const owner of [host, menuHost]) {
+      for (const name of ['click', 'pointerdown', 'keydown']) owner.addEventListener(name, event => event.stopPropagation());
+      owner.shadowRoot.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); panel.hidden = true; menuOpen = false; player.classList.remove('dub-transcript-menu-open'); button.setAttribute('aria-expanded', 'false'); button.focus(); } });
+    }
     controls.prepend(host);
+    player.append(menuHost);
     positionMenu();
   }
   function tick() {
@@ -271,19 +283,21 @@
     if (area !== 'local' || !changes.experimentSettings) return;
     const previous = signature; settings = changes.experimentSettings.newValue || {};
     signature = JSON.stringify([preferences(), settings.audioLanguage, learning.normalizeTranslationPreferences(settings.translationPreferences).targetLanguage, settings.translationPreferences?.enabled]);
-    const focused = host?.shadowRoot?.activeElement;
-    const focusIndex = focused ? [...host.shadowRoot.querySelectorAll('input,select,button,summary')].indexOf(focused) : -1;
-    const expanded = [...(host?.shadowRoot?.querySelectorAll('details') || [])].map(detail => detail.open);
+    const focused = menuHost?.shadowRoot?.activeElement;
+    const focusIndex = focused ? [...menuHost.shadowRoot.querySelectorAll('input,select,button,summary')].indexOf(focused) : -1;
+    const triggerFocused = Boolean(host?.shadowRoot?.activeElement);
+    const expanded = [...(menuHost?.shadowRoot?.querySelectorAll('details') || [])].map(detail => detail.open);
     const scroll = panel?.scrollTop || 0;
-    host?.remove(); host = null; mount();
-    [...(host?.shadowRoot?.querySelectorAll('details') || [])].forEach((detail, index) => { detail.open = Boolean(expanded[index]); });
+    host?.remove(); menuHost?.remove(); host = null; menuHost = null; mount();
+    [...(menuHost?.shadowRoot?.querySelectorAll('details') || [])].forEach((detail, index) => { detail.open = Boolean(expanded[index]); });
     if (panel) panel.scrollTop = scroll;
-    if (focusIndex >= 0) host?.shadowRoot.querySelectorAll('input,select,button,summary')[focusIndex]?.focus({ preventScroll: true });
+    if (focusIndex >= 0) menuHost?.shadowRoot.querySelectorAll('input,select,button,summary')[focusIndex]?.focus({ preventScroll: true });
+    else if (triggerFocused) host?.shadowRoot.querySelector('.trigger')?.focus({ preventScroll: true });
     if (previous !== signature) { stopped = false; void retrieve(); }
   });
-  document.addEventListener('pointerdown', event => { if (host && !event.composedPath().includes(host)) { menuOpen = false; document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); if (panel) panel.hidden = true; host.shadowRoot.querySelector('.trigger').setAttribute('aria-expanded', 'false'); } }, true);
+  document.addEventListener('pointerdown', event => { if (host && !event.composedPath().includes(host) && !event.composedPath().includes(menuHost)) { menuOpen = false; document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); if (panel) panel.hidden = true; host.shadowRoot.querySelector('.trigger').setAttribute('aria-expanded', 'false'); } }, true);
   let timer;
-  window.addEventListener('pagehide', () => { disposed = true; invalidate(); host?.remove(); controlsStyle?.remove(); document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); clearInterval(timer); });
+  window.addEventListener('pagehide', () => { disposed = true; invalidate(); host?.remove(); menuHost?.remove(); controlsStyle?.remove(); document.querySelector('#movie_player')?.classList.remove('dub-transcript-menu-open'); clearInterval(timer); });
   void chrome.storage.local.get('experimentSettings').then(stored => {
     settings = stored.experimentSettings || {}; signature = JSON.stringify([preferences(), settings.audioLanguage, learning.normalizeTranslationPreferences(settings.translationPreferences).targetLanguage, settings.translationPreferences?.enabled]);
     tick(); timer = setInterval(tick, 800);

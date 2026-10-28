@@ -1,5 +1,11 @@
 # Protected feature registry
 
+0.12.1 repairs startup placeholder/menu ownership and exposes shared word
+switches on Home. Actual menu DOM/settings and caption hover listener regression
+pass locally. User reports0.12.0 automatic retrieval works; track/route unknown.
+New browser menu/mouse/fullscreen acceptance remains unverified. See
+`test-results/0.12.1-youtube-controls.md`.
+
 0.12.0 adds ACQ-YT-CAPTIONS: automatic per-video source captions (creator first,
 original automatic second), optional YouTube translations and player settings.
 Local fixtures cover lifecycle/cache/source honesty and privacy; actual YouTube

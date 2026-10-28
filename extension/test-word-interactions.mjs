@@ -37,4 +37,22 @@ highlight.updateCurrentWordHighlight(); assert.equal(classes.has('current-word')
 vm.runInContext('session.captionPreferences.highlightCurrentWord = false;', highlight);
 highlight.updateCurrentWordHighlight(); assert.equal(classes.has('current-word'), false);
 assert.equal(classes.has('saved-word'), true); assert.equal(classes.has('selected'), true);
+// Exercise the actual delegated DOM listeners, not just the pause controller.
+const delegated = {};
+const attached = context.DubWordInteractions.createHoverPause({ media,
+  setTimer(fn) { const id = ++next; timers.set(id, fn); return id; }, clearTimer(id) { timers.delete(id); } });
+const wiring = vm.createContext({ transcriptElement: { addEventListener(name, fn) { delegated[name] = fn; } }, hoverPause: attached });
+const bindingStart = content.indexOf("    transcriptElement.addEventListener('pointerover'");
+const bindingEnd = content.indexOf('\n    captionBoxElement.addEventListener', bindingStart);
+assert.ok(bindingStart >= 0 && bindingEnd > bindingStart);
+vm.runInContext(content.slice(bindingStart, bindingEnd), wiring);
+const hovered = { closest: () => hovered }, neighbor = { closest: () => neighbor };
+media.paused = false;
+const previousPlays = plays, previousPauses = pauses;
+delegated.pointerover({ target: hovered }); assert.equal(pauses, previousPauses, 'hover listener respects default-off');
+attached.configure(true);
+delegated.pointerover({ target: hovered }); assert.equal(media.paused, true, 'actual caption pointerover pauses when enabled');
+delegated.pointerout({ target: hovered, relatedTarget: neighbor }); flush(); assert.equal(plays, previousPlays);
+delegated.pointerout({ target: neighbor, relatedTarget: null }); flush(); assert.equal(plays, previousPlays + 1);
+attached.dispose();
 console.log('Hover-pause ownership, default off, adjacent words, manual pause, preference change, navigation and listener cleanup passed');

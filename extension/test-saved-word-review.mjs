@@ -125,6 +125,8 @@ const original = JSON.stringify(entry);
 let closed = 0;
 const callbacks = { onClose() { closed++; } };
 await api.open(entry, { targetLanguage: 'ar' }, callbacks);
+assert.equal(card('.status').hidden, true, 'shared template has no stale startup banner');
+assert.equal(card('.status').textContent, '');
 assert.equal(card('.word-title').textContent, 'AR wird');
 assert.equal(card('.word-title').lang, 'ar');
 assert.equal(card('.word-definition-de').textContent, '1. seinen Zustand ändern');

@@ -128,6 +128,9 @@ details[open] > summary { border-bottom: 1px solid var(--stroke); }
 .value-stepper output { min-width: 45px; text-align: center; color: var(--accent); font: var(--ui-size-meta) var(--ui-font); }
 .range-setting output { color: var(--accent); font: var(--ui-size-meta) var(--ui-font); }
 .compact-check { margin: 4px 0; }
+.word-interaction-settings { padding: 14px 16px; }
+.word-interaction-settings h3 { margin: 0 0 12px; font-size: var(--ui-size-title); }
+.word-interaction-settings .check { min-height: 36px; }
 .interaction-tip { padding: 12px; border-radius: 8px; background: var(--accent-soft); color: var(--text-soft); font-size: var(--ui-size-meta); }
 .interaction-tip > span { color: var(--accent); margin-right: 7px; }
 .sync-control { padding: 12px 0; }
