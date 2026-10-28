@@ -1,0 +1,24 @@
+
+=== Setup plan ===
+Python:       3.13.13 (C:\Users\LOQ\AppData\Local\Programs\Python\Python313\python.exe)
+Mode:         cpu
+Live model:   base
+Batch model:  small
+Language:     de
+Extension:    D:\Programming\Antigravity-Projects\Transcript_Extension\extension
+Privacy:      transcription stays on this PC
+Disk space:   allow several GB for Python packages and speech models
+
+Dry run complete. No files or system settings were changed.
+
+=== Setup plan ===
+Python:       3.12.14 (D:\Programming\Antigravity-Projects\Transcript_Extension\.venv\Scripts\python.exe)
+Mode:         cpu
+Live model:   base
+Batch model:  small
+Language:     de
+Extension:    D:\Programming\Antigravity-Projects\Transcript_Extension\extension
+Privacy:      transcription stays on this PC
+Disk space:   allow several GB for Python packages and speech models
+
+Dry run complete. No files or system settings were changed.

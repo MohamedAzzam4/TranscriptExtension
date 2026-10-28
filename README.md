@@ -54,6 +54,19 @@ Download Python from [python.org](https://www.python.org/downloads/windows/). Du
 
 The setup is project-local: Python packages, models, CUDA files, and logs stay inside the extracted project folder. CPU mode downloads `base` for live captions and `small` for full-video analysis; NVIDIA mode reuses `small` for both. The only Windows-level changes are the per-user browser native-host registration and, unless disabled, a Startup shortcut for the local recognizer.
 
+If setup cannot locate an installed Python, it now searches Windows registration,
+common installation folders, PATH and the launcher list. A missing launcher/runtime
+does not stop the search. You can paste the full path to `python.exe` when asked,
+or open a terminal in the project folder and run:
+
+```powershell
+.\INSTALL.cmd -Python "C:\path\to\python.exe"
+```
+
+Replace that example with the actual path on your computer. Python 3.12 must be
+64-bit; Python 3.11 and 3.13 are also accepted. Unsupported versions and broken
+Windows aliases produce a reason instead of a generic instruction to reinstall.
+
 ### Update an existing installation
 
 Keep the existing project folder and extension card so the extension ID and browser-local transcripts, vocabulary, settings, and translation cache remain available.

@@ -26,47 +26,7 @@ function Write-Section([string]$Title) {
   Write-Host "=== $Title ===" -ForegroundColor Cyan
 }
 
-function Get-CompatiblePython([string]$Requested) {
-  $Candidates = New-Object System.Collections.Generic.List[string]
-  if ($Requested) {
-    $Candidates.Add($Requested)
-  } else {
-    $Launcher = Get-Command py.exe -ErrorAction SilentlyContinue
-    if ($Launcher) {
-      foreach ($Minor in "3.12", "3.11", "3.13") {
-        $Resolved = & $Launcher.Source "-$Minor" -c "import sys; print(sys.executable)" 2>$null
-        if ($LASTEXITCODE -eq 0 -and $Resolved) { $Candidates.Add([string]$Resolved) }
-      }
-    }
-    foreach ($CommandName in "python.exe", "python3.exe", "python") {
-      $Command = Get-Command $CommandName -ErrorAction SilentlyContinue
-      if ($Command) { $Candidates.Add($Command.Source) }
-    }
-  }
-
-  foreach ($Candidate in ($Candidates | Select-Object -Unique)) {
-    try {
-      $Details = & $Candidate -c "import json,sys; print(json.dumps({'path':sys.executable,'version':list(sys.version_info[:3])}))" 2>$null
-      if ($LASTEXITCODE -ne 0 -or -not $Details) { continue }
-      $Parsed = $Details | ConvertFrom-Json
-      $Version = [version]("{0}.{1}.{2}" -f $Parsed.version[0], $Parsed.version[1], $Parsed.version[2])
-      if ($Version -ge [version]"3.11" -and $Version -lt [version]"3.14") {
-        return [pscustomobject]@{ Path = [string]$Parsed.path; Version = $Version }
-      }
-    } catch {
-      # Try the next candidate. Windows Store aliases commonly fail here.
-    }
-  }
-
-  throw @"
-Python 3.11, 3.12, or 3.13 was not found.
-
-Install 64-bit Python 3.12 from:
-https://www.python.org/downloads/windows/
-
-During installation, enable "Add python.exe to PATH", then run INSTALL.cmd again.
-"@
-}
+. (Join-Path $PSScriptRoot 'python-discovery.ps1')
 
 function Get-BrowserExecutable {
   $Candidates = @(
@@ -115,7 +75,7 @@ if (-not $Mode) {
 
 if (-not $Model) { $Model = if ($Mode -eq "gpu") { "small" } else { "base" } }
 $Device = if ($Mode -eq "gpu") { "auto" } else { "cpu" }
-$PythonInfo = Get-CompatiblePython $Python
+$PythonInfo = Get-CompatiblePython -Requested $Python -AllowPrompt:(-not ($NonInteractive -or $DryRun))
 
 Write-Section "Setup plan"
 Write-Host "Python:       $($PythonInfo.Version) ($($PythonInfo.Path))"

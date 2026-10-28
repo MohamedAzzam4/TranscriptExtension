@@ -1,5 +1,11 @@
 # Protected feature registry
 
+2026-10-28 installer discovery follow-up (extension0.12.5 unchanged): missing
+Python versions/launcher no longer abort discovery. Registry/common folders and
+explicit-path recovery preserve the tested3.11–3.13/64-bit setup contract.
+Read-only plans and local regression pass; friend/clean-install/update/health
+acceptance remains unverified. See `test-results/2026-10-28-python-discovery.md`.
+
 0.12.5 expands the shared hover-pause region from source words to the whole
 caption box. Original words, translation, gaps/padding and drag handle use the
 same owned pause/resume setting; manual pauses, selection/copy, dictionary/card,

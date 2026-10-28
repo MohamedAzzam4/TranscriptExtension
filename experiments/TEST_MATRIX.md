@@ -1,5 +1,13 @@
 # Experiment matrix
 
+2026-10-28 WP0.2 Python discovery: Windows PowerShell5.1 baseline dry-run
+reproduces NativeCommandError from a missing version selector. Fixed automatic
+3.13 and explicit3.12 read-only plans pass; discovery fixtures cover failures,
+registry/common folders, architecture/version rejection and path recovery.
+Full25syntax/29extension/56server plus PowerShell suite pass. No dependency/model
+install, registry write, startup or browser test; friend's result unverified.
+See `docs/test-results/2026-10-28-python-discovery.md`.
+
 2026-10-28 caption-box hover candidate0.12.5:25syntax checks,29extension
 suites/56server tests pass. Added padding characterization fails on0.12.4;
 stable-box entry/exit and nonempty rerender/empty-hide ownership checks pass

@@ -72,6 +72,11 @@ Invoke-Checked "Server unit tests" {
     & $python -m unittest discover -s server -p "test_*.py"
 }
 
+$discoveryPython = if (Test-Path -LiteralPath $python) { (Resolve-Path -LiteralPath $python).Path } else { (Get-Command $python).Source }
+Invoke-Checked "Windows PowerShell Python discovery" {
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'test-python-discovery.ps1') -Python $discoveryPython
+}
+
 Invoke-Checked "Git whitespace check" { git diff --check }
 
 Write-Host ""

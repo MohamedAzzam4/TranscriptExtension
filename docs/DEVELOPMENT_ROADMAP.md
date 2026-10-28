@@ -28,6 +28,16 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP0.2 installer-only follow-up repairs Python discovery. Baseline
+Windows PowerShell5.1 dry-run aborts on a missing launcher selector even with
+another supported Python installed. Discovery now tolerates failed probes,
+checks registered/common/PATH/launcher-listed executables, verifies64-bit tested
+versions and offers paste-path recovery. Local25syntax checks,29extension suites,
+56server tests plus new PowerShell discovery suite pass; automatic and explicit
+3.12 read-only setup plans pass. Friend's actual machine/clean install/update/
+registration/health remain unverified: Experimental. Extension remains0.12.5.
+See `PYTHON_DISCOVERY_FIX_PLAN.md` and `test-results/2026-10-28-python-discovery.md`.
+
 2026-10-28 WP2.4/WP2.5 candidate0.12.5 expands enabled hover pause to the
 whole stable caption box, including source/translation/padding. Internal word
 replacement no longer releases pause; hiding an empty box does. Existing shared
