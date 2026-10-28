@@ -18,7 +18,8 @@ injected Shadow DOM. Change the scale there for future UI work:
 | Role | Size | Weight / leading |
 |---|---|---|
 | Metadata, labels, help, nav | 12px | 400–600 /1.5 |
-| Body, definitions, examples, controls | 14px | 400–600 /1.5 |
+| Dropdown selected text and options | 12px | 400 /1.5 |
+| Body, definitions, examples, other controls | 14px | 400–600 /1.5 |
 | Video titles, important subsection labels | 16px | 600 /1.4 |
 | Card/section titles | 18px | 700 /1.35 |
 | Page titles, translated word heading | 22px | 700 /1.3 |
@@ -29,6 +30,13 @@ monospaced when alignment helps. Long video titles wrap fully at16px (Home keeps
 its existing three-line clamp); full source/navigation remains available. New
 family/size rules do not alter user-controlled caption preferences or defaults.
 IPA uses normal glyph fallback; target text retains lang/dir.
+
+0.12.3 adds --ui-size-select for compact dropdowns in popup/player settings.
+Use the full row for long provider choices, concise option labels and normal
+tracking/weight. Keep language controls aligned at their bottom edge if a label
+wraps; reduce uppercase label tracking to .04em in the session card. Control
+height remains independent of text size. Native option rendering may vary by OS;
+real Chrome fit/zoom acceptance remains unverified while browser tests are paused.
 
 Scope: popup CSS, translation setup, shared card/notice UI, font asset loading.
 No storage/schema/dictionary/translation engine changes. Shared CSS tokens are

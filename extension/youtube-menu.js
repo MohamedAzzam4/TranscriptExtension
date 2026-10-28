@@ -54,8 +54,8 @@
     .toggle-control:has(input:checked) .toggle-state { color: var(--menu-accent); }
     .menu .field-row { display: block; padding: 8px 0; font-size: 12px; color: var(--menu-muted); }
     .menu select, .menu input[type="number"] { width: 100%; min-height: 44px; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--menu-border); border-radius: 8px; background: var(--menu-control); color: var(--menu-text); font-size: 14px; line-height: 1.4; }
-    .menu select { cursor: pointer; }
-    .menu option { color: #f0f3ee; background: #1a2920; }
+    .menu select { min-width: 0; max-width: 100%; cursor: pointer; font-size: var(--ui-size-select, 12px); font-weight: 400; letter-spacing: normal; }
+    .menu option { color: #f0f3ee; background: #1a2920; font: 400 var(--ui-size-select, 12px)/1.5 var(--ui-font, "Segoe UI", Tahoma, sans-serif); letter-spacing: normal; }
     .menu input[type="color"] { display: block; width: 100%; height: 44px; padding: 4px; margin-top: 6px; border: 1px solid var(--menu-border); border-radius: 7px; background: var(--menu-control); cursor: pointer; }
     .menu details { border-top: 1px solid var(--menu-border); margin-top: 10px; }
     .menu summary { min-height: 44px; padding: 12px 0; color: var(--menu-text); font-size: 14px; font-weight: 650; cursor: pointer; }

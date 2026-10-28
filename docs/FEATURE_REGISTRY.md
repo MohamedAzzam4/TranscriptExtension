@@ -1,5 +1,10 @@
 # Protected feature registry
 
+0.12.3 adjusts dropdown font size/weight and popup field layout. All dropdown
+IDs, option values and preference behavior are preserved; no caption-font or
+storage changes. Full local regression passes. Real native-menu/font/zoom fit
+remains unverified. See `test-results/0.12.3-dropdown-typography.md`.
+
 0.12.2 restyles the player menu with explicit panel typography/contrast,
 grouped settings and labelled On/Off switches. All source, translation,
 appearance and troubleshooting actions remain. User confirms hover works when

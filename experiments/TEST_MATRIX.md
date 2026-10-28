@@ -1,5 +1,11 @@
 # Experiment matrix
 
+2026-10-28 dropdown fit candidate0.12.3:24syntax checks,27extension suites,
+56server tests pass; all popup select IDs/option values match0.12.2. Smaller
+dropdown typography/full-width provider/concise labels applied; no real Chrome
+native-dropdown or font/zoom fit check ran. Experimental; see
+`docs/test-results/0.12.3-dropdown-typography.md`.
+
 2026-10-28 user screenshot confirms0.12.1 menu opens but text is black/serif;
 user clarifies pause-on-hover works when checked.0.12.2 styling repair passes
 24syntax checks,27extension suites and56server tests, including menu-owned font/

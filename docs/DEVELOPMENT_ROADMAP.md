@@ -28,6 +28,14 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP2.2/WP2.4/WP2.5 candidate0.12.3 adds a12px dropdown role,
+explicit option typography, full-width provider field and concise mode/provider
+labels. Language controls align when headings wrap. Existing option values and
+settings behavior remain. Local24syntax checks,27extension suites and56server
+tests pass. Real Chrome/native-dropdown/zoom fit remains unverified under the
+browser pause. Experimental; see `POPUP_SELECT_TYPOGRAPHY_PLAN.md` and
+`test-results/0.12.3-dropdown-typography.md`.
+
 2026-10-28 WP2.4/WP2.5 candidate0.12.2 fixes the user-confirmed black serif
 player-menu text by placing font/color on the panel itself, outside the inline
 host reset. Grouped controls, explicit On/Off switches, a close button and

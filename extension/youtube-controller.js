@@ -229,7 +229,7 @@
     const target = document.createElement('select'); for (const [code, name] of Object.entries(languages)) target.append(new Option(name, code));
     target.value = translation.targetLanguage; target.addEventListener('change', () => updateSettings({ translationPreferences: { targetLanguage: target.value } })); targetLabel.append(target); translationGroup.append(targetLabel);
     const providerLabel = document.createElement('label'); providerLabel.className = 'field-row'; providerLabel.textContent = 'Translation source';
-    const provider = document.createElement('select'); provider.append(new Option('YouTube, then extension fallback', 'youtube'), new Option('Extension translation provider', 'extension')); provider.value = preferences().translationSource;
+    const provider = document.createElement('select'); provider.append(new Option('YouTube, then extension', 'youtube'), new Option('Extension only', 'extension')); provider.value = preferences().translationSource;
     provider.addEventListener('change', () => updateSettings({ youtubePreferences: { translationSource: provider.value } })); providerLabel.append(provider); translationGroup.append(providerLabel); body.append(translationGroup);
     const appearance = document.createElement('details'), summary = document.createElement('summary'); summary.textContent = 'Caption appearance'; appearance.append(summary);
     for (const [label, preferencesKey, values] of [['Original', 'captionPreferences', caption], ['Translation', 'translationPreferences', translation]]) {

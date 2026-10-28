@@ -14,6 +14,7 @@
       --ui-font-mono: "Cascadia Mono", Consolas, monospace;
       --ui-size-meta: 12px;
       --ui-size-body: 14px;
+      --ui-size-select: 12px;
       --ui-size-title: 16px;
       --ui-size-section: 18px;
       --ui-size-page: 22px;
