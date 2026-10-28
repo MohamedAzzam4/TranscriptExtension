@@ -1,6 +1,6 @@
 body { width: auto; min-width: 0; max-width: 760px; max-height: none; min-height: 100vh; margin: auto; }
 .app-shell { padding: 32px 20px; }
 .session-card { padding: 24px; }
-h1 { font-size: 25px; }
-p { line-height: 1.6; }
+h1 { font-size: var(--ui-size-page); }
+p { font-size: var(--ui-size-body); line-height: var(--ui-leading-body); }
 progress { width: 100%; accent-color: #79ad88; margin-bottom: 16px; }

@@ -1,5 +1,10 @@
 # Experiment matrix
 
+2026-10-28 typography candidate0.11.5:18syntax checks,23extension suites and
+46server tests pass; local font/manifest/registration/isolation checks pass.
+Browser font loading, Arabic and layout remain unverified. User review requested
+before YouTube instructions. See `docs/test-results/0.11.5-typography.md`.
+
 2026-10-28 saved-word review candidate0.11.4: local17syntax checks,
 23extension suites/46server tests pass. Shared card DOM, offline saved data,
 removal, stale responses, navigation and popup state covered with mocks. Browser,

@@ -108,6 +108,7 @@ assert.deepEqual(scriptInjections[1].files, ["media-observer-bridge.js"]);
 assert.deepEqual(
   scriptInjections[2].files,
   [
+    "typography.js",
     "learning-features.js",
     "german-pronunciation.js",
     "transcript-groups.js",

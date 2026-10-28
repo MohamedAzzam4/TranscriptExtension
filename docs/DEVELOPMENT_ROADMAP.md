@@ -28,6 +28,13 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP2.2/WP2.4/WP2.5 candidate0.11.5 establishes shared Open Sans
+typography and12/14/16/18/22px roles; Home/Videos titles are16px. Caption
+preferences remain independent. Local18syntax checks,23extension suites and
+46server tests pass; font/layout browser checks await user review. Experimental;
+prior dictionary failures unchanged. Rules: `TYPOGRAPHY_RULES.md`; evidence:
+`test-results/0.11.5-typography.md`. Await user instructions before YouTube work.
+
 2026-10-28 WP1.3/WP2.4 candidate0.11.4 makes saved-word titles open the existing
 full dictionary card inside Words without a media session. Back/Escape, removal,
 source navigation and popup review state are preserved. Local17syntax checks,

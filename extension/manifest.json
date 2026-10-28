@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dub Transcript Lab",
-  "version": "0.11.4",
+  "version": "0.11.5",
   "description": "Local video transcription, reusable transcripts, translation, and word-learning tools.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -39,6 +39,10 @@
       "world": "MAIN"
     }
   ],
+  "web_accessible_resources": [{
+    "resources": ["fonts/OpenSans-Variable.ttf"],
+    "matches": ["http://*/*", "https://*/*"]
+  }],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Dub Transcript Lab"

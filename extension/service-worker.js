@@ -3143,6 +3143,7 @@ async function ensureContentScripts(tabId) {
     {
       key: "application",
       files: [
+        "typography.js",
         "learning-features.js",
         "german-pronunciation.js",
         "transcript-groups.js",

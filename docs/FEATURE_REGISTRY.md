@@ -1,5 +1,10 @@
 # Protected feature registry
 
+0.11.5 unifies popup/setup/card typography using bundled Open Sans and shared
+size roles, with16px Home/Videos titles. Caption settings and behavior contracts
+are retained. Local regression passes; browser appearance awaits user review.
+See `TYPOGRAPHY_RULES.md` and `test-results/0.11.5-typography.md`.
+
 0.11.4 extends LEARN-SAVE/LEARN-CARD: saved-word titles open the same full card
 inside Words, preserving dictionary metadata and list/review state. No video
 analysis is required. Local review lifecycle and existing regression pass;
