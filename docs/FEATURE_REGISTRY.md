@@ -1,5 +1,12 @@
 # Protected feature registry
 
+0.12.2 restyles the player menu with explicit panel typography/contrast,
+grouped settings and labelled On/Off switches. All source, translation,
+appearance and troubleshooting actions remain. User confirms hover works when
+enabled; no pause algorithm or default change. Local menu lifecycle/settings,
+style-contract/contrast and cross-feature regression pass. Actual new rendering
+remains unverified. See `test-results/0.12.2-youtube-menu.md`.
+
 0.12.1 repairs startup placeholder/menu ownership and exposes shared word
 switches on Home. Actual menu DOM/settings and caption hover listener regression
 pass locally. User reports0.12.0 automatic retrieval works; track/route unknown.

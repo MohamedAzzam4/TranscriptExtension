@@ -1,5 +1,12 @@
 # Experiment matrix
 
+2026-10-28 user screenshot confirms0.12.1 menu opens but text is black/serif;
+user clarifies pause-on-hover works when checked.0.12.2 styling repair passes
+24syntax checks,27extension suites and56server tests, including menu-owned font/
+color/contrast, On/Off semantics and close/focus/scroll retention. No real browser
+rendering, mouse or platform check ran. Candidate Experimental; see
+`docs/test-results/0.12.2-youtube-menu.md`.
+
 2026-10-28 user reports0.12.0 automatic YouTube transcript works, but persistent
 Starting/menu/hover UI fails.0.12.1 repair passes23syntax checks,27extension
 suites and56server tests. Actual menu DOM/shared setting events and caption

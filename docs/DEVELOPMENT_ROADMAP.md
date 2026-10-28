@@ -28,6 +28,15 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-28 WP2.4/WP2.5 candidate0.12.2 fixes the user-confirmed black serif
+player-menu text by placing font/color on the panel itself, outside the inline
+host reset. Grouped controls, explicit On/Off switches, a close button and
+scrollable details retain all settings/actions. User clarifies hover works
+when checked; its algorithm/default remain unchanged. Local24syntax checks,
+27extension suites/56server tests pass. Browser rendering/size/fullscreen checks
+remain unverified under the pause. Experimental; wider Needs development remains.
+See `test-results/0.12.2-youtube-menu.md` and `YOUTUBE_MENU_POLISH_PLAN.md`.
+
 2026-10-28 WP2.4/WP2.5/WP3.4 candidate0.12.1 addresses user-reported persistent
 Starting and inaccessible player/hover settings. The shared template now starts
 empty/hidden; the panel mounts directly in the player outside native control

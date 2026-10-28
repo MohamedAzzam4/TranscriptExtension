@@ -72,7 +72,7 @@ const context = vm.createContext({ console, URL, document,
     } }, storage: { local: { async get() { return { experimentSettings: settings }; } },
     onChanged: { addListener(fn) { storageListeners.push(fn); } } } }
 });
-for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
+for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-menu.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
 const flush = async () => { for (let i = 0; i < 15; i++) await Promise.resolve(); };
 await flush();
 const trigger = () => controls.children[0].shadowRoot.querySelector('.trigger');
@@ -88,18 +88,50 @@ assert.equal(panel().hidden, false, 'click actually opens settings');
 assert.equal(trigger().attributes['aria-expanded'], 'true');
 assert.equal(panel().getRootNode().host.parentElement === player, true,
   'settings panel must be outside clipped control/button ancestors');
+assert.equal(panel().querySelector('.menu-title').textContent, 'Caption settings');
+assert.deepEqual(panel().querySelectorAll('summary').map(node => node.textContent),
+  ['Translation', 'Caption appearance', 'Source & troubleshooting']);
+assert.equal(panel().querySelectorAll('details').every(node => !node.open), true);
+// The inline host reset wins over :host typography. Guard the reported black
+// serif text regression by requiring the panel to own both color and font.
+const css = context.DubYouTubeMenu.css;
+const menuRule = css.match(/\.menu\s*\{([^}]+)\}/)[1];
+assert.match(menuRule, /color:\s*var\(--menu-text\)/);
+assert.match(menuRule, /font:\s*400[^;]+var\(--ui-font/);
+const token = name => menuRule.match(new RegExp(`--menu-${name}:\\s*(#[\\da-f]{6})`, 'i'))[1];
+const luminance = hex => {
+  const values = hex.slice(1).match(/../g).map(value => parseInt(value, 16) / 255)
+    .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+  return values[0] * .2126 + values[1] * .7152 + values[2] * .0722;
+};
+for (const name of ['text', 'muted', 'accent']) {
+  const ratio = (luminance(token(name)) + .05) / (luminance(token('surface')) + .05);
+  assert.ok(ratio >= 4.5, `${name} contrast must be readable on the menu surface`);
+}
+assert.match(css, /prefers-reduced-motion:\s*reduce/);
+const manifest = JSON.parse(fs.readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
+const scripts = manifest.content_scripts.find(entry => entry.js?.includes('youtube-controller.js')).js;
+assert.ok(scripts.indexOf('youtube-menu.js') >= 0 && scripts.indexOf('youtube-menu.js') < scripts.indexOf('youtube-controller.js'));
 const findCheckbox = text => panel().querySelectorAll('label').find(label => label.textContent.startsWith(text)).querySelector('input');
 assert.equal(findCheckbox('Pause while hovering').checked, false);
 assert.equal(findCheckbox('Highlight current').checked, true);
-const details = panel().querySelector('details'); details.open = true; panel().scrollTop = 94;
+assert.equal(findCheckbox('Pause while hovering').attributes.role, 'switch');
+assert.equal(findCheckbox('Pause while hovering').parentElement.querySelector('.toggle-state').textContent, 'Off');
+const details = panel().querySelector('details'); details.open = true;
+panel().querySelector('.menu-body').scrollTop = 94;
 const pause = findCheckbox('Pause while hovering'); pause.checked = true; pause.focus(); await pause.fire('change'); await flush();
 assert.equal(settings.captionPreferences.pauseOnWordHover, true);
+assert.equal(findCheckbox('Pause while hovering').parentElement.querySelector('.toggle-state').textContent, 'On');
 assert.equal(panel().hidden, false);
 assert.equal(panel().querySelector('details').open, true);
-assert.equal(panel().scrollTop, 94);
+assert.equal(panel().querySelector('.menu-body').scrollTop, 94);
 assert.equal(panel().getRootNode().activeElement, findCheckbox('Pause while hovering'));
 await panel().getRootNode().fire('keydown', { key: 'Escape' });
 assert.equal(panel().hidden, true); assert.equal(trigger().attributes['aria-expanded'], 'false');
+await trigger().fire('click');
+await panel().querySelector('.menu-close').fire('click');
+assert.equal(panel().hidden, true, 'explicit close button dismisses the menu');
+assert.equal(controls.children[0].shadowRoot.activeElement, trigger(), 'close restores trigger focus');
 await trigger().fire('click');
 for (const fn of docListeners.pointerdown) fn({ composedPath: () => [panel(), panel().getRootNode().host] });
 assert.equal(panel().hidden, false, 'clicks inside the detached panel are not outside clicks');

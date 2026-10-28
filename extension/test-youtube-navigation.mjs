@@ -52,7 +52,7 @@ const context = vm.createContext({ console, URL, URLSearchParams, document, loca
     }
   }, storage: { local: { async get() { return { experimentSettings: settings }; } }, onChanged: { addListener(fn) { storageListeners.push(fn); } } } }
 });
-for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-page.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
+for (const file of ['learning-features.js', 'youtube-captions.js', 'youtube-page.js', 'youtube-menu.js', 'youtube-controller.js']) vm.runInContext(fs.readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'), context);
 const flush = async () => { for (let index = 0; index < 50; index++) await Promise.resolve(); };
 const tick = () => { for (const fn of intervals.values()) fn(); };
 await flush();
