@@ -38,6 +38,16 @@ deferred until the core extension has been proven.
 
 ## Current progress
 
+2026-10-29 WP0.1/WP0.2 main-repository documentation refresh. User explicitly
+requests main promotion; fetched origin/main8dd1d6a is34commits behind baseline
+5882965 with no main-only commits. README/update guide now describe current
+YouTube source-first captions, direct target-language German cards, caption-box
+hover, installation tiers, friend sharing and Python/PyAV repairs. Local25syntax,
+29extension,61server and Windows discovery checks pass; documentation link/version
+checks pass. Fast-forward main without force; extension0.12.5/worker0.12.1 stay
+Experimental pending existing manual gates. See `MAIN_REPO_UPDATE_PLAN.md` and
+`test-results/2026-10-29-main-readme-update.md`.
+
 2026-10-28 WP0.2 installer-only follow-up repairs Python discovery. Baseline
 Windows PowerShell5.1 dry-run aborts on a missing launcher selector even with
 another supported Python installed. Discovery now tolerates failed probes,

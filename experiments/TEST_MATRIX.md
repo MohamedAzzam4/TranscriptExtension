@@ -1,5 +1,12 @@
 # Experiment matrix
 
+2026-10-29 main/README refresh: current baseline5882965 passes25syntax,
+29extension,61server tests and Windows Python-discovery checks.23 local
+documentation links, entry points and extension0.12.5/worker0.12.1 references
+validate. No browser, install, model/network/media or manual acceptance run.
+User authorizes fast-forward main; existing Experimental/Needs development gates
+remain. See `docs/test-results/2026-10-29-main-readme-update.md`.
+
 2026-10-28 PyAV compatibility: baseline56server tests; two signature fixtures
 first reproduce metadata_errors rejection. Fixed candidate passes25syntax,
 29extension suites,61server tests and Windows Python discovery. Five new checks
